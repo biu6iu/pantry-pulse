@@ -1,4 +1,4 @@
-export class donationItem {
+export class DonationItem {
     id: string;
     itemName: string;
     category: string;
