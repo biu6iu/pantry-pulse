@@ -1,0 +1,1 @@
+export type DonationStatus = "PENDING" | "IN-TRANSIT" | "DELIVERED"
