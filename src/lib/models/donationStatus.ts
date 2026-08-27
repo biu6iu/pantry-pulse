@@ -1,0 +1,1 @@
+export type DonationStatus = "COMPLETED" | "OPEN" | null
