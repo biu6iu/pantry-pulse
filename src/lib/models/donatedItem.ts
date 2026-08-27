@@ -1,13 +1,13 @@
-export class DonationItem {
+export class DonatedItem {
     id: string;
-    itemName: string;
+    name: string; 
     category: string;
-    desc: string;
+    sku: string | null; // stock keeping unit
 
-    constructor(id: string, itemName: string, category: string, desc: string) {
+    constructor(id: string, name: string, category: string, sku: string | null = null) {
         this.id = id;
-        this.itemName = itemName;
+        this.name = name;
         this.category = category;
-        this.desc = desc;
+        this.sku = sku;
     }
 }
