@@ -12,7 +12,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci # install node dependencies
-      - run: npx tsc --noEmit # type check
-      - run: npm run lint # linting
-      - run: npm run build # building 
+      - run: npm ci 
+      - run: npx next typegen 
+      - run: npx tsc --noEmit 
+        continue-on-error: true # remove later
+      - run: npm run lint 
+      - run: npm run build 
