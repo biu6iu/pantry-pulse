@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: 20
       - run: npm ci # install node dependencies
+      - run: npx next typegen # generate types
       - run: npx tsc --noEmit # type check
       - run: npm run lint # linting
       - run: npm run build # building 
