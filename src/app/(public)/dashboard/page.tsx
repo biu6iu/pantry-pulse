@@ -1,1 +1,3 @@
-// Dashboard page displaying donation and impact overview
+export default function DashboardPage() {
+  return null;
+}

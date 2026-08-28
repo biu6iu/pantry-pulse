@@ -1,1 +1,3 @@
-// API route for retrieving, updating, or deleting a single donation
+export async function GET() {
+  return new Response(null, { status: 501 });
+}

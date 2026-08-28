@@ -1,1 +1,3 @@
-// API route for listing and creating donations
+export async function GET() {
+  return new Response(null, { status: 501 });
+}

@@ -15,6 +15,5 @@ jobs:
       - run: npm ci 
       - run: npx next typegen 
       - run: npx tsc --noEmit 
-        continue-on-error: true # remove later
       - run: npm run lint 
       - run: npm run build 
