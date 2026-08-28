@@ -1,5 +1,3 @@
-// One-time script to clean and import the donations CSV export into the
-// SQLite database via Prisma.
 // Run manually with: npx tsx scripts/import-data.ts <path-to-csv>
 
 import "dotenv/config";
@@ -27,10 +25,7 @@ interface CsvRow {
   "Shipping Phone": string;
 }
 
-// ---------- cleaning helpers ----------
-// None of these delete data - they only normalise messy source values into
-// a consistent, correctly-typed shape (or null, when a field is genuinely
-// blank in the source row).
+// cleaning helpers
 
 /** Trims a value and turns an empty string into null. */
 function cleanText(value: string | undefined): string | null {
@@ -38,8 +33,7 @@ function cleanText(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-/** Excel prefixes some exported values (zip codes, occasionally phone
- *  numbers) with a leading apostrophe to force text formatting. Strip it. */
+// Excel prefixes some exported values with a leading apostrophe to force text formatting 
 function stripExcelApostrophe(value: string): string {
   return value.startsWith("'") ? value.slice(1) : value;
 }
@@ -49,16 +43,14 @@ function cleanZip(value: string | undefined): string | null {
   return cleanText(stripExcelApostrophe(value));
 }
 
-/** Strips the Excel apostrophe and collapses repeated internal whitespace
- *  (source has both "0412 157 571" and "0412157571" style entries). */
+// Strips the Excel apostrophe and collapses repeated internal whitespace (source has both "0412 157 571" and "0412157571" style entries)
 function cleanPhone(value: string | undefined): string | null {
   if (!value) return null;
   const stripped = stripExcelApostrophe(value.trim());
   return cleanText(stripped.replace(/\s+/g, " "));
 }
 
-/** Normalises casing/whitespace only - the full range of status values
- *  hasn't been reviewed yet, so this doesn't invent an enum. */
+// Normalises casing/whitespace only 
 function cleanStatus(value: string | undefined): string {
   return value?.trim().toLowerCase() || "unknown";
 }
@@ -74,7 +66,6 @@ function parseCsvDate(value: string | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// ---------- import ----------
 
 async function main() {
   const csvPath = process.argv[2];
@@ -86,8 +77,7 @@ async function main() {
   const raw = readFileSync(csvPath, "utf8");
   const rows: CsvRow[] = parse(raw, { columns: true, skip_empty_lines: true });
 
-  // Each CSV row is one line item. A donation order spans several rows that
-  // share the same "Name" (e.g. "#D5" appears twice, once per item).
+  // Each CSV row is one line item. A donation order spans several rows that share the same "Name" (e.g. "#D5" appears twice, once per item)
   const groups = new Map<string, CsvRow[]>();
   for (const row of rows) {
     const key = row.Name;
@@ -123,12 +113,9 @@ async function main() {
       warnings.push(`${donationId}: no Shipping Company, used "${orgName}" as the recipient name instead`);
     }
 
-    // One recipient User per email; upsert so re-running the script is safe.
-    // NOTE: `update: {}` means the first order processed for an email wins -
-    // if the same email shows up under two different company names in the
-    // source data, later ones won't overwrite it. That happened once here
-    // (bethchallice@gmail.com: "Medical Pantry" vs "LUNI Lombok") - worth a
-    // manual look rather than a silent pick.
+    // One recipient User per email; upsert so re-running the script is safe
+    // NOTE: `update: {}` means the first order processed for an email wins
+    // E.g. if the same email shows up under two different company names in the source data, later ones won't overwrite it
     const user = await prisma.user.upsert({
       where: { email },
       update: {},
@@ -153,14 +140,13 @@ async function main() {
         status: cleanStatus(header.Status),
         createdAt,
         completedAt: parseCsvDate(header["Completed At"]),
-        notes: cleanText(header.Notes),
+        desc: cleanText(header.Notes),
         recipientId: user.id,
       },
     });
     donationCount++;
 
-    // Re-running the script must not duplicate line items for a donation
-    // that's already been imported.
+    // Re-running the script must not duplicate line items for a donation that's already been imported
     await prisma.donationEntry.deleteMany({ where: { donationId } });
 
     for (const row of groupRows) {
