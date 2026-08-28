@@ -47,3 +47,9 @@ dist/
 # local sqlite database
 *.db
 *.db-journal
+
+# prisma CLI agent-skill docs (local reference only, not project code)
+/.agents/skills/prisma-*
+/.claude/skills/prisma-*
+/.windsurf/skills/prisma-*
+/skills-lock.json
