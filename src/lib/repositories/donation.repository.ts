@@ -18,7 +18,7 @@ function toDonation(row: DonationRow): Donation {
     row.id,
     row.createdAt.toISOString(),
     row.completedAt ? row.completedAt.toISOString() : null,
-    row.notes,
+    row.desc,
     toDonationStatus(row.status),
     row.entries.map((entry: PrismaDonationEntry) => new DonationEntry(entry.id, entry.itemId, entry.quantity)),
     row.recipientId,
