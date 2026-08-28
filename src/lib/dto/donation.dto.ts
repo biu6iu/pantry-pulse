@@ -1,13 +1,10 @@
 interface DonationDTO {
   id: string;
   dateCreated: string;
-  description: string;
-  status: "PENDING" | "COLLECTED" | "IN_TRANSIT" | "DELIVERED";
-  
-  sender: {
-    id: string;
-    organisation: string;
-  };
+  dateCompleted: string | null;
+  description: string | null;
+  status: string;
+
   receiver: {
     id: string;
     organisation: string;
@@ -19,18 +16,9 @@ interface DonationDTO {
     quantity: number;
   }[];
 
-  tracking: {
-    origin: string;
-    destination: string;
-    timeSent: string | null;
-    eta: string | null;
-    received: string | null;
-  } | null;
-
   healthImpact: {
-    itemsDelivered: number;
-    category: string;
-    score: number;
+    itemsDelivered: number; 
+    score: number; 
   } | null;
 
   environmentalImpact: {
