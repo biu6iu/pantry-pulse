@@ -1,1 +1,3 @@
-// Page for viewing and managing donations
+export default function DonationsPage() {
+  return null;
+}

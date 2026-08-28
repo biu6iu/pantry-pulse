@@ -1,1 +1,3 @@
-// Page for visualising donation locations on a map
+export default function MapPage() {
+  return null;
+}

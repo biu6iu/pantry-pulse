@@ -1,1 +1,3 @@
-// API route for retrieving aggregated impact data
+export async function GET() {
+  return new Response(null, { status: 501 });
+}

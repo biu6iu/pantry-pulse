@@ -1,1 +1,3 @@
-// API route for retrieving tracking status of a donation
+export async function GET() {
+  return new Response(null, { status: 501 });
+}
