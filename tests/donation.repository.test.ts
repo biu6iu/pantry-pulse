@@ -25,14 +25,13 @@ describe("getImpactByRecipient", () => {
         const recipientA = results.find((r) => r.organisation === "Recipient A");
         const recipientB = results.find((r) => r.organisation === "Recipient B");
 
-        // FIX totalDonations/totalItems come back as BigInt not number
-        expect(recipientA?.totalDonations).toBe(BigInt(2));
-        expect(recipientA?.totalItems).toBe(BigInt(17));
+        expect(recipientA?.totalDonations).toBe(2);
+        expect(recipientA?.totalItems).toBe(17);
         expect(recipientA?.totalHealthImpactScore).toBe(15);
         expect(recipientA?.totalCO2Saved).toBe(20);
 
-        expect(recipientB?.totalDonations).toBe(BigInt(1));
-        expect(recipientB?.totalItems).toBe(BigInt(7));
+        expect(recipientB?.totalDonations).toBe(1);
+        expect(recipientB?.totalItems).toBe(7);
         expect(recipientB?.totalHealthImpactScore).toBe(6);
         expect(recipientB?.totalEnvironmentalImpactScore).toBe(6);
         expect(recipientB?.totalCO2Saved).toBe(15);
@@ -46,13 +45,13 @@ describe("getImpactByCategory", () => {
         const medicalSupplies = results.find((r) => r.category === "Medical Supplies");
         const uncategorised = results.find((r) => r.category === "Uncategorised");
 
-        expect(equipment?.totalItems).toBe(BigInt(3));
+        expect(equipment?.totalItems).toBe(3);
         expect(equipment?.totalHealthImpactScore).toBe(13);
 
-        expect(medicalSupplies?.totalItems).toBe(BigInt(7));
+        expect(medicalSupplies?.totalItems).toBe(7);
         expect(medicalSupplies?.totalHealthImpactScore).toBe(7);
 
-        expect(uncategorised?.totalItems).toBe(BigInt(14));
+        expect(uncategorised?.totalItems).toBe(14);
         expect(uncategorised?.totalHealthImpactScore).toBe(1);
     });
 });
@@ -68,20 +67,20 @@ describe("getImpactByMonth", () => {
         const august = results.find((r) => r.month === "2026-08");
 
         expect(june).toMatchObject({
-            totalDonations: BigInt(1),
-            totalItems: BigInt(7),
+            totalDonations: 1,
+            totalItems: 7,
             totalHealthImpactScore: 6,
             totalEnvironmentalImpactScore: 6,
         });
         expect(july).toMatchObject({
-            totalDonations: BigInt(1),
-            totalItems: BigInt(10),
+            totalDonations: 1,
+            totalItems: 10,
             totalHealthImpactScore: 0,
             totalEnvironmentalImpactScore: 0,
         });
         expect(august).toMatchObject({
-            totalDonations: BigInt(1),
-            totalItems: BigInt(7),
+            totalDonations: 1,
+            totalItems: 7,
             totalHealthImpactScore: 15,
             totalEnvironmentalImpactScore: 8,
         });
