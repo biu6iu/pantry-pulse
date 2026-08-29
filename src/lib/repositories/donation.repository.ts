@@ -34,6 +34,11 @@ function toDonation(row: DonationRow): Donation {
   );
 }
 
+function toNum(value: number | bigint): number {
+  return typeof value === "bigint" ? Number(value) : value;
+}
+
+
 export class DonationRepository implements IDonationRepository {
   async getAll(): Promise<Donation[]> {
     const rows = await prisma.donation.findMany({ include: { entries: true } });
@@ -63,7 +68,7 @@ export class DonationRepository implements IDonationRepository {
   }
 
   async getImpactByCategory(): Promise<CategoryImpactSummary[]> {
-    return prisma.$queryRaw<CategoryImpactSummary[]>`
+    const rows = await prisma.$queryRaw<CategoryImpactSummary[]>`
       SELECT
         COALESCE(i.category, 'Uncategorised') AS category,
         COALESCE(SUM(e.quantity), 0) AS "totalItems",
@@ -73,10 +78,15 @@ export class DonationRepository implements IDonationRepository {
       LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
       GROUP BY COALESCE(i.category, 'Uncategorised')
     `;
+    return rows.map((row) => ({
+      category: row.category,
+      totalItems: toNum(row.totalItems),
+      totalHealthImpactScore: toNum(row.totalHealthImpactScore),
+    }));
   }
 
   async getImpactByRecipient(): Promise<RecipientImpactSummary[]> {
-    return prisma.$queryRaw<RecipientImpactSummary[]>`
+    const rows = await prisma.$queryRaw<RecipientImpactSummary[]>`
       SELECT
         d."recipientId" AS "recipientId",
         u.name AS "organisation",
@@ -99,10 +109,19 @@ export class DonationRepository implements IDonationRepository {
       LEFT JOIN "EnvironmentalImpact" env ON env."donationId" = d.id
       GROUP BY d."recipientId", u.name
     `;
+    return rows.map((row) => ({
+      recipientId: row.recipientId,
+      organisation: row.organisation,
+      totalDonations: toNum(row.totalDonations),
+      totalItems: toNum(row.totalItems),
+      totalHealthImpactScore: toNum(row.totalHealthImpactScore),
+      totalEnvironmentalImpactScore: toNum(row.totalEnvironmentalImpactScore),
+      totalCO2Saved: toNum(row.totalCO2Saved),
+    }));
   }
 
   async getImpactByMonth(): Promise<MonthlyImpactSummary[]> {
-    return prisma.$queryRaw<MonthlyImpactSummary[]>`
+    const rows = await prisma.$queryRaw<MonthlyImpactSummary[]>`
       SELECT
         strftime('%Y-%m', d."createdAt") AS "month",
         COUNT(*) AS "totalDonations",
@@ -123,5 +142,12 @@ export class DonationRepository implements IDonationRepository {
       GROUP BY "month"
       ORDER BY "month"
     `;
+    return rows.map((row) => ({
+      month: row.month,
+      totalDonations: toNum(row.totalDonations),
+      totalItems: toNum(row.totalItems),
+      totalHealthImpactScore: toNum(row.totalHealthImpactScore),
+      totalEnvironmentalImpactScore: toNum(row.totalEnvironmentalImpactScore),
+    }));
   }
 }
