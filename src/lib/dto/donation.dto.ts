@@ -1,9 +1,11 @@
-interface DonationDTO {
+import { DonationStatus } from "@/lib/models/donationStatus";
+
+export interface DonationDTO {
   id: string;
   dateCreated: string;
   dateCompleted: string | null;
   description: string | null;
-  status: string;
+  status: DonationStatus;
 
   receiver: {
     id: string;
