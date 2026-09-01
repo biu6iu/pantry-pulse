@@ -1,4 +1,4 @@
-interface ImpactReportDTO {
+export interface ImpactReportDTO {
   overall: {
     totalDonations: number;
     totalItems: number;
