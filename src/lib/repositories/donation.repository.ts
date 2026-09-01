@@ -9,9 +9,16 @@ import {
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
 import { DonationStatus } from "@/lib/models/donationStatus";
-import type { Donation as PrismaDonation, DonationEntry as PrismaDonationEntry } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 
-type DonationRow = PrismaDonation & { entries: PrismaDonationEntry[] };
+const donationInclude = {
+  entries: { include: { item: true, healthImpact: true } },
+  environmentalImpact: true,
+  recipient: true,
+} satisfies Prisma.DonationInclude;
+
+type DonationRow = Prisma.DonationGetPayload<{ include: typeof donationInclude }>;
+type DonationEntryRow = DonationRow["entries"][number];
 
 function toDonationStatus(raw: string): DonationStatus {
   const normalized = raw.toUpperCase();
@@ -29,8 +36,20 @@ function toDonation(row: DonationRow): Donation {
     row.completedAt ? row.completedAt.toISOString() : null,
     row.desc,
     toDonationStatus(row.status),
-    row.entries.map((entry: PrismaDonationEntry) => new DonationEntry(entry.id, entry.itemId, entry.quantity)),
+    row.entries.map(
+      (entry: DonationEntryRow) =>
+        new DonationEntry(
+          entry.id,
+          entry.itemId,
+          entry.quantity,
+          entry.item.name,
+          entry.item.category,
+          entry.healthImpact?.score ?? null,
+        ),
+    ),
     row.recipientId,
+    row.recipient.name,
+    row.environmentalImpact ? { co2Saved: row.environmentalImpact.co2Saved, score: row.environmentalImpact.score } : null,
   );
 }
 
@@ -41,12 +60,12 @@ function toNum(value: number | bigint): number {
 
 export class DonationRepository implements IDonationRepository {
   async getAll(): Promise<Donation[]> {
-    const rows = await prisma.donation.findMany({ include: { entries: true } });
+    const rows = await prisma.donation.findMany({ include: donationInclude });
     return rows.map(toDonation);
   }
 
   async getById(id: string): Promise<Donation | null> {
-    const row = await prisma.donation.findUnique({ where: { id }, include: { entries: true } });
+    const row = await prisma.donation.findUnique({ where: { id }, include: donationInclude });
     return row ? toDonation(row) : null;
   }
 
