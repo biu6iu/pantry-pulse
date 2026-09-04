@@ -1,7 +1,9 @@
-export default function Home() {
+import Header from "./(public)/header";
+
+export default function Page() {
   return (
     <main>
-      <div>Hello world!</div>
+      <Header />
     </main>
   );
 }
