@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # debug
@@ -39,3 +40,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+node_modules/
+dist/
+
+# local sqlite database
+*.db
+*.db-journal
+
+# prisma CLI agent-skill docs (local reference only, not project code)
+/.agents/skills/prisma-*
+/.claude/skills/prisma-*
+/.windsurf/skills/prisma-*
+/skills-lock.json

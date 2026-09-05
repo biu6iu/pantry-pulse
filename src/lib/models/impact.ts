@@ -1,1 +1,9 @@
-// Model representing the overall impact of donations
+export abstract class Impact { 
+    id: string;
+    value: number;
+
+    constructor(id: string, value: number) {
+        this.id = id;
+        this.value = value;
+    }
+}

@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Donation {
+  id                  String               @id
+  status              String
+  createdAt           DateTime
+  completedAt         DateTime?
+  desc                String?
+  recipient           User                 @relation(fields: [recipientId], references: [id])
+  recipientId         String
+  entries             DonationEntry[]
+  environmentalImpact EnvironmentalImpact? 
+}
+
+model User {
+  id          String     @id @default(cuid())
+  name        String     // organization name from Shipping Company (e.g. "Regional Community Vet Clinic")
+  contactName String?    // personal contact from Shipping Name (e.g. "Robyn Slattery")
+  email       String     @unique // used to de-duplicate recipients across orders during import
+  street      String?
+  city        String?
+  zip         String?
+  province    String?
+  country     String?
+  phone       String?
+  donations   Donation[]
+}
+
+model DonatedItem {
+  id       String          @id @default(cuid())
+  name     String          // acts as the item description — no separate description field in source data
+  sku      String?
+  category String?         // placeholder until real categorisation is defined
+  entries  DonationEntry[]
+}
+
+model DonationEntry {
+  id           String        @id @default(cuid())
+  donation     Donation      @relation(fields: [donationId], references: [id])
+  donationId   String
+  item         DonatedItem   @relation(fields: [itemId], references: [id])
+  itemId       String
+  quantity     Int
+  healthImpact HealthImpact?
+}
+
+model HealthImpact {
+  id              String        @id @default(cuid())
+  donationEntry   DonationEntry @relation(fields: [donationEntryId], references: [id])
+  donationEntryId String        @unique
+  score           Float
+}
+
+model EnvironmentalImpact {
+  id         String   @id @default(cuid())
+  donation   Donation @relation(fields: [donationId], references: [id])
+  donationId String   @unique
+  co2Saved   Float
+  score      Float
+}

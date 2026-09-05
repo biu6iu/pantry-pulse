@@ -1,3 +1,10 @@
+import { impactService } from "@/lib/container";
+import { serverError } from "@/lib/api/responses";
+
 export async function GET() {
-  return new Response(null, { status: 501 });
-}
+   try {
+     return Response.json(await impactService.getImpactReport());
+   } catch (error) {
+     return serverError(error);
+   }
+ }
