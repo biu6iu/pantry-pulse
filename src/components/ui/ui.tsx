@@ -19,6 +19,12 @@ export function StatsBanner() {
   );
 }
 
+export function ImageBanner({ src, alt }: { src: string; alt: string }) {
+  return (
+    <img src={src} alt={alt} />
+  )
+}
+
 
 /* impact and contribution components*/
 

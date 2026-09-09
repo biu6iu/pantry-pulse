@@ -1,4 +1,5 @@
-import {StatsBanner} from '../../components/ui/ui';
+import {StatsBanner, ImageBanner} from '../../components/ui/ui';
+import {IMAGES} from '../../components/statsData';
 
 
 export default function Header() {
@@ -14,8 +15,15 @@ export default function Header() {
           <a href="/redistribution">Redistribution</a>
         </nav>
       </header>
+
+
       <StatsBanner />
+      <ImageBanner src={IMAGES.heroPrimary} alt="Medical Pantry hero banner" />
 
     </>
   );
+}
+
+export function imageStats(){
+
 }

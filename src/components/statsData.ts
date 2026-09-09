@@ -6,3 +6,8 @@ export const STATS: string[] = [
   'SMALL ROTATING STAT 4',
   'SMALL ROTATING STAT 5',
 ];
+
+export const IMAGES = {
+  heroPrimary: '/images/image1.jpg',
+  heroSecondary: '/images/image2.jpg',
+} as const;
