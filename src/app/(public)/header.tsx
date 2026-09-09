@@ -28,8 +28,19 @@ export default function Header() {
         src={IMAGES.mocBanner}
         alt="Medical Pantry hero banner"
         overlay={[
-          { text: 'CO2 emissions globally produced', top: '30%', left: '50%', fontSize: '2rem' },
-          { text: 'by the healthcare sector', top: '55%', left: '50%', fontSize: '1.25rem' },
+          {
+            top: '45%',
+            left: '50%',
+            fontSize: '1.25rem',
+            text: (
+              <>
+                <span style={{ fontSize: '4em', fontWeight: 700, display: 'block', lineHeight: 1 }}>
+                  36%
+                </span>
+                of CO<sub>2</sub> emissions reduced globally
+              </>
+            ),
+          },
         ]}
         height = "400px"
       />
