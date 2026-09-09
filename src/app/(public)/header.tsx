@@ -18,7 +18,15 @@ export default function Header() {
 
 
       <StatsBanner />
-      <ImageBanner src={IMAGES.heroPrimary} alt="Medical Pantry hero banner" />
+      <ImageBanner
+        src={IMAGES.heroSecondary}
+        alt="Medical Pantry hero banner"
+        overlay={[
+          { text: 'CO2 emissions globally produced', top: '40%', left: '10%', fontSize: '2rem' },
+          { text: 'by the healthcare sector', top: '52%', left: '10%', fontSize: '1.25rem' },
+        ]}
+        height="400px"
+      />
 
     </>
   );

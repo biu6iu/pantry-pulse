@@ -19,9 +19,47 @@ export function StatsBanner() {
   );
 }
 
-export function ImageBanner({ src, alt }: { src: string; alt: string }) {
+type ImageOverlay = {
+  text: string;
+  top?: string;      // CSS value, e.g. '40%' or '20px'
+  left?: string;
+  right?: string;
+  bottom?: string;
+  fontSize?: string; // CSS value, e.g. '1.5rem' or '32px'
+};
+
+export function ImageBanner({
+  src,
+  alt,
+  overlay,
+  height = '400px',
+}: {
+  src: string;
+  alt: string;
+  overlay?: ImageOverlay | ImageOverlay[];
+  height?: string;
+}) {
+  const overlays = overlay ? (Array.isArray(overlay) ? overlay : [overlay]) : [];
+
   return (
-    <img src={src} alt={alt} />
+    <div className="relative overflow-hidden" style={{ height }}>
+      <img src={src} alt={alt} className="w-full h-full object-cover" />
+      {overlays.map((o, i) => (
+        <span
+          key={i}
+          className="absolute text-white font-bold drop-shadow-lg"
+          style={{
+            top: o.top,
+            left: o.left,
+            right: o.right,
+            bottom: o.bottom,
+            fontSize: o.fontSize ?? '1.5rem',
+          }}
+        >
+          {o.text}
+        </span>
+      ))}
+    </div>
   )
 }
 
