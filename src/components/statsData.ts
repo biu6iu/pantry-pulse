@@ -10,4 +10,6 @@ export const STATS: string[] = [
 export const IMAGES = {
   heroPrimary: '/images/image1.jpg',
   heroSecondary: '/images/image2.jpg',
+  mocBanner: '/images/mocBanner.jpg',
+
 } as const;

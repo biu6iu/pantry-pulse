@@ -1,31 +1,37 @@
 import {StatsBanner, ImageBanner} from '../../components/ui/ui';
 import {IMAGES} from '../../components/statsData';
+import { constants } from 'node:fs';
 
 
 export default function Header() {
   return (
     <>
 
-      <header className="flex items-center justify-between px-6 py-4">
-        <span className="text-xl font-bold">Medical Pantry</span>
+      <header className="flex items-center justify-between px-6 py-4 bg-brand-blue t">
+        <span className="text-xl font-bold text-white">Medical Pantry</span>
 
-
-        <nav className="flex gap-6">
-          <a href="/impact">Impact</a>
-          <a href="/redistribution">Redistribution</a>
-        </nav>
+        <div className="flex items-center gap-6">
+          <nav className="flex gap-6 text-white">
+            <a href="/impact">Impact </a>
+            <a href="/redistribution">Redistribution</a>
+          </nav>
+          <nav className="flex gap-6 text-white font-bold bg-brand-red p-3">
+            <a href="/donate">DONATE</a>
+          </nav>
+        </div>
       </header>
 
 
       <StatsBanner />
+      
       <ImageBanner
-        src={IMAGES.heroSecondary}
+        src={IMAGES.mocBanner}
         alt="Medical Pantry hero banner"
         overlay={[
-          { text: 'CO2 emissions globally produced', top: '40%', left: '10%', fontSize: '2rem' },
-          { text: 'by the healthcare sector', top: '52%', left: '10%', fontSize: '1.25rem' },
+          { text: 'CO2 emissions globally produced', top: '30%', left: '50%', fontSize: '2rem' },
+          { text: 'by the healthcare sector', top: '55%', left: '50%', fontSize: '1.25rem' },
         ]}
-        height="400px"
+        height = "400px"
       />
 
     </>
