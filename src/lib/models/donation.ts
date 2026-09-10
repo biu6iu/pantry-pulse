@@ -38,8 +38,8 @@ export class Donation {
     }
 
     getTotalHealthImpactScore(): number | null {
-        const scored = this.entries.filter((entry) => entry.healthImpactScore !== null);
+        const scored = this.entries.filter((entry) => entry.healthImpact !== null);
         if (scored.length === 0) return null;
-        return scored.reduce((sum, entry) => sum + (entry.healthImpactScore as number), 0);
+        return scored.reduce((sum, entry) => sum + entry.healthImpact!.score, 0);
     }
 }

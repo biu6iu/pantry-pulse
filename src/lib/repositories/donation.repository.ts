@@ -8,6 +8,10 @@ import {
 } from "./donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
+import { DonatedItem } from "@/lib/models/donatedItem";
+import { HealthImpact } from "@/lib/models/healthImpact";
+import { EnvironmentalImpact } from "@/lib/models/environmentalImpact";
+import { User } from "@/lib/models/user";
 import { DonationStatus } from "@/lib/models/donationStatus";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -40,16 +44,33 @@ function toDonation(row: DonationRow): Donation {
       (entry: DonationEntryRow) =>
         new DonationEntry(
           entry.id,
-          entry.itemId,
+          new DonatedItem(entry.item.id, entry.item.name, entry.item.category, entry.item.sku),
           entry.quantity,
-          entry.item.name,
-          entry.item.category,
-          entry.healthImpact?.score ?? null,
+          entry.healthImpact
+            ? new HealthImpact(entry.healthImpact.id, entry.healthImpact.score, entry.healthImpact.donationEntryId)
+            : null,
         ),
     ),
-    row.recipientId,
-    row.recipient.name,
-    row.environmentalImpact ? { co2Saved: row.environmentalImpact.co2Saved, score: row.environmentalImpact.score } : null,
+    new User(
+      row.recipient.id,
+      row.recipient.name,
+      row.recipient.contactName,
+      row.recipient.email,
+      row.recipient.street,
+      row.recipient.city,
+      row.recipient.province,
+      row.recipient.zip,
+      row.recipient.country,
+      row.recipient.phone,
+    ),
+    row.environmentalImpact
+      ? new EnvironmentalImpact(
+          row.environmentalImpact.id,
+          row.environmentalImpact.score,
+          row.environmentalImpact.donationId,
+          row.environmentalImpact.co2Saved,
+        )
+      : null,
   );
 }
 
