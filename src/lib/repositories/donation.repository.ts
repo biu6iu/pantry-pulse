@@ -29,7 +29,6 @@ function toDonationStatus(raw: string): DonationStatus {
   if (normalized === "COMPLETED" || normalized === "OPEN") {
     return normalized;
   }
-  console.warn(`Unexpected donation status encountered: "${raw}"`);
   return null;
 }
 
