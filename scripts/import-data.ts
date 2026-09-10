@@ -20,7 +20,7 @@ interface CsvRow {
   "Shipping Street": string;
   "Shipping City": string;
   "Shipping Zip": string;
-  "Shipping Province": string;
+  "Shipping State": string;
   "Shipping Country": string;
   "Shipping Phone": string;
 }
@@ -126,7 +126,7 @@ async function main() {
         street: cleanText(header["Shipping Street"]),
         city: cleanText(header["Shipping City"]),
         zip: cleanZip(header["Shipping Zip"]),
-        province: cleanText(header["Shipping Province"]),
+        state: cleanText(header["Shipping State"]),
         country: cleanText(header["Shipping Country"]),
         phone: cleanPhone(header["Shipping Phone"]),
       },
