@@ -25,9 +25,9 @@ type DonationRow = Prisma.DonationGetPayload<{ include: typeof donationInclude }
 type DonationEntryRow = DonationRow["entries"][number];
 
 function toDonationStatus(raw: string): DonationStatus {
-  const normalized = raw.toUpperCase();
-  if (normalized === "COMPLETED" || normalized === "OPEN") {
-    return normalized;
+  const normalised = raw.toUpperCase();
+  if (normalised === "COMPLETED" || normalised === "OPEN") {
+    return normalised;
   }
   return null;
 }
@@ -57,7 +57,7 @@ function toDonation(row: DonationRow): Donation {
       row.recipient.email,
       row.recipient.street,
       row.recipient.city,
-      row.recipient.province,
+      row.recipient.state,
       row.recipient.zip,
       row.recipient.country,
       row.recipient.phone,
