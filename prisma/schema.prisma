@@ -30,7 +30,7 @@ model User {
   street      String?
   city        String?
   zip         String?
-  province    String?
+  state       String?
   country     String?
   phone       String?
   donations   Donation[]
