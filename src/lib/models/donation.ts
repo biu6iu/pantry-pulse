@@ -1,5 +1,7 @@
 import { DonationStatus } from "./donationStatus";
 import { DonationEntry } from "./donationEntry";
+import { User } from "./user";
+import { EnvironmentalImpact } from "./environmentalImpact"
 
 export class Donation {
     id: string;
@@ -8,9 +10,8 @@ export class Donation {
     desc: string | null;
     status: DonationStatus;
     entries: DonationEntry[];
-    recipientId: string;
-    recipientOrganisation: string;
-    environmentalImpact: { co2Saved: number; score: number } | null;
+    recipient: User;
+    environmentalImpact: EnvironmentalImpact | null;
 
     constructor(
         id: string,
@@ -19,9 +20,8 @@ export class Donation {
         desc: string | null,
         status: DonationStatus,
         entries: DonationEntry[],
-        recipientId: string,
-        recipientOrganisation: string,
-        environmentalImpact: { co2Saved: number; score: number } | null,
+        recipient: User,
+        environmentalImpact: EnvironmentalImpact | null
     ) {
         this.id = id;
         this.createdAt = createdAt;
@@ -29,8 +29,7 @@ export class Donation {
         this.desc = desc;
         this.status = status;
         this.entries = entries;
-        this.recipientId = recipientId;
-        this.recipientOrganisation = recipientOrganisation;
+        this.recipient = recipient;
         this.environmentalImpact = environmentalImpact;
     }
 
@@ -39,8 +38,8 @@ export class Donation {
     }
 
     getTotalHealthImpactScore(): number | null {
-        const scored = this.entries.filter((entry) => entry.healthImpactScore !== null);
+        const scored = this.entries.filter((entry) => entry.healthImpact !== null);
         if (scored.length === 0) return null;
-        return scored.reduce((sum, entry) => sum + (entry.healthImpactScore as number), 0);
+        return scored.reduce((sum, entry) => sum + entry.healthImpact!.score, 0);
     }
 }

@@ -9,7 +9,7 @@ function toDonationItemDTO(donation: Donation): DonationItemDTO {
     dateCreated: donation.createdAt,
     description: donation.desc,
     status: donation.status,
-    receiverOrganisation: donation.recipientOrganisation,
+    receiverOrganisation: donation.recipient.organisation,
     totalItems: donation.getTotalItems(),
     healthImpactScore: donation.getTotalHealthImpactScore(),
     environmentalImpactScore: donation.environmentalImpact?.score ?? null,
@@ -26,12 +26,12 @@ function toDonationDTO(donation: Donation): DonationDTO {
     description: donation.desc,
     status: donation.status,
     receiver: {
-      id: donation.recipientId,
-      organisation: donation.recipientOrganisation,
+      id: donation.recipient.id,
+      organisation: donation.recipient.organisation,
     },
     items: donation.entries.map((entry) => ({
-      itemName: entry.itemName,
-      category: entry.itemCategory ?? "Uncategorised",
+      itemName: entry.item.name,
+      category: entry.item.category ?? "Uncategorised",
       quantity: entry.quantity,
     })),
     healthImpact:
