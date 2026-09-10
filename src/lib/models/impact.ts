@@ -1,9 +1,9 @@
 export abstract class Impact { 
     id: string;
-    value: number;
+    score: number;
 
-    constructor(id: string, value: number) {
+    constructor(id: string, score: number) {
         this.id = id;
-        this.value = value;
+        this.score = score;
     }
 }
