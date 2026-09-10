@@ -1,7 +1,9 @@
 // our impact/contribution
 
 import Image from 'next/image';
-import Group29 from '@/components/images/Group 29.png';
+import boxPacking from '@/components/images/boxPacking.png';
+import medSupplies from '@/components/images/medSupplies.jpg';
+import heartIcon from '@/components/images/heartIcon.png';
 
 const impactStats = [
   {
@@ -62,7 +64,9 @@ export default function ImpactContribution() {
     hero: {
       width: '100%',
       minHeight: '260px',
-      background: '#17191d',
+      position: 'relative',
+      overflow: 'hidden',
+      background: 'transparent',
       borderRadius: '28px',
       boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
     },
@@ -86,7 +90,9 @@ export default function ImpactContribution() {
     },
     visual: {
       minHeight: '420px',
-      background: '#14171b',
+      position: 'relative',
+      overflow: 'hidden',
+      background: 'transparent',
       borderRadius: '32px',
       width: '100%',
     },
@@ -152,20 +158,39 @@ export default function ImpactContribution() {
           </p>
         </div>
 
-        <div style={styles.hero} aria-label="Impact visual placeholder" />
+        <div style={styles.hero}>
+          <Image
+            src={boxPacking}
+            alt=""
+            aria-hidden="true"
+            fill
+            sizes="100vw"
+            loading="eager"
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
       </div>
 
       <div style={styles.summary}>
         <h2 style={styles.h2}>YOUR CONTRIBUTION MEANS</h2>
 
         <div style={styles.grid}>
-          <div style={styles.visual} aria-label="Impact card placeholder" />
+          <div style={styles.visual}>
+            <Image
+              src={medSupplies}
+              alt=""
+              aria-hidden="true"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
 
           <div style={styles.list}>
             {impactStats.map((stat, index) => (
               <div key={`${stat.value}-${index}`} style={styles.card}>
                 <Image
-                  src={Group29}
+                  src={heartIcon}
                   alt=""
                   aria-hidden="true"
                   style={styles.icon}
