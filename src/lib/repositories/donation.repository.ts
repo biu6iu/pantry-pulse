@@ -115,7 +115,7 @@ export class DonationRepository implements IDonationRepository {
       FROM "DonationEntry" e
       JOIN "DonatedItem" i ON i.id = e."itemId"
       LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
-      GROUP BY COALESCE(i.category, ${UNCATEGORISED})
+      GROUP BY category
     `;
     return rows.map((row) => ({
       category: row.category,
