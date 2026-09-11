@@ -8,7 +8,7 @@ import {
 } from "./donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
-import { DonatedItem } from "@/lib/models/donatedItem";
+import { DonatedItem, UNCATEGORISED } from "@/lib/models/donatedItem";
 import { HealthImpact } from "@/lib/models/healthImpact";
 import { EnvironmentalImpact } from "@/lib/models/environmentalImpact";
 import { User } from "@/lib/models/user";
@@ -29,7 +29,7 @@ function toDonationStatus(raw: string): DonationStatus {
   if (normalised === "COMPLETED" || normalised === "OPEN") {
     return normalised;
   }
-  return null;
+  return "UNKNOWN";
 }
 
 function toDonation(row: DonationRow): Donation {
@@ -109,13 +109,13 @@ export class DonationRepository implements IDonationRepository {
   async getImpactByCategory(): Promise<CategoryImpactSummary[]> {
     const rows = await prisma.$queryRaw<CategoryImpactSummary[]>`
       SELECT
-        COALESCE(i.category, 'Uncategorised') AS category,
+        COALESCE(i.category, ${UNCATEGORISED}) AS category,
         COALESCE(SUM(e.quantity), 0) AS "totalItems",
         COALESCE(SUM(h.score), 0) AS "totalHealthImpactScore"
       FROM "DonationEntry" e
       JOIN "DonatedItem" i ON i.id = e."itemId"
       LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
-      GROUP BY COALESCE(i.category, 'Uncategorised')
+      GROUP BY COALESCE(i.category, ${UNCATEGORISED})
     `;
     return rows.map((row) => ({
       category: row.category,

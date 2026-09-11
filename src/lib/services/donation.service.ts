@@ -1,15 +1,20 @@
 import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
+import { UNCATEGORISED } from "@/lib/models/donatedItem";
 import { DonationDTO } from "@/lib/dto/donation.dto";
-import { DonationItemDTO } from "@/lib/dto/donationItem.dto";
+import { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 
-function toDonationItemDTO(donation: Donation): DonationItemDTO {
+function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
   return {
     id: donation.id,
     dateCreated: donation.createdAt,
+    dateCompleted: donation.completedAt,
     description: donation.desc,
     status: donation.status,
-    receiverOrganisation: donation.recipient.organisation,
+    receiver: {
+      id: donation.recipient.id,
+      organisation: donation.recipient.organisation,
+    },
     totalItems: donation.getTotalItems(),
     healthImpactScore: donation.getTotalHealthImpactScore(),
     environmentalImpactScore: donation.environmentalImpact?.score ?? null,
@@ -30,26 +35,26 @@ function toDonationDTO(donation: Donation): DonationDTO {
       organisation: donation.recipient.organisation,
     },
     items: donation.entries.map((entry) => ({
+      entryId: entry.id,
+      itemId: entry.item.id,
       itemName: entry.item.name,
-      category: entry.item.category ?? "Uncategorised",
+      category: entry.item.category ?? UNCATEGORISED,
       quantity: entry.quantity,
     })),
-    healthImpact:
-      totalHealthImpactScore === null
-        ? null
-        : { itemsDelivered: donation.getTotalItems(), score: totalHealthImpactScore },
+    healthImpact: totalHealthImpactScore === null ? null : { score: totalHealthImpactScore },
     environmentalImpact: donation.environmentalImpact
       ? { estimatedCO2Saved: donation.environmentalImpact.co2Saved, score: donation.environmentalImpact.score }
       : null,
+    totalItems: donation.getTotalItems(),
   };
 }
 
 export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
-  async listDonations(): Promise<DonationItemDTO[]> {
+  async listDonations(): Promise<DonationSummaryDTO[]> {
     const donations = await this.repo.getAll();
-    return donations.map(toDonationItemDTO);
+    return donations.map(toDonationSummaryDTO);
   }
 
   async getDonationDetail(id: string): Promise<DonationDTO | null> {

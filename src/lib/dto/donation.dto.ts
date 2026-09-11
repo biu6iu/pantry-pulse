@@ -13,13 +13,14 @@ export interface DonationDTO {
   };
 
   items: {
+    entryId: string;
+    itemId: string;
     itemName: string;
     category: string;
     quantity: number;
   }[];
 
   healthImpact: {
-    itemsDelivered: number; 
     score: number; 
   } | null;
 
@@ -27,4 +28,6 @@ export interface DonationDTO {
     estimatedCO2Saved: number;
     score: number;
   } | null;
+
+  totalItems: number;
 }

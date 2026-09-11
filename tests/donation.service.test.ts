@@ -22,7 +22,7 @@ describe("listDonations", () => {
         const donationA1 = results.find((d) => d.id === "#TEST-A1");
         expect(donationA1).toMatchObject({
             status: "COMPLETED",
-            receiverOrganisation: "Recipient A",
+            receiver: { organisation: "Recipient A" },
             totalItems: 7,
             healthImpactScore: 15,
             environmentalImpactScore: 8,
@@ -31,7 +31,7 @@ describe("listDonations", () => {
         const donationA2 = results.find((d) => d.id === "#TEST-A2");
         expect(donationA2).toMatchObject({
             status: "OPEN",
-            receiverOrganisation: "Recipient A",
+            receiver: { organisation: "Recipient A" },
             totalItems: 10,
             healthImpactScore: null,
             environmentalImpactScore: null,
@@ -40,7 +40,7 @@ describe("listDonations", () => {
         const donationB1 = results.find((d) => d.id === "#TEST-B1");
         expect(donationB1).toMatchObject({
             status: "COMPLETED",
-            receiverOrganisation: "Recipient B",
+            receiver: { organisation: "Recipient B" },
             totalItems: 7,
             healthImpactScore: 6,
             environmentalImpactScore: 6,
@@ -54,11 +54,24 @@ describe("getDonationDetail", () => {
 
         expect(donation?.receiver.organisation).toBe("Recipient A");
         expect(donation?.items).toEqual([
-            { itemName: "Infusion Pump", category: "Equipment", quantity: 2 },
-            { itemName: "IV Giving Set", category: "Medical Supplies", quantity: 5 },
+            {
+                entryId: expect.any(String),
+                itemId: expect.any(String),
+                itemName: "Infusion Pump",
+                category: "Equipment",
+                quantity: 2,
+            },
+            {
+                entryId: expect.any(String),
+                itemId: expect.any(String),
+                itemName: "IV Giving Set",
+                category: "Medical Supplies",
+                quantity: 5,
+            },
         ]);
-        expect(donation?.healthImpact).toEqual({ itemsDelivered: 7, score: 15 });
+        expect(donation?.healthImpact).toEqual({ score: 15 });
         expect(donation?.environmentalImpact).toEqual({ estimatedCO2Saved: 20, score: 8 });
+        expect(donation?.totalItems).toBe(7);
     });
 
     it("falls back to uncategorised and nulls out missing impacts", async () => {

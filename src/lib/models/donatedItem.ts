@@ -1,3 +1,5 @@
+export const UNCATEGORISED = "Uncategorised";
+
 export class DonatedItem {
     id: string;
     name: string; 
