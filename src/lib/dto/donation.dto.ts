@@ -13,6 +13,8 @@ export interface DonationDTO {
   };
 
   items: {
+    entryId: string;
+    itemId: string;
     itemName: string;
     category: string;
     quantity: number;
