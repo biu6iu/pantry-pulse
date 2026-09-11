@@ -73,8 +73,8 @@ function toDonation(row: DonationRow): Donation {
   );
 }
 
-function toNum(value: number | bigint): number {
-  return typeof value === "bigint" ? Number(value) : value;
+function toNum(value: number | bigint | string): number {
+  return typeof value === "number" ? value : Number(value);
 }
 
 
