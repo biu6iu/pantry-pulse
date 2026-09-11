@@ -1,9 +1,5 @@
-import Header from "./(public)/header";
+import ImpactContribution from "./(public)/impactContribution";
 
-export default function Page() {
-  return (
-    <main>
-      <Header />
-    </main>
-  );
+export default function Home() {
+  return <ImpactContribution />;
 }
