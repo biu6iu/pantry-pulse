@@ -7,9 +7,13 @@ function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
   return {
     id: donation.id,
     dateCreated: donation.createdAt,
+    dateCompleted: donation.completedAt,
     description: donation.desc,
     status: donation.status,
-    receiverOrganisation: donation.recipient.organisation,
+    receiver: {
+      id: donation.recipient.id,
+      organisation: donation.recipient.organisation,
+    },
     totalItems: donation.getTotalItems(),
     healthImpactScore: donation.getTotalHealthImpactScore(),
     environmentalImpactScore: donation.environmentalImpact?.score ?? null,
@@ -30,17 +34,17 @@ function toDonationDTO(donation: Donation): DonationDTO {
       organisation: donation.recipient.organisation,
     },
     items: donation.entries.map((entry) => ({
+      entryId: entry.id,
+      itemId: entry.item.id,
       itemName: entry.item.name,
       category: entry.item.category ?? "Uncategorised",
       quantity: entry.quantity,
     })),
-    healthImpact:
-      totalHealthImpactScore === null
-        ? null
-        : { itemsDelivered: donation.getTotalItems(), score: totalHealthImpactScore },
+    healthImpact: totalHealthImpactScore === null ? null : { score: totalHealthImpactScore },
     environmentalImpact: donation.environmentalImpact
       ? { estimatedCO2Saved: donation.environmentalImpact.co2Saved, score: donation.environmentalImpact.score }
       : null,
+    totalItems: donation.getTotalItems(),
   };
 }
 
