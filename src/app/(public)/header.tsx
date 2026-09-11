@@ -8,8 +8,21 @@ export default function Header() {
     <>
 
       <header className="flex items-center justify-between px-6 py-4 bg-brand-blue t">
-        <span className="text-xl font-bold text-white">Medical Pantry</span>
 
+        {/** the left section of the banner */}
+        <div className="flex items-center gap-3">
+          <div className="logo-container">
+            {/* Render the image using the imported variable */}
+            <img
+              src={IMAGES.logo} alt="Company Logo" className="header-logo"
+              style = {{height: '40px'}}
+            />
+          </div>
+        
+          <span className="text-xl font-bold text-white">Medical Pantry</span>
+        </div>
+
+        {/** page navigation section */}
         <div className="flex items-center gap-6">
           <nav className="flex gap-6 text-white">
             <a href="/impact">Impact </a>
