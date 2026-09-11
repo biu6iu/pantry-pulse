@@ -73,8 +73,8 @@ function toDonation(row: DonationRow): Donation {
   );
 }
 
-function toNum(value: number | bigint): number {
-  return typeof value === "bigint" ? Number(value) : value;
+function toNum(value: number | bigint | string): number {
+  return typeof value === "number" ? value : Number(value);
 }
 
 
@@ -115,7 +115,7 @@ export class DonationRepository implements IDonationRepository {
       FROM "DonationEntry" e
       JOIN "DonatedItem" i ON i.id = e."itemId"
       LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
-      GROUP BY COALESCE(i.category, ${UNCATEGORISED})
+      GROUP BY category
     `;
     return rows.map((row) => ({
       category: row.category,
@@ -162,7 +162,7 @@ export class DonationRepository implements IDonationRepository {
   async getImpactByMonth(): Promise<MonthlyImpactSummary[]> {
     const rows = await prisma.$queryRaw<MonthlyImpactSummary[]>`
       SELECT
-        strftime('%Y-%m', d."createdAt") AS "month",
+        to_char(d."createdAt", 'YYYY-MM') AS "month",
         COUNT(*) AS "totalDonations",
         COALESCE(SUM(dt."itemCount"), 0) AS "totalItems",
         COALESCE(SUM(dt."healthScore"), 0) AS "totalHealthImpactScore",

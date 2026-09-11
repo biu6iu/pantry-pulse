@@ -8,6 +8,7 @@ export default function setup() {
   }
 
   process.env.DATABASE_URL = testDbUrl;
+  process.env.DIRECT_URL = testDbUrl;
 
   execSync("npx prisma migrate deploy", {
     env: process.env, 
