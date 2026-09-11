@@ -21,7 +21,6 @@ export interface DonationDTO {
   }[];
 
   healthImpact: {
-    itemsDelivered: number; 
     score: number; 
   } | null;
 
@@ -29,4 +28,6 @@ export interface DonationDTO {
     estimatedCO2Saved: number;
     score: number;
   } | null;
+
+  totalItems: number;
 }
