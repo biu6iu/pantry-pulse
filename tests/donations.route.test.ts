@@ -35,7 +35,8 @@ describe("GET /api/donations/[id]", () => {
 
         expect(response.status).toBe(200);
         expect(body.receiver.organisation).toBe("Recipient A");
-        expect(body.healthImpact).toEqual({ itemsDelivered: 7, score: 15 });
+        expect(body.healthImpact).toEqual({ score: 15 });
+        expect(body.totalItems).toBe(7);
     });
 
     it("returns 404 for an unknown id", async () => {
