@@ -1,5 +1,6 @@
 import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
+import { UNCATEGORISED } from "@/lib/models/donatedItem";
 import { DonationDTO } from "@/lib/dto/donation.dto";
 import { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 
@@ -37,7 +38,7 @@ function toDonationDTO(donation: Donation): DonationDTO {
       entryId: entry.id,
       itemId: entry.item.id,
       itemName: entry.item.name,
-      category: entry.item.category ?? "Uncategorised",
+      category: entry.item.category ?? UNCATEGORISED,
       quantity: entry.quantity,
     })),
     healthImpact: totalHealthImpactScore === null ? null : { score: totalHealthImpactScore },
