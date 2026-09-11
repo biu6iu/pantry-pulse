@@ -162,7 +162,7 @@ export class DonationRepository implements IDonationRepository {
   async getImpactByMonth(): Promise<MonthlyImpactSummary[]> {
     const rows = await prisma.$queryRaw<MonthlyImpactSummary[]>`
       SELECT
-        strftime('%Y-%m', d."createdAt") AS "month",
+        to_char(d."createdAt", 'YYYY-MM') AS "month",
         COUNT(*) AS "totalDonations",
         COALESCE(SUM(dt."itemCount"), 0) AS "totalItems",
         COALESCE(SUM(dt."healthScore"), 0) AS "totalHealthImpactScore",
