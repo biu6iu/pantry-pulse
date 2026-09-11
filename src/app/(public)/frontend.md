@@ -1,4 +1,10 @@
 Header Section
+npm run dev
+http://localhost:3000
+
+red rotating bannenr
+marquees used as the rotating banner 
+hardcodeed text is currenrtltyheld in statsData.ts
 
 Our Impact / Contribution
 

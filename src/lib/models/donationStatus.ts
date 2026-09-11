@@ -1,1 +1,1 @@
-export type DonationStatus = "COMPLETED" | "OPEN" | null
+export type DonationStatus = "COMPLETED" | "OPEN" | "UNKNOWN"

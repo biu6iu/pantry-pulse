@@ -1,10 +1,12 @@
+export const UNCATEGORISED = "Uncategorised";
+
 export class DonatedItem {
     id: string;
     name: string; 
-    category: string;
+    category: string | null;
     sku: string | null; // stock keeping unit
 
-    constructor(id: string, name: string, category: string, sku: string | null = null) {
+    constructor(id: string, name: string, category: string | null = null, sku: string | null = null) {
         this.id = id;
         this.name = name;
         this.category = category;
