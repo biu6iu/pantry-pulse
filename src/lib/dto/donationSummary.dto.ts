@@ -1,6 +1,6 @@
 import { DonationStatus } from "@/lib/models/donationStatus";
 
-export interface DonationItemDTO {
+export interface DonationSummaryDTO {
   id: string;
   dateCreated: string;
   description: string | null;

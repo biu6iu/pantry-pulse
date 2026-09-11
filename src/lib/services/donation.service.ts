@@ -1,9 +1,9 @@
 import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationDTO } from "@/lib/dto/donation.dto";
-import { DonationItemDTO } from "@/lib/dto/donationItem.dto";
+import { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 
-function toDonationItemDTO(donation: Donation): DonationItemDTO {
+function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
   return {
     id: donation.id,
     dateCreated: donation.createdAt,
@@ -47,9 +47,9 @@ function toDonationDTO(donation: Donation): DonationDTO {
 export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
-  async listDonations(): Promise<DonationItemDTO[]> {
+  async listDonations(): Promise<DonationSummaryDTO[]> {
     const donations = await this.repo.getAll();
-    return donations.map(toDonationItemDTO);
+    return donations.map(toDonationSummaryDTO);
   }
 
   async getDonationDetail(id: string): Promise<DonationDTO | null> {
