@@ -11,5 +11,5 @@ export const IMAGES = {
   heroPrimary: '/images/image1.jpg',
   heroSecondary: '/images/image2.jpg',
   mocBanner: '/images/mocBanner.jpg',
-
+  logo: '/images/logo-transparent.png'
 } as const;
