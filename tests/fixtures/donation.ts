@@ -9,16 +9,18 @@ export async function seedFixtures() {
         email: "recipient-a@test.com",
         city: "Cleveland",
         country: "US",
+        lat: 41.4993,
+        lng: -81.6944,
         },
     });
-    
+
     const recipientB = await prisma.user.create({
         data: {
         name: "Recipient B",
         contactName: "John Pork",
         email: "recipient-b@test.com",
         city: "Shanghai",
-        country: "CN",
+        country: "CN"
         },
     });
     
@@ -78,6 +80,7 @@ export async function seedFixtures() {
         id: "#TEST-B1",
         status: "completed",
         createdAt: new Date("2026-06-29T00:00:00Z"),
+        completedAt: new Date("2026-07-03T00:00:00Z"),
         recipientId: recipientB.id,
         },
     });
