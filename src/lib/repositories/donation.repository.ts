@@ -61,6 +61,8 @@ function toDonation(row: DonationRow): Donation {
       row.recipient.zip,
       row.recipient.country,
       row.recipient.phone,
+      row.recipient.lat,
+      row.recipient.lng,
     ),
     row.environmentalImpact
       ? new EnvironmentalImpact(

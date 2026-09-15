@@ -9,6 +9,8 @@ export class User{
     zip: string | null;
     country: string | null;
     phone: string | null;
+    lat: number | null;
+    lng: number | null;
 
     constructor(
         id: string,
@@ -20,7 +22,9 @@ export class User{
         state: string | null,
         zip: string | null = null,
         country: string | null = null,
-        phone: string | null = null
+        phone: string | null = null,
+        lat: number | null = null,
+        lng: number | null = null
     ) {
         this.id = id;
         this.organisation = organisation;
@@ -32,5 +36,7 @@ export class User{
         this.zip = zip;
         this.country = country;
         this.phone = phone;
+        this.lat = lat;
+        this.lng = lng;
     }
 }
