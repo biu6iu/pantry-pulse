@@ -21,7 +21,7 @@ export function StatsBanner() {
 }
 
 type ImageOverlay = {
-  text: string;
+  text: React.ReactNode;
   top?: string;      // CSS value, e.g. '40%' or '20px'
   left?: string;
   right?: string;
