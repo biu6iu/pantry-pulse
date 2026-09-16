@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Donation {
@@ -32,6 +32,8 @@ model User {
   zip         String?
   state       String?
   country     String?
+  lat         Float?
+  lng         Float?
   phone       String?
   donations   Donation[]
 }
