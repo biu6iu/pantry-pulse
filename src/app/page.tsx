@@ -1,7 +1,12 @@
+import ImpactContribution from "./(public)/impactContribution";
+import Header from "./(public)/header";
+
 export default function Home() {
+
   return (
-    <main>
-      <div>Hello world!</div>
-    </main>
+    <>
+      <Header />
+      <ImpactContribution />
+    </>
   );
 }
