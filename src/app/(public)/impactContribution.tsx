@@ -10,6 +10,13 @@ export default async function ImpactContribution() {
   const itemsSavedCount = String(report?.overall.totalItems ?? 0);
   const totalDonationsCount = String(report?.overall.totalDonations ?? 0);
 
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+  const donationsLastMonthCount = String(
+    report?.byMonth.find((m) => m.month === lastMonthKey)?.totalDonations ?? 0
+  );
+
   const impactStats = [
     {
       value: locationCount,
@@ -23,10 +30,9 @@ export default async function ImpactContribution() {
       value: totalDonationsCount,
       label: 'donations made',
     },
-
     {
-      value: locationCount,
-      label: 'locations have received your donations',
+      value: donationsLastMonthCount,
+      label: 'donations made last month',
     },
   ];
 
