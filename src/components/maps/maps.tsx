@@ -11,6 +11,9 @@ export function TrackingMap({ donationId }: { donationId: string }) {
   useEffect(() => {
     let cancelled = false;
 
+    // Resetting to "loading" here is intentional: if donationId changes while a
+    // previous fetch is still in flight, this avoids briefly showing stale data/error.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
 
