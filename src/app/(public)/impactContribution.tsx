@@ -8,6 +8,7 @@ export default async function ImpactContribution() {
   const report = await getImpactReport();
   const locationCount = String(report?.byRecipient.length ?? 0);
   const itemsSavedCount = String(report?.overall.totalItems ?? 0);
+  const totalDonationsCount = String(report?.overall.totalDonations ?? 0);
 
   const impactStats = [
     {
@@ -15,13 +16,14 @@ export default async function ImpactContribution() {
       label: 'locations have received your donations',
     },
     {
-      value: '1028',
-      label: 'organisations who donate',
-    },
-    {
       value: itemsSavedCount,
       label: 'items saved from landfill',
     },
+    {
+      value: totalDonationsCount,
+      label: 'donations made',
+    },
+
     {
       value: locationCount,
       label: 'locations have received your donations',
