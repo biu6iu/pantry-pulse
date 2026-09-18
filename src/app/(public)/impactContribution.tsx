@@ -2,27 +2,40 @@
 
 import Image from 'next/image';
 import { ImpactContributionStatCard } from '@/components/ui/ui';
+import { getImpactReport } from '@/lib/api/server';
 
-const impactStats = [
-  {
-    value: '1028',
-    label: 'locations have received your donations',
-  },
-  {
-    value: '1028',
-    label: 'organisations who donate',
-  },
-  {
-    value: '1028',
-    label: 'items saved from landfil',
-  },
-  {
-    value: '1028',
-    label: 'locations have received your donations',
-  },
-];
+export default async function ImpactContribution() {
+  const report = await getImpactReport();
+  const locationCount = String(report?.byRecipient.length ?? 0);
+  const itemsSavedCount = String(report?.overall.totalItems ?? 0);
+  const totalDonationsCount = String(report?.overall.totalDonations ?? 0);
 
-export default function ImpactContribution() {
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+  const donationsLastMonthCount = String(
+    report?.byMonth.find((m) => m.month === lastMonthKey)?.totalDonations ?? 0
+  );
+
+  const impactStats = [
+    {
+      value: locationCount,
+      label: 'locations have received your donations',
+    },
+    {
+      value: itemsSavedCount,
+      label: 'items saved from landfill',
+    },
+    {
+      value: totalDonationsCount,
+      label: 'donations made',
+    },
+    {
+      value: donationsLastMonthCount,
+      label: 'donations made last month',
+    },
+  ];
+
   return (
     <section className="impact-contribution">
       <div className="impact-contribution__header">
