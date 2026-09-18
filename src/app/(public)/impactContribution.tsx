@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import { ImpactContributionStatCard } from '@/components/ui/ui';
-import { impactService } from '@/lib/container';
+import { getImpactReport } from '@/lib/api/server';
 
 export default async function ImpactContribution() {
-  const { byRecipient } = await impactService.getImpactReport();
-  const locationCount = String(byRecipient.length);
+  const report = await getImpactReport();
+  const locationCount = String(report?.byRecipient.length ?? 0);
+  const itemsSavedCount = String(report?.overall.totalItems ?? 0);
 
   const impactStats = [
     {
@@ -18,8 +19,8 @@ export default async function ImpactContribution() {
       label: 'organisations who donate',
     },
     {
-      value: '1028',
-      label: 'items saved from landfil',
+      value: itemsSavedCount,
+      label: 'items saved from landfill',
     },
     {
       value: locationCount,
