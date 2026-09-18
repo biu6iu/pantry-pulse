@@ -13,6 +13,25 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Prevent frontend from accessing anything below the API layer
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: ["src/app/api/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/lib/container", "@/lib/services/*"],
+              message:
+                "Frontend code must not call the service layer directly. Use @/lib/api/server (Server Components) or @/lib/api/client (Client Components) instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
