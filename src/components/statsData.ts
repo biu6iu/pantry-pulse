@@ -1,10 +1,8 @@
 
 export const STATS: string[] = [
-  'SMALL ROTATING STAT 1',
-  'SMALL ROTATING STAT 2',
-  'SMALL ROTATING STAT 3',
-  'SMALL ROTATING STAT 4',
-  'SMALL ROTATING STAT 5',
+  '60 million N95 masks sent to India at the peak of the COVID-19 pandemic',
+  '2.5 tonnes of medical supplies and equipment sent to wildlife sanctuaries and vets during the 2020 Victorian Bushfires',
+  '60 million N95 masks sent to India at the peak of the COVID-19 pandemic',
 ];
 
 export const IMAGES = {
