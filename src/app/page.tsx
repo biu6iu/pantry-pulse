@@ -1,5 +1,6 @@
 import ImpactContribution from "./(public)/impactContribution";
 import Header from "./(public)/header";
+import TrackYourImpact from "./(public)/trackImpact";
 
 export default function Home() {
 
@@ -7,6 +8,7 @@ export default function Home() {
     <>
       <Header />
       <ImpactContribution />
+      <TrackYourImpact />
     </>
   );
 }
