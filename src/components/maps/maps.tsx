@@ -22,24 +22,30 @@ export function TrackingMap({ donationId }: { donationId: string }) {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setTracking(null);
+
     getTracking(donationId)
       .then((data) => {
         if (cancelled) return;
+
         if (!data) {
+          setTracking(null);
           setError("Donation not found");
           return;
         }
+
+        setError(null);
         setTracking(data);
       })
       .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) {
+          setTracking(null);
+          setError(err.message);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
