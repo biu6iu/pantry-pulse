@@ -82,7 +82,10 @@ function toNum(value: number | bigint | string): number {
 
 export class DonationRepository implements IDonationRepository {
   async getAll(): Promise<Donation[]> {
-    const rows = await prisma.donation.findMany({ include: donationInclude });
+    const rows = await prisma.donation.findMany({
+      include: donationInclude,
+      orderBy: { createdAt: "desc" },
+    });
     return rows.map(toDonation);
   }
 
