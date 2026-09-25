@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/config/db";
 import {
   IDonationRepository,
+  DonationFilters,
   OverallImpactSummary,
   CategoryImpactSummary,
   RecipientImpactSummary,
@@ -81,10 +82,28 @@ function toNum(value: number | bigint | string): number {
 
 
 export class DonationRepository implements IDonationRepository {
-  async getAll(): Promise<Donation[]> {
+  async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
+    const { status, recipientId, from, to, limit, offset } = filters;
+
+    const where: Prisma.DonationWhereInput = {
+      ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
+      ...(recipientId ? { recipientId } : {}),
+      ...(from || to
+        ? {
+            createdAt: {
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lte: to } : {}),
+            },
+          }
+        : {}),
+    };
+
     const rows = await prisma.donation.findMany({
+      where,
       include: donationInclude,
       orderBy: { createdAt: "desc" },
+      ...(limit !== undefined ? { take: limit } : {}),
+      ...(offset !== undefined ? { skip: offset } : {}),
     });
     return rows.map(toDonation);
   }
