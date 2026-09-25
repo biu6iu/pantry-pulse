@@ -13,8 +13,17 @@ export type {
   MonthlyImpactSummary,
 };
 
+export interface DonationFilters {
+  status?: "OPEN" | "COMPLETED";
+  recipientId?: string;
+  from?: Date;
+  to?: Date;
+  limit?: number;
+  offset?: number;
+}
+
 export interface IDonationRepository {
-  getAll(): Promise<Donation[]>;
+  getAll(filters?: DonationFilters): Promise<Donation[]>;
   getById(id: string): Promise<Donation | null>;
   getOverallImpactSummary(): Promise<OverallImpactSummary>;
   getImpactByCategory(): Promise<CategoryImpactSummary[]>;

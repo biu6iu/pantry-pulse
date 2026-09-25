@@ -5,8 +5,10 @@ import { DonationService } from "@/lib/services/donation.service";
 
 const service = new DonationService(new DonationRepository());
 
+let fixtures: Awaited<ReturnType<typeof seedFixtures>>;
+
 beforeEach(async () => {
-    await seedFixtures();
+    fixtures = await seedFixtures();
 });
 
 afterEach(async () => {
@@ -45,6 +47,19 @@ describe("listDonations", () => {
             healthImpactScore: 6,
             environmentalImpactScore: 6,
         });
+    });
+});
+
+describe("listDonations filters", () => {
+    it("forwards filters through to the repository instead of dropping them", async () => {
+        const open = await service.listDonations({ status: "OPEN" });
+        expect(open.map((d) => d.id)).toEqual(["#TEST-A2"]);
+
+        const forRecipientB = await service.listDonations({ recipientId: fixtures.recipientB.id });
+        expect(forRecipientB.map((d) => d.id)).toEqual(["#TEST-B1"]);
+
+        const paged = await service.listDonations({ limit: 1, offset: 1 });
+        expect(paged.map((d) => d.id)).toEqual(["#TEST-A2"]);
     });
 });
 
