@@ -4,8 +4,10 @@ import { DonationRepository } from "@/lib/repositories/donation.repository";
 
 const repo = new DonationRepository();
 
+let fixtures: Awaited<ReturnType<typeof seedFixtures>>;
+
 beforeEach(async () => {
-    await seedFixtures();
+    fixtures = await seedFixtures();
 });
 
 afterEach(async () => {
@@ -120,6 +122,87 @@ describe("getAll", () => {
         expect(donationB1?.status).toBe("COMPLETED");
         expect(donationB1?.entries).toHaveLength(3);
         expect(donationB1?.getTotalItems()).toBe(7);
+    });
+});
+
+describe("getAll filters", () => {
+    it("returns donations newest-first with no filters", async () => {
+        const results = await repo.getAll();
+
+        expect(results.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2", "#TEST-B1"]);
+    });
+
+    it("filters by status, matching the stored value case-insensitively", async () => {
+        const open = await repo.getAll({ status: "OPEN" });
+        expect(open.map((d) => d.id)).toEqual(["#TEST-A2"]);
+
+        const completed = await repo.getAll({ status: "COMPLETED" });
+        expect(completed.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-B1"]);
+    });
+
+    it("filters by recipientId", async () => {
+        const forRecipientA = await repo.getAll({ recipientId: fixtures.recipientA.id });
+        expect(forRecipientA.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const forRecipientB = await repo.getAll({ recipientId: fixtures.recipientB.id });
+        expect(forRecipientB.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("returns nothing for a recipientId with no donations", async () => {
+        const results = await repo.getAll({ recipientId: "no-such-recipient" });
+        expect(results).toEqual([]);
+    });
+
+    it("filters by a createdAt range using from and to together", async () => {
+        const results = await repo.getAll({
+            from: new Date("2026-07-01T00:00:00Z"),
+            to: new Date("2026-08-01T00:00:00Z"),
+        });
+
+        expect(results.map((d) => d.id)).toEqual(["#TEST-A2"]);
+    });
+
+    it("treats from and to as inclusive bounds", async () => {
+        const fromExact = await repo.getAll({ from: new Date("2026-08-29T00:00:00Z") });
+        expect(fromExact.map((d) => d.id)).toEqual(["#TEST-A1"]);
+
+        const toExact = await repo.getAll({ to: new Date("2026-06-29T00:00:00Z") });
+        expect(toExact.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("applies from without to, and to without from, independently", async () => {
+        const fromOnly = await repo.getAll({ from: new Date("2026-07-01T00:00:00Z") });
+        expect(fromOnly.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const toOnly = await repo.getAll({ to: new Date("2026-07-01T00:00:00Z") });
+        expect(toOnly.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("paginates with limit and offset while preserving newest-first order", async () => {
+        const page1 = await repo.getAll({ limit: 2, offset: 0 });
+        expect(page1.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const page2 = await repo.getAll({ limit: 2, offset: 2 });
+        expect(page2.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("returns an empty page when offset exceeds the result count", async () => {
+        const results = await repo.getAll({ offset: 10 });
+        expect(results).toEqual([]);
+    });
+
+    it("combines status, recipientId, and date filters together", async () => {
+        const results = await repo.getAll({
+            status: "COMPLETED",
+            recipientId: fixtures.recipientA.id,
+        });
+
+        expect(results.map((d) => d.id)).toEqual(["#TEST-A1"]);
+    });
+
+    it("returns an empty array when combined filters match nothing", async () => {
+        const results = await repo.getAll({ status: "OPEN", recipientId: fixtures.recipientB.id });
+        expect(results).toEqual([]);
     });
 });
 
