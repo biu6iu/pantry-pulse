@@ -1,4 +1,4 @@
-import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
+import { IDonationRepository, DonationFilters } from "@/lib/repositories/donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { UNCATEGORISED } from "@/lib/models/donatedItem";
 import { DonationDTO } from "@/lib/dto/donation.dto";
@@ -52,8 +52,8 @@ function toDonationDTO(donation: Donation): DonationDTO {
 export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
-  async listDonations(): Promise<DonationSummaryDTO[]> {
-    const donations = await this.repo.getAll();
+  async listDonations(filters?: DonationFilters): Promise<DonationSummaryDTO[]> {
+    const donations = await this.repo.getAll(filters);
     return donations.map(toDonationSummaryDTO);
   }
 
