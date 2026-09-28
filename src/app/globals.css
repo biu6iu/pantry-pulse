@@ -52,11 +52,6 @@
     font-family: var(--font-sans);
   }
 
-  .impact-contribution__summary-title {
-    font-size: clamp(2.7rem, 6vw, 5rem);
-    margin-bottom: 22px;
-  }
-
   .impact-contribution__paragraph {
     margin: 0 0 18px;
     font-size: clamp(1.1rem, 1.8vw, 1.6rem);
