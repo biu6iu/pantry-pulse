@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { TrackingDTO, TrackingLocationDTO } from '@/lib/dto/tracking.dto';
-import { getTracking } from "@/lib/api/client";
 import OsmRouteMapLoader from "./osmRouteMapLoader";
 
 function hasCoords(
@@ -16,53 +14,17 @@ function labelFor(location: TrackingLocationDTO) {
 }
 
 
-export function TrackingMap({ donationId }: { donationId: string }) {
-  const [tracking, setTracking] = useState<TrackingDTO | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-
-    getTracking(donationId)
-      .then((data) => {
-        if (cancelled) return;
-
-        if (!data) {
-          setTracking(null);
-          setError("Donation not found");
-          return;
-        }
-
-        setError(null);
-        setTracking(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) {
-          setTracking(null);
-          setError(err.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [donationId]);
-  if (loading) return <p>Loading tracking info...</p>;
-  if (error) return <p className="text-red-600">Failed to load tracking info: {error}</p>;
-  if (!tracking) return null;
+export function TrackingMap({ tracking }: { tracking: TrackingDTO }) {
   if (!hasCoords(tracking.origin) || !hasCoords(tracking.receiver)) {
     return (
       <p>
-        This order does not have mapped coordinates yet. Origin and destination
-        pins come from the backend (`lat` / `lng`), not from the map.
+        Map unavailable. This order does not have origin and destination
+        coordinates yet.
       </p>
     );
   }
   return (
-    <div className="tracking-map">
+    <div className="tracking-map" aria-label="Donation route map">
       <OsmRouteMapLoader
         origin={{
           lat: tracking.origin.lat,
@@ -78,4 +40,3 @@ export function TrackingMap({ donationId }: { donationId: string }) {
     </div>
   );
 }
-
