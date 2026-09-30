@@ -3,6 +3,14 @@ import { Donation } from "@/lib/models/donation";
 import { ORIGIN } from "@/lib/config/origin";
 import { TrackingDTO, TrackingStageDTO } from "@/lib/dto/tracking.dto";
 
+// rounds to ~1.1km precision so recipients exact street addresses aren't derivable from order tracking data
+const COORDINATE_PRECISION = 2;
+
+function roundCoordinate(value: number | null): number | null {
+  if (value === null) return null;
+  return Number(value.toFixed(COORDINATE_PRECISION));
+}
+
 function toTrackingDTO(donation: Donation): TrackingDTO {
   const completed = donation.status === "COMPLETED";
 
@@ -18,12 +26,11 @@ function toTrackingDTO(donation: Donation): TrackingDTO {
     receiver: {
       id: donation.recipient.id,
       organisation: donation.recipient.organisation,
-      contactName: donation.recipient.contactName,
       city: donation.recipient.city,
       state: donation.recipient.state,
       country: donation.recipient.country,
-      lat: donation.recipient.lat,
-      lng: donation.recipient.lng,
+      lat: roundCoordinate(donation.recipient.lat),
+      lng: roundCoordinate(donation.recipient.lng),
     },
     timeline,
   };

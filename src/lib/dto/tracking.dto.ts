@@ -3,7 +3,6 @@ import { DonationStatus } from "@/lib/models/donationStatus";
 export interface TrackingLocationDTO {
   id: string | null;
   organisation: string;
-  contactName: string | null;
   city: string | null;
   state: string | null;
   country: string | null;
