@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { seedFixtures, clearFixtures } from "./fixtures/donation";
 import { DonationRepository } from "@/lib/repositories/donation.repository";
+import { prisma } from "@/lib/config/db";
 
 const repo = new DonationRepository();
 
@@ -220,5 +221,22 @@ describe("getById", () => {
         const donation = await repo.getById("#does-not-exist");
 
         expect(donation).toBeNull();
+    });
+});
+
+describe("status mapping", () => {
+    it("maps an unrecognised stored status to UNKNOWN instead of null or throwing", async () => {
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-UNKNOWN",
+                status: "cancelled",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: fixtures.recipientA.id,
+            },
+        });
+
+        const donation = await repo.getById("#TEST-UNKNOWN");
+
+        expect(donation?.status).toBe("UNKNOWN");
     });
 });
