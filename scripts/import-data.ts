@@ -153,12 +153,11 @@ async function main() {
       const itemName = cleanText(row["Item Name"]);
       if (!itemName) continue;
 
-      let item = await prisma.donatedItem.findFirst({ where: { name: itemName } });
-      if (!item) {
-        item = await prisma.donatedItem.create({
-          data: { name: itemName, sku: cleanText(row["Item Sku"]) },
-        });
-      }
+      const item = await prisma.donatedItem.upsert({
+        where: { name: itemName },
+        update: {},
+        create: { name: itemName, sku: cleanText(row["Item Sku"]) },
+      });
 
       await prisma.donationEntry.create({
         data: {

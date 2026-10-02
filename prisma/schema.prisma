@@ -40,7 +40,7 @@ model User {
 
 model DonatedItem {
   id       String          @id @default(cuid())
-  name     String          // acts as the item description — no separate description field in source data
+  name     String          @unique // acts as the item description — no separate description field in source data
   sku      String?
   category String?         // placeholder until real categorisation is defined
   entries  DonationEntry[]
