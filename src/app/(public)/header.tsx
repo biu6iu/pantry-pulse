@@ -1,4 +1,4 @@
-import {StatsBanner, ImageBanner} from '../../components/ui/ui';
+import {StatsBanner, ImageBanner, PercentBar} from '../../components/ui/ui';
 import {IMAGES} from '../../components/statsData';
 import { constants } from 'node:fs';
 
@@ -51,6 +51,8 @@ export default function Header() {
                   36%
                 </span>
                 of CO<sub>2</sub> emissions reduced globally
+                <PercentBar percent={36} />
+
               </>
             ),
           },

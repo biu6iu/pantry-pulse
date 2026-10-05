@@ -208,3 +208,17 @@
   color: white;
   padding: 0.5rem 0;
 }
+
+/*styles the percent bar*/
+.percent-bar {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.percent-bar__fill {
+  height: 100%;
+  background-color: var(--color-brand-red);
+  border-radius: 9999px;
+}

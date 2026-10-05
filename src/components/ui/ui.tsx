@@ -64,6 +64,29 @@ export function ImageBanner({
   )
 }
 
+type PercentBarProps = {
+  percent: number;   // 0-100
+  width?: string;    // CSS value, e.g. '100%' or '240px'
+  height?: string;   // CSS value, e.g. '10px'
+};
+
+export function PercentBar({ percent, width = '100%', height = '10px' }: PercentBarProps) {
+  const clamped = Math.min(100, Math.max(0, percent));
+
+  return (
+    <div
+      className="percent-bar"
+      style={{ width, height }}
+      role="progressbar"
+      aria-valuenow={clamped}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div className="percent-bar__fill" style={{ width: `${clamped}%` }} />
+    </div>
+  );
+}
+
 type ImpactContributionStatCardProps = {
   value: string;
   label: string;
