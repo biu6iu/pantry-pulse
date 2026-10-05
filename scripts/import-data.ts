@@ -1,29 +1,48 @@
-// Run manually with: npx tsx scripts/import-data.ts <path-to-csv>
+// Run manually with: npx tsx scripts/import-data.ts [path-to-data-dir]
+// The data dir (default: ./data) must contain items.csv, orders.csv and order_items.csv
 
 import "dotenv/config";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { parse } from "csv-parse/sync";
 import { prisma } from "../src/lib/config/db";
 
-interface CsvRow {
-  Name: string;
-  Email: string;
-  Status: string;
-  "Created At": string;
-  "Completed At": string;
-  Notes: string;
-  "Item Quantity": string;
-  "Item Name": string;
-  "Item Sku": string;
-  "Shipping Name": string;
-  "Shipping Company": string;
-  "Shipping Street": string;
-  "Shipping City": string;
-  "Shipping Zip": string;
-  "Shipping State": string;
-  "Shipping Country": string;
-  "Shipping Phone": string;
+interface ItemRow {
+  item_key: string;
+  display_name: string;
+  category: string;
+  units_per_pack: string;
+  unit_weight_kg: string;
+  weight_source: string;
+  co2e_kg_per_unit: string;
+  co2e_source: string;
+  health_impact_tier: string;
 }
+
+interface OrderRow {
+  order_id: string;
+  shopify_order_id: string;
+  status: string;
+  created_at: string;
+  completed_at: string;
+  delivery_method: string;
+  recipient_org: string;
+  recipient_type: string;
+  suburb: string;
+  postcode: string;
+  state: string;
+  country: string;
+}
+
+interface OrderItemRow {
+  order_id: string;
+  line_no: string;
+  item_key: string;
+  variant: string;
+  quantity: string;
+}
+
+const UNKNOWN_ORG = "Unknown organisation";
 
 // cleaning helpers
 
@@ -33,24 +52,7 @@ function cleanText(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-// Excel prefixes some exported values with a leading apostrophe to force text formatting 
-function stripExcelApostrophe(value: string): string {
-  return value.startsWith("'") ? value.slice(1) : value;
-}
-
-function cleanZip(value: string | undefined): string | null {
-  if (!value) return null;
-  return cleanText(stripExcelApostrophe(value));
-}
-
-// Strips the Excel apostrophe and collapses repeated internal whitespace (source has both "0412 157 571" and "0412157571" style entries)
-function cleanPhone(value: string | undefined): string | null {
-  if (!value) return null;
-  const stripped = stripExcelApostrophe(value.trim());
-  return cleanText(stripped.replace(/\s+/g, " "));
-}
-
-// Normalises casing/whitespace only 
+// Normalises casing/whitespace only
 function cleanStatus(value: string | undefined): string {
   return value?.trim().toLowerCase() || "unknown";
 }
@@ -60,118 +62,148 @@ function cleanQuantity(value: string | undefined): number {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
+function cleanInt(value: string | undefined): number | null {
+  const n = parseInt(value ?? "", 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+function cleanFloat(value: string | undefined): number | null {
+  const n = parseFloat(value ?? "");
+  return Number.isFinite(n) ? n : null;
+}
+
 function parseCsvDate(value: string | undefined): Date | null {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function readCsv<T>(dir: string, file: string): T[] {
+  return parse(readFileSync(join(dir, file), "utf8"), { columns: true, skip_empty_lines: true });
+}
+
+// Orders with no organisation name share a placeholder recipient per distinct type + location.
+async function findOrCreateRecipient(order: OrderRow, warnings: string[]): Promise<string> {
+  const orgName = cleanText(order.recipient_org);
+  const details = {
+    type: cleanText(order.recipient_type),
+    city: cleanText(order.suburb),
+    zip: cleanText(order.postcode),
+    state: cleanText(order.state),
+    country: cleanText(order.country),
+  };
+
+  if (!orgName) {
+    warnings.push(`${order.order_id}: no recipient_org, used "${UNKNOWN_ORG}" as the recipient name instead`);
+  }
+
+  const existing = await prisma.user.findFirst({
+    where: orgName ? { name: orgName } : { name: UNKNOWN_ORG, ...details },
+  });
+  if (!existing) {
+    const created = await prisma.user.create({ data: { name: orgName ?? UNKNOWN_ORG, ...details } });
+    return created.id;
+  }
+
+  if (existing.city !== details.city || existing.zip !== details.zip) {
+    warnings.push(
+      `${order.order_id}: "${existing.name}" already exists at ${existing.city ?? "?"} ${existing.zip ?? "?"}, ` +
+        `ignored location ${details.city ?? "?"} ${details.zip ?? "?"}`,
+    );
+  }
+  return existing.id;
+}
 
 async function main() {
-  const csvPath = process.argv[2];
-  if (!csvPath) {
-    console.error("Usage: npx tsx scripts/import-data.ts <path-to-csv>");
-    process.exit(1);
-  }
+  const dataDir = process.argv[2] ?? "data";
 
-  const raw = readFileSync(csvPath, "utf8");
-  const rows: CsvRow[] = parse(raw, { columns: true, skip_empty_lines: true });
+  const items = readCsv<ItemRow>(dataDir, "items.csv");
+  const orders = readCsv<OrderRow>(dataDir, "orders.csv");
+  const orderItems = readCsv<OrderItemRow>(dataDir, "order_items.csv");
 
-  // Each CSV row is one line item. A donation order spans several rows that share the same "Name" (e.g. "#D5" appears twice, once per item)
-  const groups = new Map<string, CsvRow[]>();
-  for (const row of rows) {
-    const key = row.Name;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(row);
-  }
-
+  let itemCount = 0;
   let donationCount = 0;
   let entryCount = 0;
   const warnings: string[] = [];
 
-  for (const [donationId, groupRows] of groups) {
-    // Order-level fields (status, dates, address) are only populated on the
-    // row that carries them; line-item rows leave them blank.
-    const header = groupRows.find((r) => r.Status) ?? groupRows[0];
+  // Upserts throughout (keyed on ids taken from the source data) so re-running the script is safe
 
-    const email = cleanText(header.Email)?.toLowerCase();
-    if (!email) {
-      warnings.push(`${donationId}: no email, skipped entirely`);
-      continue;
-    }
+  const itemIds = new Set<string>();
+  for (const row of items) {
+    const id = cleanText(row.item_key);
+    if (!id) continue;
 
-    const createdAt = parseCsvDate(header["Created At"]);
-    if (!createdAt) {
-      warnings.push(`${donationId}: no valid Created At date, skipped entirely`);
-      continue;
-    }
-
-    const shippingCompany = cleanText(header["Shipping Company"]);
-    const shippingName = cleanText(header["Shipping Name"]);
-    const orgName = shippingCompany ?? shippingName ?? "Unknown organisation";
-    if (!shippingCompany) {
-      warnings.push(`${donationId}: no Shipping Company, used "${orgName}" as the recipient name instead`);
-    }
-
-    // One recipient User per email; upsert so re-running the script is safe
-    // NOTE: `update: {}` means the first order processed for an email wins
-    // E.g. if the same email shows up under two different company names in the source data, later ones won't overwrite it
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: {
-        name: orgName,
-        contactName: shippingName,
-        email,
-        street: cleanText(header["Shipping Street"]),
-        city: cleanText(header["Shipping City"]),
-        zip: cleanZip(header["Shipping Zip"]),
-        state: cleanText(header["Shipping State"]),
-        country: cleanText(header["Shipping Country"]),
-        phone: cleanPhone(header["Shipping Phone"]),
-      },
-    });
-
-    await prisma.donation.upsert({
-      where: { id: donationId },
-      update: {},
-      create: {
-        id: donationId,
-        status: cleanStatus(header.Status),
-        createdAt,
-        completedAt: parseCsvDate(header["Completed At"]),
-        desc: cleanText(header.Notes),
-        recipientId: user.id,
-      },
-    });
-    donationCount++;
-
-    // Re-running the script must not duplicate line items for a donation that's already been imported
-    await prisma.donationEntry.deleteMany({ where: { donationId } });
-
-    for (const row of groupRows) {
-      const itemName = cleanText(row["Item Name"]);
-      if (!itemName) continue;
-
-      let item = await prisma.donatedItem.findFirst({ where: { name: itemName } });
-      if (!item) {
-        item = await prisma.donatedItem.create({
-          data: { name: itemName, sku: cleanText(row["Item Sku"]) },
-        });
-      }
-
-      await prisma.donationEntry.create({
-        data: {
-          donationId,
-          itemId: item.id,
-          quantity: cleanQuantity(row["Item Quantity"]),
-        },
-      });
-      entryCount++;
-    }
+    const data = {
+      name: cleanText(row.display_name) ?? id,
+      category: cleanText(row.category),
+      unitsPerPack: cleanInt(row.units_per_pack),
+      unitWeightKg: cleanFloat(row.unit_weight_kg),
+      weightSource: cleanText(row.weight_source),
+      co2eKgPerUnit: cleanFloat(row.co2e_kg_per_unit),
+      co2eSource: cleanText(row.co2e_source),
+      healthImpactTier: cleanInt(row.health_impact_tier),
+    };
+    await prisma.donatedItem.upsert({ where: { id }, update: data, create: { id, ...data } });
+    itemIds.add(id);
+    itemCount++;
   }
 
-  console.log(`Imported ${donationCount} donations, ${entryCount} line items.`);
+  const donationIds = new Set<string>();
+  for (const row of orders) {
+    const id = cleanText(row.order_id);
+    if (!id) continue;
+
+    const createdAt = parseCsvDate(row.created_at);
+    if (!createdAt) {
+      warnings.push(`${id}: no valid created_at date, skipped entirely`);
+      continue;
+    }
+
+    const data = {
+      status: cleanStatus(row.status),
+      createdAt,
+      completedAt: parseCsvDate(row.completed_at),
+      shopifyOrderId: cleanText(row.shopify_order_id),
+      deliveryMethod: cleanText(row.delivery_method),
+      recipientId: await findOrCreateRecipient(row, warnings),
+    };
+    await prisma.donation.upsert({ where: { id }, update: data, create: { id, ...data } });
+    donationIds.add(id);
+    donationCount++;
+  }
+
+  for (const row of orderItems) {
+    const donationId = cleanText(row.order_id);
+    const itemId = cleanText(row.item_key);
+    const lineNo = cleanInt(row.line_no);
+    const label = `${donationId ?? "?"} line ${row.line_no || "?"}`;
+
+    if (!donationId || !donationIds.has(donationId)) {
+      warnings.push(`${label}: order was not imported, line skipped`);
+      continue;
+    }
+    if (!itemId || !itemIds.has(itemId)) {
+      warnings.push(`${label}: unknown item_key "${row.item_key}", line skipped`);
+      continue;
+    }
+    if (lineNo === null) {
+      warnings.push(`${label}: no valid line_no, line skipped`);
+      continue;
+    }
+
+    const id = `${donationId}-${lineNo}`;
+    const data = {
+      donationId,
+      itemId,
+      lineNo,
+      variant: cleanText(row.variant),
+      quantity: cleanQuantity(row.quantity),
+    };
+    await prisma.donationEntry.upsert({ where: { id }, update: data, create: { id, ...data } });
+    entryCount++;
+  }
+
+  console.log(`Imported ${itemCount} items, ${donationCount} donations, ${entryCount} line items.`);
   if (warnings.length > 0) {
     console.log(`\n${warnings.length} warning(s):`);
     for (const warning of warnings) console.log(`  - ${warning}`);
