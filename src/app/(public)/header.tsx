@@ -1,4 +1,4 @@
-import {StatsBanner, ImageBanner, PercentBar} from '../../components/ui/ui';
+import {StatsBanner, ImageBanner, PercentBar, CountUp} from '../../components/ui/ui';
 import {IMAGES} from '../../components/statsData';
 import { constants } from 'node:fs';
 
@@ -48,7 +48,7 @@ export default function Header() {
             text: (
               <>
                 <span style={{ fontSize: '4em', fontWeight: 700, display: 'block', lineHeight: 1 }}>
-                  36%
+                  <CountUp value={36} suffix="%" />
                 </span>
                 of CO<sub>2</sub> emissions reduced globally
                 <PercentBar percent={36} />

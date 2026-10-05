@@ -3,6 +3,64 @@
 
 import {STATS} from '../statsData'
 import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
+
+/* counts from 0 up to `target` once the element scrolls into view */
+function useCountUp<T extends Element>(target: number, duration = 1500) {
+  const ref = useRef<T>(null);
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let frame = 0;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+
+      // skip the animation for users who turned on the reduce motion setting
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setValue(target);
+        return;
+      }
+
+      const start = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+        setValue(target * eased);
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    });
+
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [target, duration]);
+
+  return [ref, value] as const;
+}
+
+type CountUpProps = {
+  value: number;
+  suffix?: string;   // e.g. '%'
+  duration?: number; // ms
+};
+
+export function CountUp({ value, suffix = '', duration }: CountUpProps) {
+  const [ref, current] = useCountUp<HTMLSpanElement>(value, duration);
+
+  return (
+    <span ref={ref}>
+      {Math.round(current).toLocaleString()}
+      {suffix}
+    </span>
+  );
+}
 
 
 export function StatsBanner() {
@@ -72,9 +130,11 @@ type PercentBarProps = {
 
 export function PercentBar({ percent, width = '100%', height = '10px' }: PercentBarProps) {
   const clamped = Math.min(100, Math.max(0, percent));
+  const [ref, current] = useCountUp<HTMLDivElement>(clamped);
 
   return (
     <div
+      ref={ref}
       className="percent-bar"
       style={{ width, height }}
       role="progressbar"
@@ -82,7 +142,7 @@ export function PercentBar({ percent, width = '100%', height = '10px' }: Percent
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="percent-bar__fill" style={{ width: `${clamped}%` }} />
+      <div className="percent-bar__fill" style={{ width: `${current}%` }} />
     </div>
   );
 }
@@ -106,7 +166,10 @@ export function ImpactContributionStatCard({ value, label, icon }: ImpactContrib
       />
 
       <div className="impact-contribution__content">
-        <span className="impact-contribution__value">{value}</span>
+        <span className="impact-contribution__value">
+          {/* only animate values that are plain numbers */}
+          {Number.isFinite(Number(value)) ? <CountUp value={Number(value)} /> : value}
+        </span>
         <span className="impact-contribution__label">{label}</span>
       </div>
     </div>
