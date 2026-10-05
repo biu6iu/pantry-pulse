@@ -2,7 +2,7 @@ export class User{
     id: string;
     organisation: string;
     contactName: string | null;
-    email: string;
+    email: string | null;
     street: string | null;
     city: string | null;
     state: string | null;
@@ -16,7 +16,7 @@ export class User{
         id: string,
         organisation: string,
         contactName: string | null,
-        email: string,
+        email: string | null,
         street: string | null = null,
         city: string | null = null,
         state: string | null,
