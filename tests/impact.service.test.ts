@@ -14,22 +14,23 @@ afterEach(async () => {
 });
 
 describe("getImpactReport", () => {
-    it("sums totals across every donation", async () => {
+    it("sums totals across completed donations", async () => {
         const report = await service.getImpactReport();
 
         expect(report.overall).toEqual({
-            totalDonations: 3,
-            totalItems: 24,
-            totalHealthImpactScore: 21,
-            totalEnvironmentalImpactScore: 14,
-            totalCO2Saved: 35,
+            totalDonations: 2,
+            totalItems: 14,
+            totalUnitsDelivered: 143,
+            totalWeightDivertedKg: 19,
+            totalCO2eAvoidedKg: 74,
+            averageHealthImpactScore: 2.6,
         });
     });
 
     it("aggregates totals per month in chronological order", async () => {
         const report = await service.getImpactReport();
 
-        expect(report.byMonth.map((m) => m.month)).toEqual(["2026-06", "2026-07", "2026-08"]);
+        expect(report.byMonth.map((m) => m.month)).toEqual(["2026-06", "2026-08"]);
     });
 
     it("aggregates totals per recipient", async () => {
@@ -39,7 +40,7 @@ describe("getImpactReport", () => {
         const recipientA = report.byRecipient.find((r) => r.organisation === "Recipient A");
         const recipientB = report.byRecipient.find((r) => r.organisation === "Recipient B");
 
-        expect(recipientA?.totalDonations).toBe(2);
+        expect(recipientA?.totalDonations).toBe(1);
         expect(recipientB?.totalDonations).toBe(1);
     });
 

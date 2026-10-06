@@ -26,8 +26,9 @@ describe("listDonations", () => {
             status: "COMPLETED",
             receiver: { organisation: "Recipient A" },
             totalItems: 7,
-            healthImpactScore: 15,
-            environmentalImpactScore: 8,
+            healthImpactScore: 2.57,
+            weightDivertedKg: 13,
+            co2eAvoidedKg: 50,
         });
 
         const donationA2 = results.find((d) => d.id === "#TEST-A2");
@@ -36,7 +37,8 @@ describe("listDonations", () => {
             receiver: { organisation: "Recipient A" },
             totalItems: 10,
             healthImpactScore: null,
-            environmentalImpactScore: null,
+            weightDivertedKg: null,
+            co2eAvoidedKg: null,
         });
 
         const donationB1 = results.find((d) => d.id === "#TEST-B1");
@@ -44,8 +46,9 @@ describe("listDonations", () => {
             status: "COMPLETED",
             receiver: { organisation: "Recipient B" },
             totalItems: 7,
-            healthImpactScore: 6,
-            environmentalImpactScore: 6,
+            healthImpactScore: 2.67,
+            weightDivertedKg: 6,
+            co2eAvoidedKg: 24,
         });
     });
 });
@@ -64,7 +67,7 @@ describe("listDonations filters", () => {
 });
 
 describe("getDonationDetail", () => {
-    it("aggregates health impact across entries and includes item/receiver details", async () => {
+    it("calculates impact across entries and includes item/receiver details", async () => {
         const donation = await service.getDonationDetail("#TEST-A1");
 
         expect(donation?.receiver.organisation).toBe("Recipient A");
@@ -84,8 +87,13 @@ describe("getDonationDetail", () => {
                 quantity: 5,
             },
         ]);
-        expect(donation?.healthImpact).toEqual({ score: 15 });
-        expect(donation?.environmentalImpact).toEqual({ estimatedCO2Saved: 20, score: 8 });
+        // (2 pumps x 4 + 5 giving sets x 2) / 7 items
+        expect(donation?.healthImpact).toEqual({ score: 2.57 });
+        expect(donation?.environmentalImpact).toEqual({
+            unitsDelivered: 102,
+            weightDivertedKg: 13,
+            co2eAvoidedKg: 50,
+        });
         expect(donation?.totalItems).toBe(7);
     });
 
