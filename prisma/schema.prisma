@@ -21,7 +21,6 @@ model Donation {
   recipient           User                 @relation(fields: [recipientId], references: [id])
   recipientId         String
   entries             DonationEntry[]
-  environmentalImpact EnvironmentalImpact? 
 }
 
 model User {
@@ -64,20 +63,4 @@ model DonationEntry {
   lineNo       Int?
   variant      String?       // e.g. "Top / Black / XS"
   quantity     Int
-  healthImpact HealthImpact?
-}
-
-model HealthImpact {
-  id              String        @id @default(cuid())
-  donationEntry   DonationEntry @relation(fields: [donationEntryId], references: [id])
-  donationEntryId String        @unique
-  score           Float
-}
-
-model EnvironmentalImpact {
-  id         String   @id @default(cuid())
-  donation   Donation @relation(fields: [donationId], references: [id])
-  donationId String   @unique
-  co2Saved   Float
-  score      Float
 }
