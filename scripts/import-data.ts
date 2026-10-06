@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "csv-parse/sync";
 import { prisma } from "../src/lib/config/db";
+import type { Prisma } from "../src/generated/prisma/client";
 
 interface ItemRow {
   item_key: string;
@@ -83,7 +84,11 @@ function readCsv<T>(dir: string, file: string): T[] {
 }
 
 // Orders with no organisation name share a placeholder recipient per distinct type + location.
-async function findOrCreateRecipient(order: OrderRow, warnings: string[]): Promise<string> {
+async function findOrCreateRecipient(
+  db: Prisma.TransactionClient,
+  order: OrderRow,
+  warnings: string[],
+): Promise<string> {
   const orgName = cleanText(order.recipient_org);
   const details = {
     type: cleanText(order.recipient_type),
@@ -97,11 +102,11 @@ async function findOrCreateRecipient(order: OrderRow, warnings: string[]): Promi
     warnings.push(`${order.order_id}: no recipient_org, used "${UNKNOWN_ORG}" as the recipient name instead`);
   }
 
-  const existing = await prisma.user.findFirst({
+  const existing = await db.user.findFirst({
     where: orgName ? { name: orgName } : { name: UNKNOWN_ORG, ...details },
   });
   if (!existing) {
-    const created = await prisma.user.create({ data: { name: orgName ?? UNKNOWN_ORG, ...details } });
+    const created = await db.user.create({ data: { name: orgName ?? UNKNOWN_ORG, ...details } });
     return created.id;
   }
 
@@ -165,7 +170,7 @@ async function main() {
       completedAt: parseCsvDate(row.completed_at),
       shopifyOrderId: cleanText(row.shopify_order_id),
       deliveryMethod: cleanText(row.delivery_method),
-      recipientId: await findOrCreateRecipient(row, warnings),
+      recipientId: await findOrCreateRecipient(prisma, row, warnings),
     };
     await prisma.donation.upsert({ where: { id }, update: data, create: { id, ...data } });
     donationIds.add(id);
