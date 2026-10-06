@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { apiRequest } from "./http";
 import type { ImpactReportDTO } from "@/lib/dto/impactReport.dto";
 import type { DonationDTO } from "@/lib/dto/donation.dto";
-import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
+import type { DonationListDTO } from "@/lib/dto/donationSummary.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 
 async function getOrigin(): Promise<string> {
@@ -23,9 +23,9 @@ export async function getImpactReport(): Promise<ImpactReportDTO | null> {
   return apiRequest<ImpactReportDTO>(`${origin}/api/impact`);
 }
 
-export async function listDonations(): Promise<DonationSummaryDTO[] | null> {
+export async function listDonations(): Promise<DonationListDTO | null> {
   const origin = await getOrigin();
-  return apiRequest<DonationSummaryDTO[]>(`${origin}/api/donations`);
+  return apiRequest<DonationListDTO>(`${origin}/api/donations`);
 }
 
 export async function getDonation(id: string): Promise<DonationDTO | null> {

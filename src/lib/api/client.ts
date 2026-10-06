@@ -1,15 +1,15 @@
 import { apiRequest } from "./http";
 import type { ImpactReportDTO } from "@/lib/dto/impactReport.dto";
 import type { DonationDTO } from "@/lib/dto/donation.dto";
-import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
+import type { DonationListDTO } from "@/lib/dto/donationSummary.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 
 export async function getImpactReport(): Promise<ImpactReportDTO | null> {
   return apiRequest<ImpactReportDTO>("/api/impact");
 }
 
-export async function listDonations(): Promise<DonationSummaryDTO[] | null> {
-  return apiRequest<DonationSummaryDTO[]>("/api/donations");
+export async function listDonations(): Promise<DonationListDTO | null> {
+  return apiRequest<DonationListDTO>("/api/donations");
 }
 
 export async function getDonation(id: string): Promise<DonationDTO | null> {
