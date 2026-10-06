@@ -1,33 +1,25 @@
-export interface OverallImpactSummary {
+export interface ImpactTotals {
   totalDonations: number;
   totalItems: number;
-  totalHealthImpactScore: number;
-  totalEnvironmentalImpactScore: number;
-  totalCO2Saved: number;
+  totalUnitsDelivered: number;
+  totalWeightDivertedKg: number;
+  totalCO2eAvoidedKg: number;
+  averageHealthImpactScore: number | null; // null when no item in the group has a health impact tier
 }
 
-export interface CategoryImpactSummary {
+export type OverallImpactSummary = ImpactTotals;
+
+export interface CategoryImpactSummary extends ImpactTotals {
   category: string;
-  totalItems: number;
-  totalHealthImpactScore: number;
 }
 
-export interface RecipientImpactSummary {
+export interface RecipientImpactSummary extends ImpactTotals {
   recipientId: string;
   organisation: string;
-  totalDonations: number;
-  totalItems: number;
-  totalHealthImpactScore: number;
-  totalEnvironmentalImpactScore: number;
-  totalCO2Saved: number;
 }
 
-export interface MonthlyImpactSummary {
+export interface MonthlyImpactSummary extends ImpactTotals {
   month: string; // "YYYY-MM"
-  totalDonations: number;
-  totalItems: number;
-  totalHealthImpactScore: number;
-  totalEnvironmentalImpactScore: number;
 }
 
 export interface ImpactReportDTO {

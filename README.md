@@ -85,7 +85,7 @@ src/lib/models             domain objects
 
 | Directory | Responsibility |
 | --- | --- |
-| `models/` | Domain classes and types (`Donation`, `DonationEntry`, `DonatedItem`, `User`, `HealthImpact`, `EnvironmentalImpact`, `DonationStatus`). Plain objects with a little behaviour, e.g. `Donation.getTotalItems()`. They know nothing about Prisma or HTTP. |
+| `models/` | Domain classes and types (`Donation`, `DonationEntry`, `DonatedItem`, `User`, `DonationStatus`). Plain objects with a little behaviour, e.g. `Donation.getTotalItems()`. Impact figures are calculated here from the item factors (see `impact.ts`), not stored. They know nothing about Prisma or HTTP. |
 | `dto/` | Data transfer objects: the exact JSON shapes the API returns and the frontend consumes (`DonationDTO`, `DonationSummaryDTO`, `ImpactReportDTO`, `TrackingDTO`). |
 | `repositories/` | The only layer that talks to the database. `donation.repository.interface.ts` defines `IDonationRepository`; `donation.repository.ts` implements it with Prisma and maps rows into models. |
 | `services/` | Business logic. Each service (`DonationService`, `ImpactService`, `TrackingService`) takes an `IDonationRepository` in its constructor, and maps models to DTOs. |
