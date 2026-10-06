@@ -48,10 +48,13 @@ Both scripts are run manually with `tsx` and connect to the database in `DATABAS
 ### Importing data
 
 ```bash
-npx tsx scripts/import-data.ts <path-to-csv>
+npm run db:import              # reads ./data
+npm run db:import -- <folder>  # or a folder of your choice
 ```
 
-Imports donations from a CSV export (recipients, items and entries).
+The folder must contain `items.csv`, `orders.csv` and `order_items.csv`. Items, orders and line items are upserted using the ids from the CSVs, so re-running the import is safe. Rows that can't be imported are skipped and listed as warnings at the end.
+
+The whole import runs in a single transaction: if anything fails, no changes are saved.
 
 ### Geocoding users
 
