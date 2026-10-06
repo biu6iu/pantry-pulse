@@ -67,12 +67,17 @@ export function StatsBanner() {
   return (
     <div className="marquee-banner-style">
       <div className="marquee-track">
-        {STATS.map((s) => (
-          <span key={s}>{s}</span>
-        ))}
-        {STATS.map((s) => (
-          <span key={`${s}-dup`} aria-hidden="true">{s}</span>
-        ))}
+        {/* two identical groups so the strip loops with no gap */}
+        <div className="marquee-group">
+          {STATS.map((s) => (
+            <span key={s}>{s}</span>
+          ))}
+        </div>
+        <div className="marquee-group" aria-hidden="true">
+          {STATS.map((s) => (
+            <span key={`${s}-dup`}>{s}</span>
+          ))}
+        </div>
       </div>
     </div>
   );

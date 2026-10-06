@@ -181,23 +181,36 @@
 /* scrolling functionality*/
 @keyframes marquee-scroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(-100%); }
 }
 
 /* styles animated strip*/
 .marquee-track {
   display: flex;
-  width: max-content;
-  gap: 4rem;
   font-weight: bold;
+}
+
+/* each group is at least as wide as the screen so there is never an empty gap;
+   padding-right matches the gap so the spacing stays even where the groups join */
+.marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  min-width: 100%;
+  justify-content: space-around;
+  gap: 4rem;
+  padding-right: 4rem;
+  white-space: nowrap;
   animation: marquee-scroll 30s linear infinite;
 }
 
-/* allows the strip to be sccrollable for those who turned on thereduce motion setting*/ 
+/* allows the strip to be sccrollable for those who turned on thereduce motion setting*/
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
-    animation: none;
     overflow-x: auto;
+  }
+
+  .marquee-group {
+    animation: none;
   }
 }
 
