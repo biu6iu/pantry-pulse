@@ -16,90 +16,121 @@ afterEach(async () => {
 });
 
 describe("getImpactByRecipient", () => {
-    it("does not double-count environmental impact across multiple entries", async () => {
-        const results = await repo.getImpactByRecipient();
-        const recipientA = results.find((r) => r.organisation === "Recipient A");
-
-        expect(recipientA?.totalEnvironmentalImpactScore).toBe(8);
-    });
-
-    it("aggregates totals per recipient across all of their donations", async () => {
+    it("aggregates totals per recipient across their completed donations", async () => {
         const results = await repo.getImpactByRecipient();
         const recipientA = results.find((r) => r.organisation === "Recipient A");
         const recipientB = results.find((r) => r.organisation === "Recipient B");
 
-        expect(recipientA?.totalDonations).toBe(2);
-        expect(recipientA?.totalItems).toBe(17);
-        expect(recipientA?.totalHealthImpactScore).toBe(15);
-        expect(recipientA?.totalCO2Saved).toBe(20);
+        // Recipient A's open donation (#TEST-A2) is not counted
+        expect(recipientA).toMatchObject({
+            totalDonations: 1,
+            totalItems: 7,
+            totalUnitsDelivered: 102,
+            totalWeightDivertedKg: 13,
+            totalCO2eAvoidedKg: 50,
+            averageHealthImpactScore: 2.57,
+        });
+        expect(recipientB).toMatchObject({
+            totalDonations: 1,
+            totalItems: 7,
+            totalUnitsDelivered: 41,
+            totalWeightDivertedKg: 6,
+            totalCO2eAvoidedKg: 24,
+            averageHealthImpactScore: 2.67,
+        });
+    });
 
-        expect(recipientB?.totalDonations).toBe(1);
-        expect(recipientB?.totalItems).toBe(7);
-        expect(recipientB?.totalHealthImpactScore).toBe(6);
-        expect(recipientB?.totalEnvironmentalImpactScore).toBe(6);
-        expect(recipientB?.totalCO2Saved).toBe(15);
+    it("leaves out internal recipients", async () => {
+        const internal = await prisma.user.create({ data: { name: "Medical Pantry", type: "internal" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-INTERNAL",
+                status: "completed",
+                createdAt: new Date("2026-05-29T00:00:00Z"),
+                recipientId: internal.id,
+            },
+        });
+        await prisma.donationEntry.create({
+            data: { donationId: "#TEST-INTERNAL", itemId: fixtures.itemPump.id, quantity: 3 },
+        });
+
+        const results = await repo.getImpactByRecipient();
+        expect(results.map((r) => r.organisation).sort()).toEqual(["Recipient A", "Recipient B"]);
+
+        const overall = await repo.getOverallImpactSummary();
+        expect(overall.totalDonations).toBe(2);
+        expect(overall.totalItems).toBe(14);
     });
 });
 
 describe("getImpactByCategory", () => {
-    it("aggregates item counts and health impact scores per category", async () => {
+    it("aggregates item counts and impact figures per category", async () => {
         const results = await repo.getImpactByCategory();
         const equipment = results.find((r) => r.category === "Equipment");
         const medicalSupplies = results.find((r) => r.category === "Medical Supplies");
         const uncategorised = results.find((r) => r.category === "Uncategorised");
 
-        expect(equipment?.totalItems).toBe(3);
-        expect(equipment?.totalHealthImpactScore).toBe(13);
-
-        expect(medicalSupplies?.totalItems).toBe(7);
-        expect(medicalSupplies?.totalHealthImpactScore).toBe(7);
-
-        expect(uncategorised?.totalItems).toBe(14);
-        expect(uncategorised?.totalHealthImpactScore).toBe(1);
+        expect(equipment).toMatchObject({
+            totalItems: 3,
+            totalUnitsDelivered: 3,
+            totalWeightDivertedKg: 12,
+            totalCO2eAvoidedKg: 60,
+            averageHealthImpactScore: 4,
+        });
+        expect(medicalSupplies).toMatchObject({
+            totalItems: 7,
+            totalUnitsDelivered: 140,
+            totalWeightDivertedKg: 7,
+            totalCO2eAvoidedKg: 14,
+            averageHealthImpactScore: 2,
+        });
+        // items with no factors still count as items but carry no impact figures
+        expect(uncategorised).toMatchObject({
+            totalItems: 4,
+            totalUnitsDelivered: 0,
+            totalWeightDivertedKg: 0,
+            totalCO2eAvoidedKg: 0,
+            averageHealthImpactScore: null,
+        });
     });
 });
 
 describe("getImpactByMonth", () => {
-    it("aggregates totals per month in chronological order", async () => {
+    it("aggregates completed donations per month in chronological order", async () => {
         const results = await repo.getImpactByMonth();
 
-        expect(results.map((r) => r.month)).toEqual(["2026-06", "2026-07", "2026-08"]);
+        // July only has an open donation, so it does not appear
+        expect(results.map((r) => r.month)).toEqual(["2026-06", "2026-08"]);
 
         const june = results.find((r) => r.month === "2026-06");
-        const july = results.find((r) => r.month === "2026-07");
         const august = results.find((r) => r.month === "2026-08");
 
         expect(june).toMatchObject({
             totalDonations: 1,
             totalItems: 7,
-            totalHealthImpactScore: 6,
-            totalEnvironmentalImpactScore: 6,
-        });
-        expect(july).toMatchObject({
-            totalDonations: 1,
-            totalItems: 10,
-            totalHealthImpactScore: 0,
-            totalEnvironmentalImpactScore: 0,
+            totalCO2eAvoidedKg: 24,
+            averageHealthImpactScore: 2.67,
         });
         expect(august).toMatchObject({
             totalDonations: 1,
             totalItems: 7,
-            totalHealthImpactScore: 15,
-            totalEnvironmentalImpactScore: 8,
+            totalCO2eAvoidedKg: 50,
+            averageHealthImpactScore: 2.57,
         });
     });
 });
 
 describe("getOverallImpactSummary", () => {
-    it("sums totals across every donation", async () => {
+    it("sums totals across completed donations", async () => {
         const result = await repo.getOverallImpactSummary();
 
         expect(result).toEqual({
-            totalDonations: 3,
-            totalItems: 24,
-            totalHealthImpactScore: 21,
-            totalEnvironmentalImpactScore: 14,
-            totalCO2Saved: 35,
+            totalDonations: 2,
+            totalItems: 14,
+            totalUnitsDelivered: 143,
+            totalWeightDivertedKg: 19,
+            totalCO2eAvoidedKg: 74,
+            averageHealthImpactScore: 2.6,
         });
     });
 });

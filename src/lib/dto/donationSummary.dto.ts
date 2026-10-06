@@ -14,5 +14,6 @@ export interface DonationSummaryDTO {
 
   totalItems: number;
   healthImpactScore: number | null;
-  environmentalImpactScore: number | null;
+  weightDivertedKg: number | null;
+  co2eAvoidedKg: number | null;
 }

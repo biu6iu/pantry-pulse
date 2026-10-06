@@ -25,8 +25,9 @@ export interface DonationDTO {
   } | null;
 
   environmentalImpact: {
-    estimatedCO2Saved: number;
-    score: number;
+    unitsDelivered: number;
+    weightDivertedKg: number;
+    co2eAvoidedKg: number;
   } | null;
 
   totalItems: number;

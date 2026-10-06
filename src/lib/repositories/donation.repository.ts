@@ -10,15 +10,13 @@ import {
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
 import { DonatedItem, UNCATEGORISED } from "@/lib/models/donatedItem";
-import { HealthImpact } from "@/lib/models/healthImpact";
-import { EnvironmentalImpact } from "@/lib/models/environmentalImpact";
+import { HEALTH_IMPACT_TIER_COUNT, INTERNAL_RECIPIENT_TYPE, roundImpact } from "@/lib/models/impact";
 import { User } from "@/lib/models/user";
 import { DonationStatus } from "@/lib/models/donationStatus";
 import { Prisma } from "@/generated/prisma/client";
 
 const donationInclude = {
-  entries: { include: { item: true, healthImpact: true } },
-  environmentalImpact: true,
+  entries: { include: { item: true } },
   recipient: true,
 } satisfies Prisma.DonationInclude;
 
@@ -44,11 +42,17 @@ function toDonation(row: DonationRow): Donation {
       (entry: DonationEntryRow) =>
         new DonationEntry(
           entry.id,
-          new DonatedItem(entry.item.id, entry.item.name, entry.item.category, entry.item.sku),
+          new DonatedItem(
+            entry.item.id,
+            entry.item.name,
+            entry.item.category,
+            entry.item.sku,
+            entry.item.unitsPerPack,
+            entry.item.unitWeightKg,
+            entry.item.co2eKgPerUnit,
+            entry.item.healthImpactTier,
+          ),
           entry.quantity,
-          entry.healthImpact
-            ? new HealthImpact(entry.healthImpact.id, entry.healthImpact.score, entry.healthImpact.donationEntryId)
-            : null,
         ),
     ),
     new User(
@@ -64,22 +68,57 @@ function toDonation(row: DonationRow): Donation {
       row.recipient.phone,
       row.recipient.lat,
       row.recipient.lng,
+      row.recipient.type,
     ),
-    row.environmentalImpact
-      ? new EnvironmentalImpact(
-          row.environmentalImpact.id,
-          row.environmentalImpact.score,
-          row.environmentalImpact.donationId,
-          row.environmentalImpact.co2Saved,
-        )
-      : null,
   );
 }
 
-function toNum(value: number | bigint | string): number {
+type RawNumber = number | bigint | string;
+
+function toNum(value: RawNumber): number {
   return typeof value === "number" ? value : Number(value);
 }
 
+interface ImpactTotalsRow {
+  totalDonations: RawNumber;
+  totalItems: RawNumber;
+  totalUnitsDelivered: RawNumber;
+  totalWeightDivertedKg: RawNumber;
+  totalCO2eAvoidedKg: RawNumber;
+  averageHealthImpactScore: RawNumber | null;
+}
+
+// Only completed donations to external recipients count towards impact figures
+const IMPACT_SOURCE = Prisma.sql`
+  FROM "Donation" d
+  JOIN "User" u ON u.id = d."recipientId"
+  LEFT JOIN "DonationEntry" e ON e."donationId" = d.id
+  LEFT JOIN "DonatedItem" i ON i.id = e."itemId"
+  WHERE lower(d.status) = 'completed' AND u.type IS DISTINCT FROM ${INTERNAL_RECIPIENT_TYPE}
+`;
+
+// Health score is the average item score (tier count + 1 - tier) weighted by quantity
+const IMPACT_TOTALS = Prisma.sql`
+  COUNT(DISTINCT d.id) AS "totalDonations",
+  COALESCE(SUM(e.quantity), 0) AS "totalItems",
+  COALESCE(SUM(e.quantity * i."unitsPerPack"), 0) AS "totalUnitsDelivered",
+  COALESCE(SUM(e.quantity * i."unitsPerPack" * i."unitWeightKg"), 0) AS "totalWeightDivertedKg",
+  COALESCE(SUM(e.quantity * i."unitsPerPack" * i."co2eKgPerUnit"), 0) AS "totalCO2eAvoidedKg",
+  SUM(e.quantity * (${HEALTH_IMPACT_TIER_COUNT + 1}::int - i."healthImpactTier"))::float
+    / NULLIF(SUM(e.quantity) FILTER (WHERE i."healthImpactTier" IS NOT NULL), 0) AS "averageHealthImpactScore"
+`;
+
+function toImpactTotals(row: ImpactTotalsRow) {
+  return {
+    totalDonations: toNum(row.totalDonations),
+    totalItems: toNum(row.totalItems),
+    totalUnitsDelivered: toNum(row.totalUnitsDelivered),
+    totalWeightDivertedKg: roundImpact(toNum(row.totalWeightDivertedKg)),
+    totalCO2eAvoidedKg: roundImpact(toNum(row.totalCO2eAvoidedKg)),
+    averageHealthImpactScore:
+      row.averageHealthImpactScore === null ? null : roundImpact(toNum(row.averageHealthImpactScore)),
+  };
+}
 
 export class DonationRepository implements IDonationRepository {
   async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
@@ -114,103 +153,49 @@ export class DonationRepository implements IDonationRepository {
   }
 
   async getOverallImpactSummary(): Promise<OverallImpactSummary> {
-    const [totalDonations, itemAgg, healthAgg, envAgg] = await Promise.all([
-      prisma.donation.count(),
-      prisma.donationEntry.aggregate({ _sum: { quantity: true } }),
-      prisma.healthImpact.aggregate({ _sum: { score: true } }),
-      prisma.environmentalImpact.aggregate({ _sum: { score: true, co2Saved: true } }),
-    ]);
-
-    return {
-      totalDonations,
-      totalItems: itemAgg._sum.quantity ?? 0,
-      totalHealthImpactScore: healthAgg._sum.score ?? 0,
-      totalEnvironmentalImpactScore: envAgg._sum.score ?? 0,
-      totalCO2Saved: envAgg._sum.co2Saved ?? 0,
-    };
+    const rows = await prisma.$queryRaw<ImpactTotalsRow[]>`
+      SELECT ${IMPACT_TOTALS}
+      ${IMPACT_SOURCE}
+    `;
+    return toImpactTotals(rows[0]);
   }
 
   async getImpactByCategory(): Promise<CategoryImpactSummary[]> {
-    const rows = await prisma.$queryRaw<CategoryImpactSummary[]>`
+    const rows = await prisma.$queryRaw<(ImpactTotalsRow & { category: string })[]>`
       SELECT
         COALESCE(i.category, ${UNCATEGORISED}) AS category,
-        COALESCE(SUM(e.quantity), 0) AS "totalItems",
-        COALESCE(SUM(h.score), 0) AS "totalHealthImpactScore"
-      FROM "DonationEntry" e
-      JOIN "DonatedItem" i ON i.id = e."itemId"
-      LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
-      GROUP BY category
+        ${IMPACT_TOTALS}
+      ${IMPACT_SOURCE} AND e.id IS NOT NULL
+      GROUP BY i.category
     `;
-    return rows.map((row) => ({
-      category: row.category,
-      totalItems: toNum(row.totalItems),
-      totalHealthImpactScore: toNum(row.totalHealthImpactScore),
-    }));
+    return rows.map((row) => ({ category: row.category, ...toImpactTotals(row) }));
   }
 
   async getImpactByRecipient(): Promise<RecipientImpactSummary[]> {
-    const rows = await prisma.$queryRaw<RecipientImpactSummary[]>`
+    const rows = await prisma.$queryRaw<(ImpactTotalsRow & { recipientId: string; organisation: string })[]>`
       SELECT
         d."recipientId" AS "recipientId",
         u.name AS "organisation",
-        COUNT(*) AS "totalDonations",
-        COALESCE(SUM(dt."itemCount"), 0) AS "totalItems",
-        COALESCE(SUM(dt."healthScore"), 0) AS "totalHealthImpactScore",
-        COALESCE(SUM(env.score), 0) AS "totalEnvironmentalImpactScore",
-        COALESCE(SUM(env."co2Saved"), 0) AS "totalCO2Saved"
-      FROM "Donation" d
-      JOIN "User" u ON u.id = d."recipientId"
-      LEFT JOIN (
-        SELECT
-          e."donationId" AS "donationId",
-          SUM(e.quantity) AS "itemCount",
-          SUM(h.score) AS "healthScore"
-        FROM "DonationEntry" e
-        LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
-        GROUP BY e."donationId"
-      ) dt ON dt."donationId" = d.id
-      LEFT JOIN "EnvironmentalImpact" env ON env."donationId" = d.id
+        ${IMPACT_TOTALS}
+      ${IMPACT_SOURCE}
       GROUP BY d."recipientId", u.name
     `;
     return rows.map((row) => ({
       recipientId: row.recipientId,
       organisation: row.organisation,
-      totalDonations: toNum(row.totalDonations),
-      totalItems: toNum(row.totalItems),
-      totalHealthImpactScore: toNum(row.totalHealthImpactScore),
-      totalEnvironmentalImpactScore: toNum(row.totalEnvironmentalImpactScore),
-      totalCO2Saved: toNum(row.totalCO2Saved),
+      ...toImpactTotals(row),
     }));
   }
 
   async getImpactByMonth(): Promise<MonthlyImpactSummary[]> {
-    const rows = await prisma.$queryRaw<MonthlyImpactSummary[]>`
+    const rows = await prisma.$queryRaw<(ImpactTotalsRow & { month: string })[]>`
       SELECT
         to_char(d."createdAt", 'YYYY-MM') AS "month",
-        COUNT(*) AS "totalDonations",
-        COALESCE(SUM(dt."itemCount"), 0) AS "totalItems",
-        COALESCE(SUM(dt."healthScore"), 0) AS "totalHealthImpactScore",
-        COALESCE(SUM(env.score), 0) AS "totalEnvironmentalImpactScore"
-      FROM "Donation" d
-      LEFT JOIN (
-        SELECT
-          e."donationId" AS "donationId",
-          SUM(e.quantity) AS "itemCount",
-          SUM(h.score) AS "healthScore"
-        FROM "DonationEntry" e
-        LEFT JOIN "HealthImpact" h ON h."donationEntryId" = e.id
-        GROUP BY e."donationId"
-      ) dt ON dt."donationId" = d.id
-      LEFT JOIN "EnvironmentalImpact" env ON env."donationId" = d.id
-      GROUP BY "month"
-      ORDER BY "month"
+        ${IMPACT_TOTALS}
+      ${IMPACT_SOURCE}
+      GROUP BY 1
+      ORDER BY 1
     `;
-    return rows.map((row) => ({
-      month: row.month,
-      totalDonations: toNum(row.totalDonations),
-      totalItems: toNum(row.totalItems),
-      totalHealthImpactScore: toNum(row.totalHealthImpactScore),
-      totalEnvironmentalImpactScore: toNum(row.totalEnvironmentalImpactScore),
-    }));
+    return rows.map((row) => ({ month: row.month, ...toImpactTotals(row) }));
   }
 }

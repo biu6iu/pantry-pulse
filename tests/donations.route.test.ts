@@ -24,7 +24,7 @@ describe("GET /api/donations", () => {
         expect(body).toHaveLength(3);
 
         const donationA1 = body.find((d: { id: string }) => d.id === "#TEST-A1");
-        expect(donationA1).toMatchObject({ totalItems: 7, healthImpactScore: 15 });
+        expect(donationA1).toMatchObject({ totalItems: 7, healthImpactScore: 2.57 });
     });
 });
 
@@ -140,7 +140,7 @@ describe("GET /api/donations/[id]", () => {
 
         expect(response.status).toBe(200);
         expect(body.receiver.organisation).toBe("Recipient A");
-        expect(body.healthImpact).toEqual({ score: 15 });
+        expect(body.healthImpact).toEqual({ score: 2.57 });
         expect(body.totalItems).toBe(7);
     });
 
