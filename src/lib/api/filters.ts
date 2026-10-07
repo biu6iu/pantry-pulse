@@ -1,4 +1,4 @@
-import type { DonationFilters } from "@/lib/repositories/donation.repository.interface";
+import type { DonationFilters } from "@/lib/dto/donationFilters.dto";
 
 export type ParsedFilters = { ok: true; filters: DonationFilters } | { ok: false; error: string };
 

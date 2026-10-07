@@ -97,7 +97,8 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+        expect(body.total).toBe(2);
     });
 
     it("filters by state within a country", async () => {
@@ -106,7 +107,8 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-B1"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-B1"]);
+        expect(body.total).toBe(1);
     });
 
     it("returns an empty array, not an error, when filters match nothing", async () => {
