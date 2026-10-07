@@ -20,8 +20,8 @@ export interface IDonationRepository {
   getAll(filters?: DonationFilters): Promise<Donation[]>;
   count(filters?: DonationFilters): Promise<number>;
   getById(id: string): Promise<Donation | null>;
-  getOverallImpactSummary(): Promise<OverallImpactSummary>;
-  getImpactByCategory(): Promise<CategoryImpactSummary[]>;
-  getImpactByRecipient(): Promise<RecipientImpactSummary[]>;
-  getImpactByMonth(): Promise<MonthlyImpactSummary[]>;
+  getOverallImpactSummary(filters?: DonationFilters): Promise<OverallImpactSummary>;
+  getImpactByCategory(filters?: DonationFilters): Promise<CategoryImpactSummary[]>;
+  getImpactByRecipient(filters?: DonationFilters): Promise<RecipientImpactSummary[]>;
+  getImpactByMonth(filters?: DonationFilters): Promise<MonthlyImpactSummary[]>;
 }

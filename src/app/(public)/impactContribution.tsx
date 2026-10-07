@@ -1,8 +1,10 @@
 // our impact/contribution
 
 import Image from 'next/image';
-import { ImpactContributionStatCard } from '@/components/ui/ui';
+import { ImpactContributionStatCard, ImpactCategoryRow } from '@/components/ui/ui';
+import { ImpactOverTimeChart } from '@/components/charts/charts';
 import { getImpactReport } from '@/lib/api/server';
+import { formatCategory, formatWeight } from '@/lib/format';
 
 export default async function ImpactContribution() {
   const report = await getImpactReport();
@@ -35,6 +37,20 @@ export default async function ImpactContribution() {
       label: 'donations made last month',
     },
   ];
+
+  // categories sorted by CO2e avoided, each shown as a share of the total
+  const categories = report?.byCategory.filter((c) => c.totalCO2eAvoidedKg > 0) ?? [];
+  const totalCO2e = categories.reduce((sum, c) => sum + c.totalCO2eAvoidedKg, 0);
+  const categoryRows = categories
+    .toSorted((a, b) => b.totalCO2eAvoidedKg - a.totalCO2eAvoidedKg)
+    .map((c) => {
+      const weight = formatWeight(c.totalCO2eAvoidedKg);
+      return {
+        category: formatCategory(c.category),
+        value: `${weight.value} ${weight.unit}`,
+        percent: (c.totalCO2eAvoidedKg / totalCO2e) * 100,
+      };
+    });
 
   return (
     <section className="impact-contribution">
@@ -95,6 +111,41 @@ export default async function ImpactContribution() {
           </div>
         </div>
       </div>
+
+      {categoryRows.length > 0 ? (
+        <div className="impact-breakdown">
+          <h2 className="impact-contribution__summary-title">
+            WHERE YOUR DONATIONS MAKE THE MOST DIFFERENCE
+          </h2>
+
+          <p className="impact-contribution__paragraph">
+            Share of CO<sub>2</sub>e emissions avoided by each category of supplies.
+          </p>
+
+          <ul className="impact-breakdown__list">
+            {categoryRows.map((row) => (
+              <ImpactCategoryRow
+                key={row.category}
+                category={row.category}
+                value={row.value}
+                percent={row.percent}
+              />
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {report && report.byMonth.length > 0 ? (
+        <div className="impact-over-time">
+          <h2 className="impact-contribution__summary-title">IMPACT OVER TIME</h2>
+
+          <p className="impact-contribution__paragraph">
+            How much difference delivered donations have made each month.
+          </p>
+
+          <ImpactOverTimeChart months={report.byMonth} />
+        </div>
+      ) : null}
     </section>
   );
 }

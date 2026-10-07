@@ -61,6 +61,12 @@ describe("getImpactByRecipient", () => {
         expect(overall.totalDonations).toBe(2);
         expect(overall.totalItems).toBe(14);
     });
+
+    it("filters by date range", async () => {
+        const results = await repo.getImpactByRecipient({ from: new Date("2026-07-01T00:00:00Z") });
+
+        expect(results.map((r) => r.organisation)).toEqual(["Recipient A"]);
+    });
 });
 
 describe("getImpactByCategory", () => {
@@ -93,6 +99,13 @@ describe("getImpactByCategory", () => {
             averageHealthImpactScore: null,
         });
     });
+
+    it("filters by region", async () => {
+        const results = await repo.getImpactByCategory({ country: "US" });
+
+        expect(results.map((r) => r.category).sort()).toEqual(["Equipment", "Medical Supplies"]);
+        expect(results.reduce((sum, r) => sum + r.totalItems, 0)).toBe(7);
+    });
 });
 
 describe("getImpactByMonth", () => {
@@ -118,6 +131,33 @@ describe("getImpactByMonth", () => {
             averageHealthImpactScore: 2.57,
         });
     });
+
+    it("filters by region and date together", async () => {
+        const from = new Date("2026-07-01T00:00:00Z");
+
+        const us = await repo.getImpactByMonth({ country: "US", from });
+        expect(us.map((r) => r.month)).toEqual(["2026-08"]);
+
+        const cn = await repo.getImpactByMonth({ country: "CN", from });
+        expect(cn).toEqual([]);
+    });
+
+    it("filtered monthly totals add up to the filtered overall summary", async () => {
+        const filterSets = [
+            {},
+            { country: "US" },
+            { state: "SH" },
+            { from: new Date("2026-07-01T00:00:00Z") },
+        ];
+
+        for (const filters of filterSets) {
+            const overall = await repo.getOverallImpactSummary(filters);
+            const months = await repo.getImpactByMonth(filters);
+
+            expect(months.reduce((sum, m) => sum + m.totalDonations, 0)).toBe(overall.totalDonations);
+            expect(months.reduce((sum, m) => sum + m.totalItems, 0)).toBe(overall.totalItems);
+        }
+    });
 });
 
 describe("getOverallImpactSummary", () => {
@@ -131,6 +171,35 @@ describe("getOverallImpactSummary", () => {
             totalWeightDivertedKg: 19,
             totalCO2eAvoidedKg: 74,
             averageHealthImpactScore: 2.6,
+        });
+    });
+
+    
+    it("filters by country and state", async () => {
+        const us = await repo.getOverallImpactSummary({ country: "US" });
+        expect(us).toMatchObject({ totalDonations: 1, totalItems: 7, totalCO2eAvoidedKg: 50 });
+
+        const sh = await repo.getOverallImpactSummary({ state: "sh" });
+        expect(sh).toMatchObject({ totalDonations: 1, totalItems: 7, totalCO2eAvoidedKg: 24 });
+    });
+
+    it("filters by date range", async () => {
+        const fromJuly = await repo.getOverallImpactSummary({ from: new Date("2026-07-01T00:00:00Z") });
+        expect(fromJuly).toMatchObject({ totalDonations: 1, totalCO2eAvoidedKg: 50 });
+
+        const toJuly = await repo.getOverallImpactSummary({ to: new Date("2026-07-01T00:00:00Z") });
+        expect(toJuly).toMatchObject({ totalDonations: 1, totalCO2eAvoidedKg: 24 });
+    });
+
+    it("returns zeros when nothing matches", async () => {
+        const none = await repo.getOverallImpactSummary({ country: "AU" });
+        expect(none).toEqual({
+            totalDonations: 0,
+            totalItems: 0,
+            totalUnitsDelivered: 0,
+            totalWeightDivertedKg: 0,
+            totalCO2eAvoidedKg: 0,
+            averageHealthImpactScore: null,
         });
     });
 });
@@ -229,6 +298,40 @@ describe("getAll filters", () => {
             recipientId: fixtures.recipientA.id,
         });
 
+        expect(results.map((d) => d.id)).toEqual(["#TEST-A1"]);
+    });
+    
+    it("filters by country, matching case-insensitively", async () => {
+        const us = await repo.getAll({ country: "US" });
+        expect(us.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const cn = await repo.getAll({ country: "cn" });
+        expect(cn.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("filters by state, matching case-insensitively", async () => {
+        const oh = await repo.getAll({ state: "oh" });
+        expect(oh.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const sh = await repo.getAll({ state: "SH" });
+        expect(sh.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("returns nothing for a country or state no recipient has", async () => {
+        expect(await repo.getAll({ country: "AU" })).toEqual([]);
+        expect(await repo.getAll({ state: "VIC" })).toEqual([]);
+    });
+
+    it("requires both country and state to match when both are given", async () => {
+        const both = await repo.getAll({ country: "US", state: "OH" });
+        expect(both.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const mismatch = await repo.getAll({ country: "US", state: "SH" });
+        expect(mismatch).toEqual([]);
+    });
+
+    it("combines region with status", async () => {
+        const results = await repo.getAll({ country: "US", status: "COMPLETED" });
         expect(results.map((d) => d.id)).toEqual(["#TEST-A1"]);
     });
 
