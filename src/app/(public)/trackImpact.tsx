@@ -14,9 +14,9 @@ function healthTier(donation: DonationDTO): string {
     return "Not recorded";
   }
   const score = donation.healthImpact.score;
-  if (score >= 15) return `High (score ${score})`;
-  if (score >= 5) return `Medium (score ${score})`;
-  return `Low (score ${score})`;
+  if (score >= 15) return "High";
+  if (score >= 5) return "Medium";
+  return "Low";
 }
 
 function healthPinPercent(donation: DonationDTO): number | null {
