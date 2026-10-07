@@ -136,7 +136,7 @@ function toImpactTotals(row: ImpactTotalsRow) {
 
 // limit and offset are deliberately ignored here so the same filter serves both the page and its total
 function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
-  const { status, recipientId, from, to } = filters;
+  const { status, recipientId, from, to, country, state } = filters;
 
   return {
     ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
@@ -146,6 +146,14 @@ function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
           createdAt: {
             ...(from ? { gte: from } : {}),
             ...(to ? { lte: to } : {}),
+          },
+        }
+      : {}),
+    ...(country || state
+      ? {
+          recipient: {
+            ...(country ? { country: { equals: country, mode: "insensitive" } } : {}),
+            ...(state ? { state: { equals: state, mode: "insensitive" } } : {}),
           },
         }
       : {}),
