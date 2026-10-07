@@ -57,6 +57,11 @@ npm run db:import -- <folder>  # or a folder of your choice
 ```
 
 The folder must contain `items.csv`, `orders.csv` and `order_items.csv`. Items, orders and line items are upserted using the ids from the CSVs, so re-running the import is safe. Rows that can't be imported are skipped and listed as warnings at the end.
+<<<<<<< HEAD
+=======
+
+The whole import runs in a single transaction: if anything fails, no changes are saved.
+>>>>>>> origin/main
 
 ### Geocoding users
 

@@ -88,14 +88,28 @@ interface ImpactTotalsRow {
   averageHealthImpactScore: RawNumber | null;
 }
 
-// Only completed donations to external recipients count towards impact figures
-const IMPACT_SOURCE = Prisma.sql`
-  FROM "Donation" d
-  JOIN "User" u ON u.id = d."recipientId"
-  LEFT JOIN "DonationEntry" e ON e."donationId" = d.id
-  LEFT JOIN "DonatedItem" i ON i.id = e."itemId"
-  WHERE lower(d.status) = 'completed' AND u.type IS DISTINCT FROM ${INTERNAL_RECIPIENT_TYPE}
-`;
+// Only completed donations to external recipients count towards impact figures, so status is
+// not filterable here; limit and offset are ignored because aggregates are not paged
+function impactSource(filters: DonationFilters = {}) {
+  const { from, to, country, state } = filters;
+
+  const conditions = [
+    Prisma.sql`lower(d.status) = 'completed'`,
+    Prisma.sql`u.type IS DISTINCT FROM ${INTERNAL_RECIPIENT_TYPE}`,
+    ...(from ? [Prisma.sql`d."createdAt" >= ${from}`] : []),
+    ...(to ? [Prisma.sql`d."createdAt" <= ${to}`] : []),
+    ...(country ? [Prisma.sql`lower(u.country) = lower(${country})`] : []),
+    ...(state ? [Prisma.sql`lower(u.state) = lower(${state})`] : []),
+  ];
+
+  return Prisma.sql`
+    FROM "Donation" d
+    JOIN "User" u ON u.id = d."recipientId"
+    LEFT JOIN "DonationEntry" e ON e."donationId" = d.id
+    LEFT JOIN "DonatedItem" i ON i.id = e."itemId"
+    WHERE ${Prisma.join(conditions, " AND ")}
+  `;
+}
 
 // Health score is the average item score (tier count + 1 - tier) weighted by quantity
 const IMPACT_TOTALS = Prisma.sql`
@@ -120,25 +134,38 @@ function toImpactTotals(row: ImpactTotalsRow) {
   };
 }
 
+// limit and offset are deliberately ignored here so the same filter serves both the page and its total
+function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
+  const { status, recipientId, from, to, country, state } = filters;
+
+  return {
+    ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
+    ...(recipientId ? { recipientId } : {}),
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        }
+      : {}),
+    ...(country || state
+      ? {
+          recipient: {
+            ...(country ? { country: { equals: country, mode: "insensitive" } } : {}),
+            ...(state ? { state: { equals: state, mode: "insensitive" } } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
 export class DonationRepository implements IDonationRepository {
   async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
-    const { status, recipientId, from, to, limit, offset } = filters;
-
-    const where: Prisma.DonationWhereInput = {
-      ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
-      ...(recipientId ? { recipientId } : {}),
-      ...(from || to
-        ? {
-            createdAt: {
-              ...(from ? { gte: from } : {}),
-              ...(to ? { lte: to } : {}),
-            },
-          }
-        : {}),
-    };
+    const { limit, offset } = filters;
 
     const rows = await prisma.donation.findMany({
-      where,
+      where: toDonationWhere(filters),
       include: donationInclude,
       orderBy: { createdAt: "desc" },
       ...(limit !== undefined ? { take: limit } : {}),
@@ -147,37 +174,41 @@ export class DonationRepository implements IDonationRepository {
     return rows.map(toDonation);
   }
 
+  async count(filters: DonationFilters = {}): Promise<number> {
+    return prisma.donation.count({ where: toDonationWhere(filters) });
+  }
+
   async getById(id: string): Promise<Donation | null> {
     const row = await prisma.donation.findUnique({ where: { id }, include: donationInclude });
     return row ? toDonation(row) : null;
   }
 
-  async getOverallImpactSummary(): Promise<OverallImpactSummary> {
+  async getOverallImpactSummary(filters: DonationFilters = {}): Promise<OverallImpactSummary> {
     const rows = await prisma.$queryRaw<ImpactTotalsRow[]>`
       SELECT ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE}
+      ${impactSource(filters)}
     `;
     return toImpactTotals(rows[0]);
   }
 
-  async getImpactByCategory(): Promise<CategoryImpactSummary[]> {
+  async getImpactByCategory(filters: DonationFilters = {}): Promise<CategoryImpactSummary[]> {
     const rows = await prisma.$queryRaw<(ImpactTotalsRow & { category: string })[]>`
       SELECT
         COALESCE(i.category, ${UNCATEGORISED}) AS category,
         ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE} AND e.id IS NOT NULL
+      ${impactSource(filters)} AND e.id IS NOT NULL
       GROUP BY i.category
     `;
     return rows.map((row) => ({ category: row.category, ...toImpactTotals(row) }));
   }
 
-  async getImpactByRecipient(): Promise<RecipientImpactSummary[]> {
+  async getImpactByRecipient(filters: DonationFilters = {}): Promise<RecipientImpactSummary[]> {
     const rows = await prisma.$queryRaw<(ImpactTotalsRow & { recipientId: string; organisation: string })[]>`
       SELECT
         d."recipientId" AS "recipientId",
         u.name AS "organisation",
         ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE}
+      ${impactSource(filters)}
       GROUP BY d."recipientId", u.name
     `;
     return rows.map((row) => ({
@@ -187,12 +218,12 @@ export class DonationRepository implements IDonationRepository {
     }));
   }
 
-  async getImpactByMonth(): Promise<MonthlyImpactSummary[]> {
+  async getImpactByMonth(filters: DonationFilters = {}): Promise<MonthlyImpactSummary[]> {
     const rows = await prisma.$queryRaw<(ImpactTotalsRow & { month: string })[]>`
       SELECT
         to_char(d."createdAt", 'YYYY-MM') AS "month",
         ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE}
+      ${impactSource(filters)}
       GROUP BY 1
       ORDER BY 1
     `;

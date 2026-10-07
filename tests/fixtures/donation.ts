@@ -9,6 +9,7 @@ export async function seedFixtures() {
         email: "recipient-a@test.com",
         city: "Cleveland",
         country: "US",
+        state: "OH",
         lat: 41.4993,
         lng: -81.6944,
         },
@@ -20,7 +21,8 @@ export async function seedFixtures() {
         contactName: "John Pork",
         email: "recipient-b@test.com",
         city: "Shanghai",
-        country: "CN"
+        country: "CN",
+        state: "SH",
         },
     });
     
