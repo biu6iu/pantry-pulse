@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { TrackingDTO, TrackingLocationDTO } from '@/lib/dto/tracking.dto';
-import { getTracking } from "@/lib/api/client";
 import OsmRouteMapLoader from "./osmRouteMapLoader";
 
 function hasCoords(
@@ -16,46 +14,7 @@ function labelFor(location: TrackingLocationDTO) {
   return place ? `${location.organisation} (${place})` : location.organisation;
 }
 
-export function TrackingMap({ donationId }: { donationId: string }) {
-  const [tracking, setTracking] = useState<TrackingDTO | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getTracking(donationId)
-      .then((data) => {
-        if (cancelled) return;
-
-        if (!data) {
-          setTracking(null);
-          setError("Donation not found");
-          return;
-        }
-
-        setError(null);
-        setTracking(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) {
-          setTracking(null);
-          setError(err.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [donationId]);
-
-  if (loading) return <p>Loading tracking info...</p>;
-  if (error) return <p className="text-red-600">Failed to load tracking info: {error}</p>;
-  if (!tracking) return null;
-
+export function TrackingMap({ tracking }: { tracking: TrackingDTO }) {
   if (!hasCoords(tracking.origin) || !hasCoords(tracking.receiver)) {
     return (
       <p>
@@ -65,7 +24,7 @@ export function TrackingMap({ donationId }: { donationId: string }) {
   }
 
   return (
-    <div className="tracking-map space-y-3 p-4">
+    <div className="tracking-map space-y-3" aria-label="Donation route map">
       <p>
         From {labelFor(tracking.origin)} to {labelFor(tracking.receiver)}.
         Destination is approximate (within about 1 km).
