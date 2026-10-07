@@ -6,6 +6,8 @@ import type { DonationDTO } from "@/lib/dto/donation.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 import { TrackingMap } from "@/components/maps/maps";
 
+// API healthImpact.score is a quantity-weighted average of item scores.
+// Item score = 5 − healthImpactTier, and tiers are 1 (highest) … 4 (lowest), so score is ~1–4.
 function healthTier(donation: DonationDTO): string {
   if (donation.status !== "COMPLETED") {
     return "Pending (order not completed)";
@@ -14,14 +16,14 @@ function healthTier(donation: DonationDTO): string {
     return "Not recorded";
   }
   const score = donation.healthImpact.score;
-  if (score >= 15) return "High";
-  if (score >= 5) return "Medium";
+  if (score >= 3) return "High";
+  if (score >= 2) return "Medium";
   return "Low";
 }
 
 function healthPinPercent(donation: DonationDTO): number | null {
   if (donation.status !== "COMPLETED" || !donation.healthImpact) return null;
-  return Math.min(96, Math.max(4, (donation.healthImpact.score / 20) * 100));
+  return Math.min(96, Math.max(4, (donation.healthImpact.score / 4) * 100));
 }
 
 function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
