@@ -56,23 +56,28 @@ export function CountUp({ value, suffix = '', duration }: CountUpProps) {
 
   return (
     <span ref={ref}>
-      {Math.round(current).toLocaleString()}
+      {Math.round(current).toLocaleString('en-AU')}
       {suffix}
     </span>
   );
 }
 
 
-export function StatsBanner() {
+export function StatsBanner({ stats = STATS }: { stats?: string[] }) {
   return (
     <div className="marquee-banner-style">
       <div className="marquee-track">
-        {STATS.map((s) => (
-          <span key={s}>{s}</span>
-        ))}
-        {STATS.map((s) => (
-          <span key={`${s}-dup`} aria-hidden="true">{s}</span>
-        ))}
+        {/* two identical groups so the strip loops with no gap */}
+        <div className="marquee-group">
+          {stats.map((s) => (
+            <span key={s}>{s}</span>
+          ))}
+        </div>
+        <div className="marquee-group" aria-hidden="true">
+          {stats.map((s) => (
+            <span key={`${s}-dup`}>{s}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -144,6 +149,26 @@ export function PercentBar({ percent, width = '100%', height = '10px' }: Percent
     >
       <div className="percent-bar__fill" style={{ width: `${current}%` }} />
     </div>
+  );
+}
+
+type ImpactCategoryRowProps = {
+  category: string;
+  value: string;   // formatted CO2e, e.g. '1,240 kg'
+  percent: number; // share of total CO2e, 0-100
+};
+
+export function ImpactCategoryRow({ category, value, percent }: ImpactCategoryRowProps) {
+  return (
+    <li className="impact-breakdown__row">
+      <div className="impact-breakdown__row-text">
+        <span className="impact-breakdown__category">{category}</span>
+        <span className="impact-breakdown__value">
+          {value} CO<sub>2</sub>e · {Math.round(percent)}%
+        </span>
+      </div>
+      <PercentBar percent={percent} height="14px" />
+    </li>
   );
 }
 
