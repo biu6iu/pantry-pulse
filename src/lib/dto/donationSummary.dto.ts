@@ -17,3 +17,8 @@ export interface DonationSummaryDTO {
   weightDivertedKg: number | null;
   co2eAvoidedKg: number | null;
 }
+
+export interface DonationListDTO {
+  items: DonationSummaryDTO[];
+  total: number;
+}

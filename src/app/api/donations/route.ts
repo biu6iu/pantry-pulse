@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { donationService } from "@/lib/container";
 import { serverError, badRequest } from "@/lib/api/responses";
-import { DonationFilters } from "@/lib/repositories/donation.repository.interface";
+import type { DonationFilters } from "@/lib/dto/donationFilters.dto";
 
 const VALID_STATUSES = ["OPEN", "COMPLETED"];
 
