@@ -13,10 +13,12 @@ Pantry Pulse is a project of Medical Pantry which visualises the donations made 
 ```bash
 npm install                # also runs `prisma generate` (postinstall)
 cp .env.example .env       # then fill in the values below
-npx prisma migrate dev     # apply migrations to your development database
+npm run db:migrate         # apply migrations to your development database
 ```
 
 `npm install` generates the Prisma client into `src/generated/prisma`, which is git-ignored. If you change `prisma/schema.prisma`, re-run `npx prisma generate`.
+
+To change the schema, edit `prisma/schema.prisma` and create a migration with `npx prisma migrate dev`.
 
 ### Environment variables
 
@@ -41,9 +43,11 @@ The app is served at <http://localhost:3000>.
 npm test             # single run (vitest run)
 ```
 
+The suite applies migrations to `TEST_DATABASE_URL` and deletes every row after each test, so it must point at a separate test database, never at real data.
+
 ## Scripts
 
-Both scripts are run manually with `tsx` and connect to the database in `DATABASE_URL`.
+Both scripts connect to the database in `DATABASE_URL`.
 
 ### Importing data
 
@@ -53,8 +57,11 @@ npm run db:import -- <folder>  # or a folder of your choice
 ```
 
 The folder must contain `items.csv`, `orders.csv` and `order_items.csv`. Items, orders and line items are upserted using the ids from the CSVs, so re-running the import is safe. Rows that can't be imported are skipped and listed as warnings at the end.
+<<<<<<< HEAD
+=======
 
 The whole import runs in a single transaction: if anything fails, no changes are saved.
+>>>>>>> origin/main
 
 ### Geocoding users
 
@@ -62,7 +69,7 @@ The whole import runs in a single transaction: if anything fails, no changes are
 npx tsx scripts/geocode-users.ts
 ```
 
-Fills in `lat`/`lng` for every user that is missing coordinates, using their address (street, city, state, zip, country) and the LocationIQ search API. These coordinates drive the tracking map. Requires `LOCATION_IQ_KEY`. Requests are rate-limited (600 ms apart) and results are cached per normalised address, so users sharing an address cost a single request. Users with no address, or an address LocationIQ cannot resolve, are skipped.
+Fills in `lat`/`lng` for every user that is missing coordinates, using their address (street, city, state, zip, country) and the LocationIQ search API. These coordinates drive the tracking map. Requires `LOCATION_IQ_KEY`. Requests are spaced about 1.1 s apart (LocationIQ's free tier allows 60 per minute) and retried after a minute if rate-limited. Results are cached per normalised address, so users sharing an address cost a single request. Users with no address, or an address LocationIQ cannot resolve, are skipped.
 
 Run it after importing data so that new recipients appear on the map.
 
