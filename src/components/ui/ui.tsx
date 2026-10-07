@@ -3,18 +3,81 @@
 
 import {STATS} from '../statsData'
 import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
+
+/* counts from 0 up to `target` once the element scrolls into view */
+function useCountUp<T extends Element>(target: number, duration = 1500) {
+  const ref = useRef<T>(null);
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let frame = 0;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+
+      // skip the animation for users who turned on the reduce motion setting
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setValue(target);
+        return;
+      }
+
+      const start = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+        setValue(target * eased);
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    });
+
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [target, duration]);
+
+  return [ref, value] as const;
+}
+
+type CountUpProps = {
+  value: number;
+  suffix?: string;   // e.g. '%'
+  duration?: number; // ms
+};
+
+export function CountUp({ value, suffix = '', duration }: CountUpProps) {
+  const [ref, current] = useCountUp<HTMLSpanElement>(value, duration);
+
+  return (
+    <span ref={ref}>
+      {Math.round(current).toLocaleString('en-AU')}
+      {suffix}
+    </span>
+  );
+}
 
 
-export function StatsBanner() {
+export function StatsBanner({ stats = STATS }: { stats?: string[] }) {
   return (
     <div className="marquee-banner-style">
       <div className="marquee-track">
-        {STATS.map((s) => (
-          <span key={s}>{s}</span>
-        ))}
-        {STATS.map((s) => (
-          <span key={`${s}-dup`} aria-hidden="true">{s}</span>
-        ))}
+        {/* two identical groups so the strip loops with no gap */}
+        <div className="marquee-group">
+          {stats.map((s) => (
+            <span key={s}>{s}</span>
+          ))}
+        </div>
+        <div className="marquee-group" aria-hidden="true">
+          {stats.map((s) => (
+            <span key={`${s}-dup`}>{s}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -64,6 +127,51 @@ export function ImageBanner({
   )
 }
 
+type PercentBarProps = {
+  percent: number;   // 0-100
+  width?: string;    // CSS value, e.g. '100%' or '240px'
+  height?: string;   // CSS value, e.g. '10px'
+};
+
+export function PercentBar({ percent, width = '100%', height = '10px' }: PercentBarProps) {
+  const clamped = Math.min(100, Math.max(0, percent));
+  const [ref, current] = useCountUp<HTMLDivElement>(clamped);
+
+  return (
+    <div
+      ref={ref}
+      className="percent-bar"
+      style={{ width, height }}
+      role="progressbar"
+      aria-valuenow={clamped}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div className="percent-bar__fill" style={{ width: `${current}%` }} />
+    </div>
+  );
+}
+
+type ImpactCategoryRowProps = {
+  category: string;
+  value: string;   // formatted CO2e, e.g. '1,240 kg'
+  percent: number; // share of total CO2e, 0-100
+};
+
+export function ImpactCategoryRow({ category, value, percent }: ImpactCategoryRowProps) {
+  return (
+    <li className="impact-breakdown__row">
+      <div className="impact-breakdown__row-text">
+        <span className="impact-breakdown__category">{category}</span>
+        <span className="impact-breakdown__value">
+          {value} CO<sub>2</sub>e · {Math.round(percent)}%
+        </span>
+      </div>
+      <PercentBar percent={percent} height="14px" />
+    </li>
+  );
+}
+
 type ImpactContributionStatCardProps = {
   value: string;
   label: string;
@@ -83,7 +191,10 @@ export function ImpactContributionStatCard({ value, label, icon }: ImpactContrib
       />
 
       <div className="impact-contribution__content">
-        <span className="impact-contribution__value">{value}</span>
+        <span className="impact-contribution__value">
+          {/* only animate values that are plain numbers */}
+          {Number.isFinite(Number(value)) ? <CountUp value={Number(value)} /> : value}
+        </span>
         <span className="impact-contribution__label">{label}</span>
       </div>
     </div>

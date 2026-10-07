@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/config/db";
  
 export async function seedFixtures() {
-    //arbitrary values given to the impact scores
+    // Impact is calculated from the item factors below; itemBandages has none, like a custom order
     const recipientA = await prisma.user.create({
         data: {
         name: "Recipient A",
@@ -9,6 +9,7 @@ export async function seedFixtures() {
         email: "recipient-a@test.com",
         city: "Cleveland",
         country: "US",
+        state: "OH",
         lat: 41.4993,
         lng: -81.6944,
         },
@@ -20,23 +21,38 @@ export async function seedFixtures() {
         contactName: "John Pork",
         email: "recipient-b@test.com",
         city: "Shanghai",
-        country: "CN"
+        country: "CN",
+        state: "SH",
         },
     });
     
     const itemPump = await prisma.donatedItem.create({
-        data: { name: "Infusion Pump", category: "Equipment" },
+        data: {
+            name: "Infusion Pump",
+            category: "Equipment",
+            unitsPerPack: 1,
+            unitWeightKg: 4,
+            co2eKgPerUnit: 20,
+            healthImpactTier: 1,
+        },
     });
     
     const itemGivingSet = await prisma.donatedItem.create({
-        data: { name: "IV Giving Set", category: "Medical Supplies" },
+        data: {
+            name: "IV Giving Set",
+            category: "Medical Supplies",
+            unitsPerPack: 20,
+            unitWeightKg: 0.05,
+            co2eKgPerUnit: 0.1,
+            healthImpactTier: 3,
+        },
     });
     
     const itemBandages = await prisma.donatedItem.create({
         data: { name: "Bandages", category: null },
     });
     
-    // Donation A1: Recipient A, 2 entries, different categories, has impacts
+    // Donation A1: Recipient A, 2 entries, different categories, counts towards impact
     const donationA1 = await prisma.donation.create({
         data: {
         id: "#TEST-A1",
@@ -45,23 +61,14 @@ export async function seedFixtures() {
         recipientId: recipientA.id,
         },
     });
-    const entryA1_1 = await prisma.donationEntry.create({
+    await prisma.donationEntry.create({
         data: { donationId: donationA1.id, itemId: itemPump.id, quantity: 2 },
     });
-    await prisma.healthImpact.create({
-        data: { donationEntryId: entryA1_1.id, score: 10 },
-    });
-    const entryA1_2 = await prisma.donationEntry.create({
+    await prisma.donationEntry.create({
         data: { donationId: donationA1.id, itemId: itemGivingSet.id, quantity: 5 },
     });
-    await prisma.healthImpact.create({
-        data: { donationEntryId: entryA1_2.id, score: 5 },
-    });
-    await prisma.environmentalImpact.create({
-        data: { donationId: donationA1.id, co2Saved: 20, score: 8 },
-    });
     
-    // Donation A2: Recipient A, 1 entry, uncategorised item, no health or environmental impacts
+    // Donation A2: Recipient A, 1 entry, uncategorised item, still open so it has no impact
     const donationA2 = await prisma.donation.create({
         data: {
         id: "#TEST-A2",
@@ -74,7 +81,7 @@ export async function seedFixtures() {
         data: { donationId: donationA2.id, itemId: itemBandages.id, quantity: 10 },
     });
     
-    // Donation B1: Recipient B, 3 entries, has impacts
+    // Donation B1: Recipient B, 3 entries (one without item factors), counts towards impact
     const donationB1 = await prisma.donation.create({
         data: {
         id: "#TEST-B1",
@@ -84,26 +91,14 @@ export async function seedFixtures() {
         recipientId: recipientB.id,
         },
     });
-    const entryB1_1 = await prisma.donationEntry.create({
+    await prisma.donationEntry.create({
         data: { donationId: donationB1.id, itemId: itemPump.id, quantity: 1 },
     });
-    await prisma.healthImpact.create({
-        data: { donationEntryId: entryB1_1.id, score: 3 },
-    });
-    const entryB1_2 = await prisma.donationEntry.create({
+    await prisma.donationEntry.create({
         data: { donationId: donationB1.id, itemId: itemGivingSet.id, quantity: 2 },
     });
-    await prisma.healthImpact.create({
-        data: { donationEntryId: entryB1_2.id, score: 2 },
-    });
-    const entryB1_3 = await prisma.donationEntry.create({
+    await prisma.donationEntry.create({
         data: { donationId: donationB1.id, itemId: itemBandages.id, quantity: 4 },
-    });
-    await prisma.healthImpact.create({
-        data: { donationEntryId: entryB1_3.id, score: 1 },
-    });
-    await prisma.environmentalImpact.create({
-        data: { donationId: donationB1.id, co2Saved: 15, score: 6 },
     });
     
     return {
@@ -119,8 +114,6 @@ export async function seedFixtures() {
 }
  
 export async function clearFixtures() {
-    await prisma.healthImpact.deleteMany({});
-    await prisma.environmentalImpact.deleteMany({});
     await prisma.donationEntry.deleteMany({});
     await prisma.donation.deleteMany({});
     await prisma.donatedItem.deleteMany({});

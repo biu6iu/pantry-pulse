@@ -16,17 +16,19 @@ model Donation {
   createdAt           DateTime
   completedAt         DateTime?
   desc                String?
+  shopifyOrderId      String?              // blank for orders that never reached Shopify (e.g. still open)
+  deliveryMethod      String?              // "pickup" | "courier" | "unknown"
   recipient           User                 @relation(fields: [recipientId], references: [id])
   recipientId         String
   entries             DonationEntry[]
-  environmentalImpact EnvironmentalImpact? 
 }
 
 model User {
   id          String     @id @default(cuid())
-  name        String     // organization name from Shipping Company (e.g. "Regional Community Vet Clinic")
-  contactName String?    // personal contact from Shipping Name (e.g. "Robyn Slattery")
-  email       String     @unique // used to de-duplicate recipients across orders during import
+  name        String     // organization name from recipient_org (e.g. "Regional Community Vet Clinic")
+  type        String?    // recipient_type from source data (e.g. "wildlife_rescue")
+  contactName String?
+  email       String?    @unique // not present in the current source data
   street      String?
   city        String?
   zip         String?
@@ -39,34 +41,26 @@ model User {
 }
 
 model DonatedItem {
-  id       String          @id @default(cuid())
-  name     String          // acts as the item description — no separate description field in source data
-  sku      String?
-  category String?         // placeholder until real categorisation is defined
-  entries  DonationEntry[]
+  id               String          @id @default(cuid()) // import uses item_key from source data (e.g. "syringe-pump-infuser")
+  name             String          // display_name from source data
+  sku              String?
+  category         String?
+  unitsPerPack     Int?
+  unitWeightKg     Float?
+  weightSource     String?
+  co2eKgPerUnit    Float?
+  co2eSource       String?
+  healthImpactTier Int?
+  entries          DonationEntry[]
 }
 
 model DonationEntry {
-  id           String        @id @default(cuid())
+  id           String        @id @default(cuid()) // import uses "<order_id>-<line_no>" (e.g. "D5-1")
   donation     Donation      @relation(fields: [donationId], references: [id])
   donationId   String
   item         DonatedItem   @relation(fields: [itemId], references: [id])
   itemId       String
+  lineNo       Int?
+  variant      String?       // e.g. "Top / Black / XS"
   quantity     Int
-  healthImpact HealthImpact?
-}
-
-model HealthImpact {
-  id              String        @id @default(cuid())
-  donationEntry   DonationEntry @relation(fields: [donationEntryId], references: [id])
-  donationEntryId String        @unique
-  score           Float
-}
-
-model EnvironmentalImpact {
-  id         String   @id @default(cuid())
-  donation   Donation @relation(fields: [donationId], references: [id])
-  donationId String   @unique
-  co2Saved   Float
-  score      Float
 }

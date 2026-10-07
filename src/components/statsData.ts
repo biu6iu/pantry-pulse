@@ -1,10 +1,9 @@
 
+// static stats that don't come from the impact report;
+// the waste and CO2 figures are calculated in header.tsx
 export const STATS: string[] = [
-  'SMALL ROTATING STAT 1',
-  'SMALL ROTATING STAT 2',
-  'SMALL ROTATING STAT 3',
-  'SMALL ROTATING STAT 4',
-  'SMALL ROTATING STAT 5',
+  'RUN 100% BY VOLUNTEERS',
+  'FOR EVERY $1 WE DONATE $350+ OF MEDICAL SUPPLIES',
 ];
 
 export const IMAGES = {

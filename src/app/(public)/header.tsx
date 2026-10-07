@@ -1,9 +1,23 @@
 import {StatsBanner, ImageBanner} from '../../components/ui/ui';
-import {IMAGES} from '../../components/statsData';
+import {IMAGES, STATS} from '../../components/statsData';
+import { getImpactReport } from '@/lib/api/server';
+import { formatWeight } from '@/lib/format';
 import { constants } from 'node:fs';
 
+export default async function Header() {
+  const report = await getImpactReport();
+  const overall = report?.overall;
 
-export default function Header() {
+  const co2e = overall ? formatWeight(overall.totalCO2eAvoidedKg) : null;
+  const waste = overall ? formatWeight(overall.totalWeightDivertedKg) : null;
+
+  // real figures first, then the static stats
+  const stats = [
+    ...(waste ? [`PREVENTED ${waste.value} ${waste.unit.toUpperCase()} OF WASTE`] : []),
+    ...(co2e ? [`AVOIDED ${co2e.value} ${co2e.unit.toUpperCase()} OF CO2e EMISSIONS`] : []),
+    ...STATS,
+  ];
+
   return (
     <>
 
@@ -35,29 +49,30 @@ export default function Header() {
       </header>
 
 
-      <StatsBanner />
-      
+      <StatsBanner stats={stats} />
+
       <ImageBanner
         src={IMAGES.mocBanner}
         alt="Medical Pantry hero banner"
-        overlay={[
+        overlay={co2e ? [
           {
-            top: '45%',
+            top: '20%',
             left: '50%',
             fontSize: '1.25rem',
             text: (
               <>
-                <span style={{ fontSize: '4em', fontWeight: 700, display: 'block', lineHeight: 1 }}>
-                  36%
+                <span style={{ fontSize: '7em', fontWeight: 700, display: 'block', lineHeight: 1 }}>
+                  {co2e.value}
+                  <span style={{ fontSize: '0.4em' }}> {co2e.unit}</span>
                 </span>
-                of CO<sub>2</sub> emissions reduced globally
+                of CO<sub>2</sub>e emissions avoided through delivered donations
               </>
             ),
           },
-        ]
-        
+        ] : []
+
       }
-        height = "400px"
+        height = "300px"
       />
 
     </>

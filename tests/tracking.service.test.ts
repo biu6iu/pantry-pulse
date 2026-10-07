@@ -24,8 +24,8 @@ describe("getTracking", () => {
             organisation: "Recipient A",
             city: "Cleveland",
             country: "US",
-            lat: 41.4993,
-            lng: -81.6944,
+            lat: 41.5,
+            lng: -81.69,
         });
         expect(tracking?.timeline).toEqual([
             { stage: "CREATED", label: "Created", occurredAt: "2026-08-29T00:00:00.000Z", complete: true },

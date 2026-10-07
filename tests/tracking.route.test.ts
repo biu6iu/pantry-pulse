@@ -25,8 +25,8 @@ describe("GET /api/tracking/[id]", () => {
         expect(body.origin).toEqual(ORIGIN);
         expect(body.receiver).toMatchObject({
             organisation: "Recipient A",
-            lat: 41.4993,
-            lng: -81.6944,
+            lat: 41.5,
+            lng: -81.69,
         });
         expect(body.timeline).toHaveLength(2);
     });

@@ -1,10 +1,28 @@
-import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
+import { IDonationRepository, DonationFilters } from "@/lib/repositories/donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { UNCATEGORISED } from "@/lib/models/donatedItem";
+import { EnvironmentalImpact, roundImpact } from "@/lib/models/impact";
 import { DonationDTO } from "@/lib/dto/donation.dto";
-import { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
+import { DonationListDTO, DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
+
+function toHealthImpactScore(donation: Donation): number | null {
+  const score = donation.getHealthImpactScore();
+  return score === null ? null : roundImpact(score);
+}
+
+function toEnvironmentalImpact(donation: Donation): EnvironmentalImpact | null {
+  const impact = donation.getEnvironmentalImpact();
+  if (impact === null) return null;
+  return {
+    unitsDelivered: impact.unitsDelivered,
+    weightDivertedKg: roundImpact(impact.weightDivertedKg),
+    co2eAvoidedKg: roundImpact(impact.co2eAvoidedKg),
+  };
+}
 
 function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
+  const environmentalImpact = toEnvironmentalImpact(donation);
+
   return {
     id: donation.id,
     dateCreated: donation.createdAt,
@@ -16,13 +34,14 @@ function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
       organisation: donation.recipient.organisation,
     },
     totalItems: donation.getTotalItems(),
-    healthImpactScore: donation.getTotalHealthImpactScore(),
-    environmentalImpactScore: donation.environmentalImpact?.score ?? null,
+    healthImpactScore: toHealthImpactScore(donation),
+    weightDivertedKg: environmentalImpact?.weightDivertedKg ?? null,
+    co2eAvoidedKg: environmentalImpact?.co2eAvoidedKg ?? null,
   };
 }
 
 function toDonationDTO(donation: Donation): DonationDTO {
-  const totalHealthImpactScore = donation.getTotalHealthImpactScore();
+  const healthImpactScore = toHealthImpactScore(donation);
 
   return {
     id: donation.id,
@@ -41,14 +60,8 @@ function toDonationDTO(donation: Donation): DonationDTO {
       category: entry.item.category ?? UNCATEGORISED,
       quantity: entry.quantity,
     })),
-    healthImpact: totalHealthImpactScore === null ? null : { score: totalHealthImpactScore },
-    environmentalImpact: donation.environmentalImpact
-      ? {
-          unitsDelivered: donation.getTotalItems(),
-          weightDivertedKg: donation.environmentalImpact.co2Saved,
-          co2eAvoidedKg: donation.environmentalImpact.co2Saved,
-        }
-      : null,
+    healthImpact: healthImpactScore === null ? null : { score: healthImpactScore },
+    environmentalImpact: toEnvironmentalImpact(donation),
     totalItems: donation.getTotalItems(),
   };
 }
@@ -56,9 +69,9 @@ function toDonationDTO(donation: Donation): DonationDTO {
 export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
-  async listDonations(): Promise<DonationSummaryDTO[]> {
-    const donations = await this.repo.getAll();
-    return donations.map(toDonationSummaryDTO);
+  async listDonations(filters?: DonationFilters): Promise<DonationListDTO> {
+    const [donations, total] = await Promise.all([this.repo.getAll(filters), this.repo.count(filters)]);
+    return { items: donations.map(toDonationSummaryDTO), total };
   }
 
   async getDonationDetail(id: string): Promise<DonationDTO | null> {

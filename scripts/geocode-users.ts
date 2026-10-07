@@ -2,7 +2,11 @@ import "dotenv/config";
 import { prisma } from "../src/lib/config/db";
 
 const LOCATION_IQ_KEY = process.env.LOCATION_IQ_KEY;
-const REQUEST_DELAY_MS = 600;
+// LocationIQ's free tier allows 60 requests per minute
+const REQUEST_DELAY_MS = 1100;
+// The limit is per minute, so a rate-limited request waits out the whole window before retrying
+const RATE_LIMIT_RETRIES = 5;
+const RATE_LIMIT_BACKOFF_MS = 65_000;
 
 interface GeocodeResult {
   lat: number;
@@ -32,14 +36,27 @@ function normaliseQuery(query: string): string {
   return query.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-async function geocode(query: string): Promise<GeocodeResult | null> {
+// Only 2-letter ISO codes (e.g. "AU") can be used to restrict results to a country
+function toCountryCode(country: string | null): string | null {
+  const trimmed = country?.trim() ?? "";
+  return /^[A-Za-z]{2}$/.test(trimmed) ? trimmed.toLowerCase() : null;
+}
+
+async function geocode(query: string, countryCode: string | null): Promise<GeocodeResult | null> {
   const url = new URL("https://us1.locationiq.com/v1/search");
   url.searchParams.set("key", LOCATION_IQ_KEY!);
   url.searchParams.set("q", query);
   url.searchParams.set("format", "json");
   url.searchParams.set("limit", "1");
+  // without this a free-text match can land in the wrong country
+  if (countryCode) url.searchParams.set("countrycodes", countryCode);
 
-  const response = await fetch(url);
+  let response = await fetch(url);
+  for (let attempt = 1; response.status === 429 && attempt <= RATE_LIMIT_RETRIES; attempt++) {
+    console.log(`Rate limited, waiting ${RATE_LIMIT_BACKOFF_MS / 1000}s (retry ${attempt}/${RATE_LIMIT_RETRIES})...`);
+    await sleep(RATE_LIMIT_BACKOFF_MS);
+    response = await fetch(url);
+  }
   if (response.status === 404) {
     return null;
   }
@@ -54,11 +71,15 @@ async function geocode(query: string): Promise<GeocodeResult | null> {
   return { lat: parseFloat(first.lat), lng: parseFloat(first.lon) };
 }
 
-async function lookupCached(query: string, cache: Map<string, GeocodeResult | null>): Promise<GeocodeResult | null> {
-  const key = normaliseQuery(query);
+async function lookupCached(
+  query: string,
+  countryCode: string | null,
+  cache: Map<string, GeocodeResult | null>,
+): Promise<GeocodeResult | null> {
+  const key = normaliseQuery(`${countryCode ?? ""}|${query}`);
   if (cache.has(key)) return cache.get(key)!;
 
-  const result = await geocode(query);
+  const result = await geocode(query, countryCode);
   cache.set(key, result);
   await sleep(REQUEST_DELAY_MS);
   return result;
@@ -80,15 +101,25 @@ async function main() {
     const fullQuery = buildAddressQuery(user);
     if (!fullQuery) continue;
 
-    const result = await lookupCached(fullQuery, cache);
+    const countryCode = toCountryCode(user.country);
+    let result = await lookupCached(fullQuery, countryCode, cache);
 
-    if (result === null) continue;
+    // Subdivision codes like "TH-83" can make an otherwise valid address unmatchable, so retry without the state
+    if (result === null && countryCode && user.state) {
+      const fallbackQuery = buildAddressQuery({ ...user, state: null, country: null });
+      if (fallbackQuery) result = await lookupCached(fallbackQuery, countryCode, cache);
+    }
 
+    if (result === null) {
+      console.log(`Not found: ${user.name} (${fullQuery})`);
+      continue;
+    }
 
     await prisma.user.update({
       where: { id: user.id },
       data: { lat: result.lat, lng: result.lng },
     });
+    console.log(`Geocoded: ${user.name}`);
   }
 }
 
