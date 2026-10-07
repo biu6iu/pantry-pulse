@@ -304,6 +304,8 @@ export default function TrackYourImpact() {
 
       <div className="bg-[#d7e3ec] px-6 py-10">
         <div className="mx-auto max-w-4xl space-y-6 text-[#141a43]">
+          <TrackingMap tracking={tracking} />
+
           {searched ? (
             <>
               <h3 className="text-2xl font-bold">Order {tracking?.id ?? donation?.id}</h3>
@@ -320,8 +322,6 @@ export default function TrackYourImpact() {
               {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
             </>
           ) : null}
-
-          <TrackingMap tracking={tracking} />
         </div>
       </div>
 
