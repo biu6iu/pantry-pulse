@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { donationService } from "@/lib/container";
 import { serverError, badRequest } from "@/lib/api/responses";
-import { parseDonationFilters } from "@/lib/api/filters";
+import type { DonationFilters } from "@/lib/dto/donationFilters.dto";
+
+const VALID_STATUSES = ["OPEN", "COMPLETED"];
 
 export async function GET(request: NextRequest) {
   try {
