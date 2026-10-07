@@ -78,6 +78,24 @@ describe("GET /api/donations query parameters", () => {
         expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1"]);
     });
 
+    it("filters by country", async () => {
+        const request = new NextRequest("http://localhost/api/donations?country=us");
+        const response = await getDonations(request);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+    });
+
+    it("filters by state within a country", async () => {
+        const request = new NextRequest("http://localhost/api/donations?country=CN&state=sh");
+        const response = await getDonations(request);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
     it("returns an empty array, not an error, when filters match nothing", async () => {
         const request = new NextRequest("http://localhost/api/donations?status=open&recipientId=no-such-id");
         const response = await getDonations(request);
@@ -94,6 +112,9 @@ describe("GET /api/donations validation", () => {
         ["recipientId", ""],
         ["from", "not-a-date"],
         ["to", "also-not-a-date"],
+        ["country", ""],
+        ["state", ""],
+        ["state", "XYZ"],
         ["limit", "0"],
         ["limit", "-1"],
         ["limit", "1.5"],
@@ -111,6 +132,15 @@ describe("GET /api/donations validation", () => {
         expect(response.status).toBe(400);
         expect(typeof body.error).toBe("string");
         expect(body.error.length).toBeGreaterThan(0);
+    });
+
+    it("returns 400 when from is after to", async () => {
+        const request = new NextRequest("http://localhost/api/donations?from=2026-08-01&to=2026-07-01");
+        const response = await getDonations(request);
+        const body = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(body.error).toBe("from must not be after to");
     });
 
     it("rejects an invalid filter without letting it reach the database", async () => {
