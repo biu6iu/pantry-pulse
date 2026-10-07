@@ -122,20 +122,21 @@ function toImpactTotals(row: ImpactTotalsRow) {
 
 export class DonationRepository implements IDonationRepository {
   async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
-    const { status, recipientId, from, to, limit, offset } = filters;
+  const { status, recipientId, from, to, country, state, limit, offset } = filters;
 
-    const where: Prisma.DonationWhereInput = {
-      ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
-      ...(recipientId ? { recipientId } : {}),
-      ...(from || to
-        ? {
-            createdAt: {
-              ...(from ? { gte: from } : {}),
-              ...(to ? { lte: to } : {}),
-            },
-          }
-        : {}),
-    };
+  const where: Prisma.DonationWhereInput = {
+    ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
+    ...(recipientId ? { recipientId } : {}),
+    ...(from || to ? { createdAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
+    ...(country || state
+      ? {
+          recipient: {
+            ...(country ? { country: { equals: country, mode: "insensitive" } } : {}),
+            ...(state ? { state: { equals: state, mode: "insensitive" } } : {}),
+          },
+        }
+      : {}),
+  };
 
     const rows = await prisma.donation.findMany({
       where,

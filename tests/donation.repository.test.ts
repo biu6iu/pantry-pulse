@@ -231,6 +231,40 @@ describe("getAll filters", () => {
 
         expect(results.map((d) => d.id)).toEqual(["#TEST-A1"]);
     });
+    
+    it("filters by country, matching case-insensitively", async () => {
+        const us = await repo.getAll({ country: "US" });
+        expect(us.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const cn = await repo.getAll({ country: "cn" });
+        expect(cn.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("filters by state, matching case-insensitively", async () => {
+        const oh = await repo.getAll({ state: "oh" });
+        expect(oh.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const sh = await repo.getAll({ state: "SH" });
+        expect(sh.map((d) => d.id)).toEqual(["#TEST-B1"]);
+    });
+
+    it("returns nothing for a country or state no recipient has", async () => {
+        expect(await repo.getAll({ country: "AU" })).toEqual([]);
+        expect(await repo.getAll({ state: "VIC" })).toEqual([]);
+    });
+
+    it("requires both country and state to match when both are given", async () => {
+        const both = await repo.getAll({ country: "US", state: "OH" });
+        expect(both.map((d) => d.id)).toEqual(["#TEST-A1", "#TEST-A2"]);
+
+        const mismatch = await repo.getAll({ country: "US", state: "SH" });
+        expect(mismatch).toEqual([]);
+    });
+
+    it("combines region with status", async () => {
+        const results = await repo.getAll({ country: "US", status: "COMPLETED" });
+        expect(results.map((d) => d.id)).toEqual(["#TEST-A1"]);
+    });
 
     it("returns an empty array when combined filters match nothing", async () => {
         const results = await repo.getAll({ status: "OPEN", recipientId: fixtures.recipientB.id });

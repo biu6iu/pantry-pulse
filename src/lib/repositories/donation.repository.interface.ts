@@ -18,6 +18,8 @@ export interface DonationFilters {
   recipientId?: string;
   from?: Date;
   to?: Date;
+  country?: string;
+  state?: string;
   limit?: number;
   offset?: number;
 }
