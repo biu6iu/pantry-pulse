@@ -88,14 +88,28 @@ interface ImpactTotalsRow {
   averageHealthImpactScore: RawNumber | null;
 }
 
-// Only completed donations to external recipients count towards impact figures
-const IMPACT_SOURCE = Prisma.sql`
-  FROM "Donation" d
-  JOIN "User" u ON u.id = d."recipientId"
-  LEFT JOIN "DonationEntry" e ON e."donationId" = d.id
-  LEFT JOIN "DonatedItem" i ON i.id = e."itemId"
-  WHERE lower(d.status) = 'completed' AND u.type IS DISTINCT FROM ${INTERNAL_RECIPIENT_TYPE}
-`;
+// Only completed donations to external recipients count towards impact figures, so status is
+// not filterable here; limit and offset are ignored because aggregates are not paged
+function impactSource(filters: DonationFilters = {}) {
+  const { from, to, country, state } = filters;
+
+  const conditions = [
+    Prisma.sql`lower(d.status) = 'completed'`,
+    Prisma.sql`u.type IS DISTINCT FROM ${INTERNAL_RECIPIENT_TYPE}`,
+    ...(from ? [Prisma.sql`d."createdAt" >= ${from}`] : []),
+    ...(to ? [Prisma.sql`d."createdAt" <= ${to}`] : []),
+    ...(country ? [Prisma.sql`lower(u.country) = lower(${country})`] : []),
+    ...(state ? [Prisma.sql`lower(u.state) = lower(${state})`] : []),
+  ];
+
+  return Prisma.sql`
+    FROM "Donation" d
+    JOIN "User" u ON u.id = d."recipientId"
+    LEFT JOIN "DonationEntry" e ON e."donationId" = d.id
+    LEFT JOIN "DonatedItem" i ON i.id = e."itemId"
+    WHERE ${Prisma.join(conditions, " AND ")}
+  `;
+}
 
 // Health score is the average item score (tier count + 1 - tier) weighted by quantity
 const IMPACT_TOTALS = Prisma.sql`
@@ -153,10 +167,10 @@ export class DonationRepository implements IDonationRepository {
     return row ? toDonation(row) : null;
   }
 
-  async getOverallImpactSummary(): Promise<OverallImpactSummary> {
+  async getOverallImpactSummary(filters: DonationFilters = {}): Promise<OverallImpactSummary> {
     const rows = await prisma.$queryRaw<ImpactTotalsRow[]>`
       SELECT ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE}
+      ${impactSource(filters)}
     `;
     return toImpactTotals(rows[0]);
   }
@@ -166,7 +180,7 @@ export class DonationRepository implements IDonationRepository {
       SELECT
         COALESCE(i.category, ${UNCATEGORISED}) AS category,
         ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE} AND e.id IS NOT NULL
+      ${impactSource()} AND e.id IS NOT NULL
       GROUP BY i.category
     `;
     return rows.map((row) => ({ category: row.category, ...toImpactTotals(row) }));
@@ -178,7 +192,7 @@ export class DonationRepository implements IDonationRepository {
         d."recipientId" AS "recipientId",
         u.name AS "organisation",
         ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE}
+      ${impactSource()}
       GROUP BY d."recipientId", u.name
     `;
     return rows.map((row) => ({
@@ -193,7 +207,7 @@ export class DonationRepository implements IDonationRepository {
       SELECT
         to_char(d."createdAt", 'YYYY-MM') AS "month",
         ${IMPACT_TOTALS}
-      ${IMPACT_SOURCE}
+      ${impactSource()}
       GROUP BY 1
       ORDER BY 1
     `;
