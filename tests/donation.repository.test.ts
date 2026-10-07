@@ -341,6 +341,18 @@ describe("getAll filters", () => {
     });
 });
 
+describe("count", () => {
+    it("counts every donation with no filters", async () => {
+        expect(await repo.count()).toBe(3);
+    });
+
+    it("applies the same filters as getAll but ignores limit and offset", async () => {
+        expect(await repo.count({ status: "COMPLETED" })).toBe(2);
+        expect(await repo.count({ recipientId: fixtures.recipientA.id, limit: 1, offset: 1 })).toBe(2);
+        expect(await repo.count({ status: "OPEN", recipientId: fixtures.recipientB.id })).toBe(0);
+    });
+});
+
 describe("getById", () => {
     it("returns a single donation with its entries", async () => {
         const donation = await repo.getById("#TEST-B1");

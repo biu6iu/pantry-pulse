@@ -21,9 +21,10 @@ describe("GET /api/donations", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body).toHaveLength(3);
+        expect(body.items).toHaveLength(3);
+        expect(body.total).toBe(3);
 
-        const donationA1 = body.find((d: { id: string }) => d.id === "#TEST-A1");
+        const donationA1 = body.items.find((d: { id: string }) => d.id === "#TEST-A1");
         expect(donationA1).toMatchObject({ totalItems: 7, healthImpactScore: 2.57 });
     });
 });
@@ -35,7 +36,8 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
+        expect(body.total).toBe(1);
     });
 
     it("filters by recipientId", async () => {
@@ -46,7 +48,7 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-B1"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-B1"]);
     });
 
     it("filters by a from/to date range", async () => {
@@ -55,16 +57,27 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
     });
 
-    it("paginates with limit and offset", async () => {
+    it("paginates with limit and offset, reporting the total before paging", async () => {
         const request = new NextRequest("http://localhost/api/donations?limit=1&offset=1");
         const response = await getDonations(request);
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
+        expect(body.total).toBe(3);
+    });
+
+    it("reports the filtered total, not the page size, when filters and paging combine", async () => {
+        const request = new NextRequest("http://localhost/api/donations?status=completed&limit=1");
+        const response = await getDonations(request);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1"]);
+        expect(body.total).toBe(2);
     });
 
     it("combines status and recipientId filters together", async () => {
@@ -75,7 +88,7 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A1"]);
     });
 
     it("filters by country", async () => {
@@ -102,7 +115,7 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body).toEqual([]);
+        expect(body).toEqual({ items: [], total: 0 });
     });
 });
 
@@ -156,7 +169,7 @@ describe("GET /api/donations validation", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
+        expect(body.items.map((d: { id: string }) => d.id)).toEqual(["#TEST-A2"]);
     });
 });
 

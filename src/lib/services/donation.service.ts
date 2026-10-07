@@ -3,7 +3,7 @@ import { Donation } from "@/lib/models/donation";
 import { UNCATEGORISED } from "@/lib/models/donatedItem";
 import { EnvironmentalImpact, roundImpact } from "@/lib/models/impact";
 import { DonationDTO } from "@/lib/dto/donation.dto";
-import { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
+import { DonationListDTO, DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 
 function toHealthImpactScore(donation: Donation): number | null {
   const score = donation.getHealthImpactScore();
@@ -69,9 +69,9 @@ function toDonationDTO(donation: Donation): DonationDTO {
 export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
-  async listDonations(filters?: DonationFilters): Promise<DonationSummaryDTO[]> {
-    const donations = await this.repo.getAll(filters);
-    return donations.map(toDonationSummaryDTO);
+  async listDonations(filters?: DonationFilters): Promise<DonationListDTO> {
+    const [donations, total] = await Promise.all([this.repo.getAll(filters), this.repo.count(filters)]);
+    return { items: donations.map(toDonationSummaryDTO), total };
   }
 
   async getDonationDetail(id: string): Promise<DonationDTO | null> {
