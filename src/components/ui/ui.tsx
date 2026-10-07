@@ -152,6 +152,26 @@ export function PercentBar({ percent, width = '100%', height = '10px' }: Percent
   );
 }
 
+type ImpactCategoryRowProps = {
+  category: string;
+  value: string;   // formatted CO2e, e.g. '1,240 kg'
+  percent: number; // share of total CO2e, 0-100
+};
+
+export function ImpactCategoryRow({ category, value, percent }: ImpactCategoryRowProps) {
+  return (
+    <li className="impact-breakdown__row">
+      <div className="impact-breakdown__row-text">
+        <span className="impact-breakdown__category">{category}</span>
+        <span className="impact-breakdown__value">
+          {value} CO<sub>2</sub>e · {Math.round(percent)}%
+        </span>
+      </div>
+      <PercentBar percent={percent} height="14px" />
+    </li>
+  );
+}
+
 type ImpactContributionStatCardProps = {
   value: string;
   label: string;

@@ -141,6 +141,41 @@
     font-family: var(--font-sans);
   }
 
+  /* category breakdown */
+  .impact-breakdown {
+    margin-top: 54px;
+  }
+
+  .impact-breakdown__list {
+    display: grid;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .impact-breakdown__row-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-bottom: 6px;
+  }
+
+  .impact-breakdown__category {
+    font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--color-brand-blue);
+  }
+
+  .impact-breakdown__value {
+    font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+    color: var(--color-brand-blue);
+    opacity: 0.9;
+  }
+
   @media (max-width: 900px) {
     .impact-contribution__header,
     .impact-contribution__grid {
@@ -161,7 +196,8 @@
       gap: 24px;
     }
 
-    .impact-contribution__summary {
+    .impact-contribution__summary,
+    .impact-breakdown {
       margin-top: 36px;
     }
 
@@ -234,4 +270,10 @@
   height: 100%;
   background-color: var(--color-brand-red);
   border-radius: 9999px;
+}
+
+/* the default track is white for the hero image, darken it on the cream background */
+.impact-breakdown .percent-bar {
+  background-color: rgba(20, 26, 67, 0.12);
+  margin: 0;
 }
