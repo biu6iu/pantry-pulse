@@ -61,6 +61,12 @@ describe("getImpactByRecipient", () => {
         expect(overall.totalDonations).toBe(2);
         expect(overall.totalItems).toBe(14);
     });
+
+    it("filters by date range", async () => {
+        const results = await repo.getImpactByRecipient({ from: new Date("2026-07-01T00:00:00Z") });
+
+        expect(results.map((r) => r.organisation)).toEqual(["Recipient A"]);
+    });
 });
 
 describe("getImpactByCategory", () => {
@@ -93,6 +99,13 @@ describe("getImpactByCategory", () => {
             averageHealthImpactScore: null,
         });
     });
+
+    it("filters by region", async () => {
+        const results = await repo.getImpactByCategory({ country: "US" });
+
+        expect(results.map((r) => r.category).sort()).toEqual(["Equipment", "Medical Supplies"]);
+        expect(results.reduce((sum, r) => sum + r.totalItems, 0)).toBe(7);
+    });
 });
 
 describe("getImpactByMonth", () => {
@@ -117,6 +130,33 @@ describe("getImpactByMonth", () => {
             totalCO2eAvoidedKg: 50,
             averageHealthImpactScore: 2.57,
         });
+    });
+
+    it("filters by region and date together", async () => {
+        const from = new Date("2026-07-01T00:00:00Z");
+
+        const us = await repo.getImpactByMonth({ country: "US", from });
+        expect(us.map((r) => r.month)).toEqual(["2026-08"]);
+
+        const cn = await repo.getImpactByMonth({ country: "CN", from });
+        expect(cn).toEqual([]);
+    });
+
+    it("filtered monthly totals add up to the filtered overall summary", async () => {
+        const filterSets = [
+            {},
+            { country: "US" },
+            { state: "SH" },
+            { from: new Date("2026-07-01T00:00:00Z") },
+        ];
+
+        for (const filters of filterSets) {
+            const overall = await repo.getOverallImpactSummary(filters);
+            const months = await repo.getImpactByMonth(filters);
+
+            expect(months.reduce((sum, m) => sum + m.totalDonations, 0)).toBe(overall.totalDonations);
+            expect(months.reduce((sum, m) => sum + m.totalItems, 0)).toBe(overall.totalItems);
+        }
     });
 });
 
