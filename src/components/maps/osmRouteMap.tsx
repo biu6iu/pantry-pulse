@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 export type MapPoint = {
@@ -20,7 +20,7 @@ function FitTwoPoints({ start, end }: { start: MapPoint; end: MapPoint }) {
         [start.lat, start.lng],
         [end.lat, end.lng],
       ],
-      { padding: [40, 40], maxZoom: 12 },
+      { padding: [40, 40], maxZoom: 11 },
     );
   }, [map, start.lat, start.lng, end.lat, end.lng]);
 
@@ -33,6 +33,9 @@ const pin = L.divIcon({
   iconSize: [18, 18],
   iconAnchor: [9, 18],
 });
+
+// Backend rounds receiver coords to 2 decimal places (~1.1km), so don't imply a street pin.
+const APPROXIMATE_RADIUS_METERS = 1100;
 
 export default function OsmRouteMap({
   origin,
@@ -58,9 +61,13 @@ export default function OsmRouteMap({
       <Marker position={start} icon={pin}>
         <Popup>{origin.label}</Popup>
       </Marker>
-      <Marker position={end} icon={pin}>
-        <Popup>{destination.label}</Popup>
-      </Marker>
+      <Circle
+        center={end}
+        radius={APPROXIMATE_RADIUS_METERS}
+        pathOptions={{ color: "#c4453a", fillColor: "#c4453a", fillOpacity: 0.22, weight: 2 }}
+      >
+        <Popup>{destination.label} (approximate)</Popup>
+      </Circle>
       <Polyline positions={[start, end]} pathOptions={{ color: "#c4453a", weight: 3 }} />
       <FitTwoPoints start={origin} end={destination} />
     </MapContainer>
