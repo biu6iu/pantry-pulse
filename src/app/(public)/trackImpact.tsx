@@ -29,9 +29,12 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
   const pinPercent = donation ? healthPinPercent(donation) : null;
 
   return (
-    <article className="rounded-xl bg-white p-4">
-      <h4 className="text-sm font-semibold uppercase">Health impact</h4>
-      <div className="relative mt-6 mb-2 h-10">
+    <article className="overflow-hidden rounded-2xl bg-white shadow-md">
+      <div className="bg-[#c4453a] px-4 py-3 text-white">
+        <h4 className="text-sm font-semibold uppercase tracking-wide">Health impact</h4>
+      </div>
+      <div className="p-5">
+      <div className="relative mt-2 mb-2 h-10">
         {pinPercent != null ? (
           <div
             className="absolute -top-1 z-10"
@@ -52,21 +55,165 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
         />
       </div>
       <p className="mt-2 text-lg font-bold">{label}</p>
+      </div>
     </article>
   );
 }
 
-function destinationText(tracking: TrackingDTO): string {
-  const receiver = tracking.receiver;
-  const place = [receiver.city, receiver.state, receiver.country]
-    .filter(Boolean)
-    .join(", ");
-  return place ? `${receiver.organisation} — ${place}` : receiver.organisation;
+function placeLabel(city: string | null, state: string | null, country: string | null) {
+  return [city, state, country].filter(Boolean).join(", ");
 }
 
 function formatWhen(iso: string | null): string {
   if (!iso) return "Not yet";
   return new Date(iso).toLocaleDateString();
+}
+
+function LeafIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current" aria-hidden="true">
+      <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l.93-2.3c.9.08 1.81.12 2.73.12 7 0 11.63-4.18 11.63-9.64 0-2.18-.96-3.98-2.5-5.18C17.9 8.2 17.46 8.08 17 8zm-3.5 6.5c-1.93 0-3.5-1.12-3.5-2.5s1.57-2.5 3.5-2.5 3.5 1.12 3.5 2.5-1.57 2.5-3.5 2.5z" />
+    </svg>
+  );
+}
+
+function PinGlyph() {
+  return (
+    <span
+      className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-white bg-[#c4453a] shadow"
+      aria-hidden="true"
+    />
+  );
+}
+
+function EnvironmentalCard({ donation }: { donation: DonationDTO | null }) {
+  const kg = donation?.environmentalImpact?.estimatedCO2Saved;
+
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-md">
+      <div className="flex items-center gap-3 bg-[#1b7a4e] px-4 py-3 text-white">
+        <LeafIcon />
+        <h4 className="text-sm font-semibold uppercase tracking-wide">Environmental impact</h4>
+      </div>
+      <div className="p-5">
+        {kg != null ? (
+          <>
+            <p className="text-4xl font-extrabold leading-none text-[#1b7a4e] md:text-5xl">
+              {kg}
+              <span className="ml-2 text-lg font-semibold">kg</span>
+            </p>
+            <p className="mt-2 text-sm text-slate-600">CO₂ emissions kept out of the atmosphere</p>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-emerald-100" aria-hidden="true">
+              <div className="h-full w-4/5 rounded-full bg-[#1b7a4e]" />
+            </div>
+          </>
+        ) : (
+          <p className="text-lg font-bold">Not recorded</p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function DestinationCard({
+  tracking,
+  fallbackOrg,
+}: {
+  tracking: TrackingDTO | null;
+  fallbackOrg?: string;
+}) {
+  const origin = tracking?.origin;
+  const receiver = tracking?.receiver;
+  const originPlace = origin ? placeLabel(origin.city, origin.state, origin.country) : "";
+  const destPlace = receiver ? placeLabel(receiver.city, receiver.state, receiver.country) : "";
+
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-md sm:col-span-2">
+      <div className="bg-[#2a7d9d] px-4 py-3 text-white">
+        <h4 className="text-sm font-semibold uppercase tracking-wide">Recipient and destination</h4>
+      </div>
+      <div className="grid gap-0 sm:grid-cols-[1fr_auto_1fr]">
+        <div className="flex gap-3 p-5">
+          <PinGlyph />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#2a7d9d]">From</p>
+            <p className="text-lg font-bold">{origin?.organisation ?? "Medical Pantry"}</p>
+            {originPlace ? <p className="text-sm text-slate-600">{originPlace}</p> : null}
+          </div>
+        </div>
+        <div className="hidden items-center px-2 text-2xl text-[#c4453a] sm:flex" aria-hidden="true">
+          →
+        </div>
+        <div className="flex gap-3 border-t border-slate-100 p-5 sm:border-t-0">
+          <PinGlyph />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#c4453a]">To</p>
+            <p className="text-lg font-bold">
+              {receiver?.organisation ?? fallbackOrg ?? "Not available"}
+            </p>
+            {destPlace ? <p className="text-sm text-slate-600">{destPlace}</p> : null}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function DeliveryStatusCard({ tracking }: { tracking: TrackingDTO }) {
+  const allComplete =
+    tracking.status === "COMPLETED" || tracking.timeline.every((stage) => stage.complete);
+  const completedCount = tracking.timeline.filter((stage) => stage.complete).length;
+  const fillPercent = allComplete
+    ? 100
+    : tracking.timeline.length <= 1
+      ? 0
+      : Math.max(0, ((completedCount - 1) / (tracking.timeline.length - 1)) * 100);
+
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-md">
+      <div className="flex items-center justify-between bg-[#141a43] px-4 py-3 text-white">
+        <h4 className="text-sm font-semibold uppercase tracking-wide">Delivery status</h4>
+        <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold">{tracking.status}</span>
+      </div>
+      <div className="relative p-5">
+        <div className="pointer-events-none absolute top-9 right-10 left-10 hidden h-1 sm:block" aria-hidden="true">
+          <div className="h-full rounded-full bg-slate-200" />
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-[#1b7a4e]"
+            style={{ width: `${fillPercent}%` }}
+          />
+        </div>
+        <div
+          className="pointer-events-none absolute top-9 bottom-9 left-9 w-1 rounded-full bg-slate-200 sm:hidden"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute top-9 left-9 w-1 rounded-full bg-[#1b7a4e] sm:hidden"
+          style={{ height: `${fillPercent}%` }}
+          aria-hidden="true"
+        />
+        <ol className="relative flex flex-col gap-6 sm:flex-row sm:items-start">
+          {tracking.timeline.map((stage, index) => (
+            <li key={stage.stage} className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center">
+              <span
+                className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                  stage.complete ? "bg-[#1b7a4e] text-white" : "bg-slate-300 text-slate-600"
+                }`}
+              >
+                {stage.complete ? "✓" : index + 1}
+              </span>
+              <div>
+                <p className="font-bold">{stage.label}</p>
+                <p className="text-sm text-slate-600">
+                  {stage.complete ? "Complete" : "Not complete"} · {formatWhen(stage.occurredAt)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </article>
+  );
 }
 
 export default function TrackYourImpact() {
@@ -163,38 +310,14 @@ export default function TrackYourImpact() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <HealthImpactScale donation={donation} />
-
-                <article className="rounded-xl bg-white p-4">
-                  <h4 className="text-sm font-semibold uppercase">Environmental impact</h4>
-                  <p className="mt-2 text-lg font-bold">
-                    {donation?.environmentalImpact
-                      ? `${donation.environmentalImpact.estimatedCO2Saved} kg CO₂ emissions reduced`
-                      : "Not recorded"}
-                  </p>
-                </article>
-
-                <article className="rounded-xl bg-white p-4 sm:col-span-2">
-                  <h4 className="text-sm font-semibold uppercase">Recipient and destination</h4>
-                  <p className="mt-2">
-                    {tracking ? destinationText(tracking) : donation?.receiver.organisation ?? "Not available"}
-                  </p>
-                </article>
+                <EnvironmentalCard donation={donation} />
+                <DestinationCard
+                  tracking={tracking}
+                  fallbackOrg={donation?.receiver.organisation}
+                />
               </div>
 
-              {tracking ? (
-                <article className="rounded-xl bg-white p-4">
-                  <h4 className="text-sm font-semibold uppercase">Delivery status</h4>
-                  <p className="mt-2 font-bold">{tracking.status}</p>
-                  <ol className="mt-3 list-decimal space-y-1 pl-5">
-                    {tracking.timeline.map((stage) => (
-                      <li key={stage.stage}>
-                        {stage.label}
-                        {stage.complete ? " — complete" : " — not complete"} ({formatWhen(stage.occurredAt)})
-                      </li>
-                    ))}
-                  </ol>
-                </article>
-              ) : null}
+              {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
             </>
           ) : null}
 
