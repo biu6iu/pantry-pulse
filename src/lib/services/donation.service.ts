@@ -43,7 +43,11 @@ function toDonationDTO(donation: Donation): DonationDTO {
     })),
     healthImpact: totalHealthImpactScore === null ? null : { score: totalHealthImpactScore },
     environmentalImpact: donation.environmentalImpact
-      ? { estimatedCO2Saved: donation.environmentalImpact.co2Saved, score: donation.environmentalImpact.score }
+      ? {
+          unitsDelivered: donation.getTotalItems(),
+          weightDivertedKg: donation.environmentalImpact.co2Saved,
+          co2eAvoidedKg: donation.environmentalImpact.co2Saved,
+        }
       : null,
     totalItems: donation.getTotalItems(),
   };

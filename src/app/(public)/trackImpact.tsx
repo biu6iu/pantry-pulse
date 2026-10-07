@@ -87,7 +87,7 @@ function PinGlyph() {
 }
 
 function EnvironmentalCard({ donation }: { donation: DonationDTO | null }) {
-  const kg = donation?.environmentalImpact?.estimatedCO2Saved;
+  const kg = donation?.environmentalImpact?.co2eAvoidedKg;
 
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-md">

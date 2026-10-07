@@ -70,7 +70,11 @@ describe("getDonationDetail", () => {
             },
         ]);
         expect(donation?.healthImpact).toEqual({ score: 15 });
-        expect(donation?.environmentalImpact).toEqual({ estimatedCO2Saved: 20, score: 8 });
+        expect(donation?.environmentalImpact).toEqual({
+            unitsDelivered: 7,
+            weightDivertedKg: 20,
+            co2eAvoidedKg: 20,
+        });
         expect(donation?.totalItems).toBe(7);
     });
 
