@@ -5,3 +5,9 @@ export function formatWeight(kg: number) {
   }
   return { value: Math.round(kg).toLocaleString(), unit: 'kg' };
 }
+
+/* turns a category key into a readable name, e.g. 'medical_equipment' -> 'Medical equipment' */
+export function formatCategory(category: string) {
+  const words = category.replace(/_/g, ' ').trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}

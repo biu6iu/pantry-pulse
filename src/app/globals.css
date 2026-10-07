@@ -176,6 +176,193 @@
     opacity: 0.9;
   }
 
+  /* impact over time chart */
+  .impact-over-time {
+    margin-top: 54px;
+  }
+
+  .impact-over-time__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .impact-over-time__control {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    border: 2px solid var(--color-border-ink);
+    background: transparent;
+    color: var(--color-brand-blue);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .impact-over-time__control[aria-pressed='true'] {
+    background: var(--color-brand-blue);
+    color: white;
+  }
+
+  .impact-over-time__total {
+    margin: 0 0 24px;
+    font-size: clamp(1rem, 1.5vw, 1.3rem);
+    color: var(--color-brand-blue);
+  }
+
+  .impact-over-time__total-value {
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 700;
+    letter-spacing: -0.06em;
+  }
+
+  .impact-over-time__chart {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+  }
+
+  .impact-over-time__y-axis {
+    position: relative;
+    height: 260px;
+    min-width: 64px;
+  }
+
+  .impact-over-time__tick {
+    position: absolute;
+    right: 0;
+    transform: translateY(50%);
+    font-size: 0.8rem;
+    color: var(--color-brand-blue);
+    opacity: 0.7;
+    white-space: nowrap;
+  }
+
+  .impact-over-time__plot {
+    position: relative;
+    display: flex;
+    height: 260px;
+  }
+
+  .impact-over-time__gridline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(20, 26, 67, 0.12);
+  }
+
+  /* the whole column is the hover target, not just the bar */
+  .impact-over-time__column {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    outline: none;
+  }
+
+  .impact-over-time__column:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--color-brand-blue);
+    border-radius: 6px;
+  }
+
+  .impact-over-time__bar {
+    position: relative;
+    width: min(24px, 60%);
+    background: var(--color-brand-red);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.4s ease-out;
+  }
+
+  .impact-over-time__column:hover .impact-over-time__bar,
+  .impact-over-time__column:focus-visible .impact-over-time__bar {
+    filter: brightness(0.85);
+  }
+
+  .impact-over-time__bar-label {
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-brand-blue);
+    white-space: nowrap;
+  }
+
+  .impact-over-time__tooltip {
+    position: absolute;
+    top: -8px;
+    z-index: 1;
+    display: none;
+    flex-direction: column;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--color-brand-blue);
+    color: white;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .impact-over-time__tooltip--center {
+    left: 50%;
+    transform: translate(-50%, -100%);
+  }
+
+  .impact-over-time__tooltip--start {
+    left: 0;
+    transform: translateY(-100%);
+  }
+
+  .impact-over-time__tooltip--end {
+    right: 0;
+    transform: translateY(-100%);
+  }
+
+  .impact-over-time__column:hover .impact-over-time__tooltip,
+  .impact-over-time__column:focus-visible .impact-over-time__tooltip {
+    display: flex;
+  }
+
+  .impact-over-time__x-axis {
+    display: flex;
+    margin-top: 8px;
+  }
+
+  .impact-over-time__month {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--color-brand-blue);
+  }
+
+  .impact-over-time__year {
+    opacity: 0.6;
+  }
+
+  .impact-over-time__table-toggle {
+    margin-top: 20px;
+    color: var(--color-brand-blue);
+  }
+
+  .impact-over-time__table-toggle summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .impact-over-time__table {
+    margin-top: 12px;
+    border-collapse: collapse;
+  }
+
+  .impact-over-time__table th,
+  .impact-over-time__table td {
+    padding: 6px 16px 6px 0;
+    text-align: left;
+    border-bottom: 1px solid rgba(20, 26, 67, 0.12);
+  }
+
   @media (max-width: 900px) {
     .impact-contribution__header,
     .impact-contribution__grid {
@@ -197,8 +384,23 @@
     }
 
     .impact-contribution__summary,
-    .impact-breakdown {
+    .impact-breakdown,
+    .impact-over-time {
       margin-top: 36px;
+    }
+
+    .impact-over-time__y-axis {
+      min-width: 48px;
+    }
+
+    .impact-over-time__y-axis,
+    .impact-over-time__plot {
+      height: 200px;
+    }
+
+    .impact-over-time__month,
+    .impact-over-time__tick {
+      font-size: 0.7rem;
     }
 
     .impact-contribution__card {

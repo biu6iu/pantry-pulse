@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import { ImpactContributionStatCard, ImpactCategoryRow } from '@/components/ui/ui';
+import { ImpactOverTimeChart } from '@/components/charts/charts';
 import { getImpactReport } from '@/lib/api/server';
-import { formatWeight } from '@/lib/format';
+import { formatCategory, formatWeight } from '@/lib/format';
 
 export default async function ImpactContribution() {
   const report = await getImpactReport();
@@ -45,7 +46,7 @@ export default async function ImpactContribution() {
     .map((c) => {
       const weight = formatWeight(c.totalCO2eAvoidedKg);
       return {
-        category: c.category,
+        category: formatCategory(c.category),
         value: `${weight.value} ${weight.unit}`,
         percent: (c.totalCO2eAvoidedKg / totalCO2e) * 100,
       };
@@ -131,6 +132,18 @@ export default async function ImpactContribution() {
               />
             ))}
           </ul>
+        </div>
+      ) : null}
+
+      {report && report.byMonth.length > 0 ? (
+        <div className="impact-over-time">
+          <h2 className="impact-contribution__summary-title">IMPACT OVER TIME</h2>
+
+          <p className="impact-contribution__paragraph">
+            How much difference delivered donations have made each month.
+          </p>
+
+          <ImpactOverTimeChart months={report.byMonth} />
         </div>
       ) : null}
     </section>
