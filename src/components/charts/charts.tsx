@@ -28,11 +28,18 @@ const METRICS = [
     key: 'donations',
     label: 'Donations',
     getValue: (m: MonthlyImpactSummary) => m.totalDonations,
-    format: (v: number) => Math.round(v).toLocaleString(),
+    format: (v: number) => Math.round(v).toLocaleString('en-AU'),
   },
 ] as const;
 
 const MONTHS_SHOWN = 12;
+
+// fixed month names, toLocaleString gives different results on the server and
+// in the browser (e.g. 'June' vs 'Jun') which breaks hydration
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
 
 /* the 12 months up to the latest month with data, filling months with no donations as 0 */
 function lastTwelveMonths(months: MonthlyImpactSummary[]) {
@@ -64,8 +71,8 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
   const columns = lastTwelveMonths(months).map((c) => ({
     ...c,
     value: c.data ? metric.getValue(c.data) : 0,
-    label: c.date.toLocaleString('en-AU', { month: 'short' }),
-    fullLabel: c.date.toLocaleString('en-AU', { month: 'long', year: 'numeric' }),
+    label: MONTH_NAMES[c.date.getMonth()].slice(0, 3),
+    fullLabel: `${MONTH_NAMES[c.date.getMonth()]} ${c.date.getFullYear()}`,
   }));
 
   if (columns.length === 0) return null;

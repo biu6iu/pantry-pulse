@@ -56,7 +56,7 @@ export function CountUp({ value, suffix = '', duration }: CountUpProps) {
 
   return (
     <span ref={ref}>
-      {Math.round(current).toLocaleString()}
+      {Math.round(current).toLocaleString('en-AU')}
       {suffix}
     </span>
   );
