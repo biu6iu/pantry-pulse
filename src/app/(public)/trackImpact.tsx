@@ -19,6 +19,43 @@ function healthTier(donation: DonationDTO): string {
   return `Low (score ${score})`;
 }
 
+function healthPinPercent(donation: DonationDTO): number | null {
+  if (donation.status !== "COMPLETED" || !donation.healthImpact) return null;
+  return Math.min(96, Math.max(4, (donation.healthImpact.score / 20) * 100));
+}
+
+function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
+  const label = donation ? healthTier(donation) : "Not available";
+  const pinPercent = donation ? healthPinPercent(donation) : null;
+
+  return (
+    <article className="rounded-xl bg-white p-4">
+      <h4 className="text-sm font-semibold uppercase">Health impact</h4>
+      <div className="relative mt-6 mb-2 h-10">
+        {pinPercent != null ? (
+          <div
+            className="absolute -top-1 z-10"
+            style={{ left: `${pinPercent}%`, transform: "translateX(-50%)" }}
+            aria-hidden="true"
+          >
+            <div
+              className="h-0 w-0 border-x-8 border-t-[12px] border-x-transparent border-t-[#141a43]"
+            />
+          </div>
+        ) : null}
+        <div
+          className="absolute bottom-0 h-5 w-full rounded-md"
+          style={{
+            background:
+              "linear-gradient(to right, #e53935, #fb8c00, #fdd835, #9ccc65, #43a047)",
+          }}
+        />
+      </div>
+      <p className="mt-2 text-lg font-bold">{label}</p>
+    </article>
+  );
+}
+
 function destinationText(tracking: TrackingDTO): string {
   const receiver = tracking.receiver;
   const place = [receiver.city, receiver.state, receiver.country]
@@ -118,55 +155,52 @@ export default function TrackYourImpact() {
         </div>
       </div>
 
-      {searched ? (
-        <div className="bg-[#d7e3ec] px-6 py-10">
-          <div className="mx-auto max-w-4xl space-y-6 text-[#141a43]">
-            <h3 className="text-2xl font-bold">Order {tracking?.id ?? donation?.id}</h3>
+      <div className="bg-[#d7e3ec] px-6 py-10">
+        <div className="mx-auto max-w-4xl space-y-6 text-[#141a43]">
+          {searched ? (
+            <>
+              <h3 className="text-2xl font-bold">Order {tracking?.id ?? donation?.id}</h3>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <article className="rounded-xl bg-white p-4">
-                <h4 className="text-sm font-semibold uppercase">Health impact</h4>
-                <p className="mt-2 text-lg font-bold">
-                  {donation ? healthTier(donation) : "Not available"}
-                </p>
-              </article>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <HealthImpactScale donation={donation} />
 
-              <article className="rounded-xl bg-white p-4">
-                <h4 className="text-sm font-semibold uppercase">Environmental impact</h4>
-                <p className="mt-2 text-lg font-bold">
-                  {donation?.environmentalImpact
-                    ? `${donation.environmentalImpact.estimatedCO2Saved} kg CO₂ emissions reduced`
-                    : "Not recorded"}
-                </p>
-              </article>
+                <article className="rounded-xl bg-white p-4">
+                  <h4 className="text-sm font-semibold uppercase">Environmental impact</h4>
+                  <p className="mt-2 text-lg font-bold">
+                    {donation?.environmentalImpact
+                      ? `${donation.environmentalImpact.estimatedCO2Saved} kg CO₂ emissions reduced`
+                      : "Not recorded"}
+                  </p>
+                </article>
 
-              <article className="rounded-xl bg-white p-4 sm:col-span-2">
-                <h4 className="text-sm font-semibold uppercase">Recipient and destination</h4>
-                <p className="mt-2">
-                  {tracking ? destinationText(tracking) : donation?.receiver.organisation ?? "Not available"}
-                </p>
-              </article>
-            </div>
+                <article className="rounded-xl bg-white p-4 sm:col-span-2">
+                  <h4 className="text-sm font-semibold uppercase">Recipient and destination</h4>
+                  <p className="mt-2">
+                    {tracking ? destinationText(tracking) : donation?.receiver.organisation ?? "Not available"}
+                  </p>
+                </article>
+              </div>
 
-            {tracking ? (
-              <article className="rounded-xl bg-white p-4">
-                <h4 className="text-sm font-semibold uppercase">Delivery status</h4>
-                <p className="mt-2 font-bold">{tracking.status}</p>
-                <ol className="mt-3 list-decimal space-y-1 pl-5">
-                  {tracking.timeline.map((stage) => (
-                    <li key={stage.stage}>
-                      {stage.label}
-                      {stage.complete ? " — complete" : " — not complete"} ({formatWhen(stage.occurredAt)})
-                    </li>
-                  ))}
-                </ol>
-              </article>
-            ) : null}
+              {tracking ? (
+                <article className="rounded-xl bg-white p-4">
+                  <h4 className="text-sm font-semibold uppercase">Delivery status</h4>
+                  <p className="mt-2 font-bold">{tracking.status}</p>
+                  <ol className="mt-3 list-decimal space-y-1 pl-5">
+                    {tracking.timeline.map((stage) => (
+                      <li key={stage.stage}>
+                        {stage.label}
+                        {stage.complete ? " — complete" : " — not complete"} ({formatWhen(stage.occurredAt)})
+                      </li>
+                    ))}
+                  </ol>
+                </article>
+              ) : null}
+            </>
+          ) : null}
 
-            {tracking ? <TrackingMap tracking={tracking} /> : null}
-          </div>
+          <TrackingMap tracking={tracking} />
         </div>
-      ) : null}
+      </div>
 
       <div className="h-10 bg-[#2a7d9d]" />
     </section>

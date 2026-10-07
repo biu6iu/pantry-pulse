@@ -1,6 +1,7 @@
 'use client';
 
 import type { TrackingDTO, TrackingLocationDTO } from '@/lib/dto/tracking.dto';
+import { ORIGIN } from "@/lib/config/origin";
 import OsmRouteMapLoader from "./osmRouteMapLoader";
 
 function hasCoords(
@@ -14,32 +15,37 @@ function labelFor(location: TrackingLocationDTO) {
   return place ? `${location.organisation} (${place})` : location.organisation;
 }
 
-export function TrackingMap({ tracking }: { tracking: TrackingDTO }) {
-  if (!hasCoords(tracking.origin) || !hasCoords(tracking.receiver)) {
-    return (
-      <p>
-        Map unavailable. Destination coordinates are not available for this order yet.
-      </p>
-    );
-  }
+const DEFAULT_ORIGIN = {
+  lat: ORIGIN.lat as number,
+  lng: ORIGIN.lng as number,
+  label: labelFor(ORIGIN),
+};
 
-  return (
-    <div className="tracking-map space-y-3" aria-label="Donation route map">
-      <p>
-        From {labelFor(tracking.origin)} to {labelFor(tracking.receiver)}.
-        Destination is approximate (within about 1 km).
-      </p>
-      <OsmRouteMapLoader
-        origin={{
+export function TrackingMap({ tracking }: { tracking: TrackingDTO | null }) {
+  const origin =
+    tracking && hasCoords(tracking.origin)
+      ? {
           lat: tracking.origin.lat,
           lng: tracking.origin.lng,
           label: labelFor(tracking.origin),
-        }}
-        destination={{
+        }
+      : DEFAULT_ORIGIN;
+
+  const destination =
+    tracking && hasCoords(tracking.receiver)
+      ? {
           lat: tracking.receiver.lat,
           lng: tracking.receiver.lng,
           label: labelFor(tracking.receiver),
-        }}
+        }
+      : null;
+
+  return (
+    <div className="tracking-map" aria-label="Donation route map">
+      <OsmRouteMapLoader
+        origin={origin}
+        destination={destination}
+        routeKey={tracking?.id ?? "empty"}
       />
     </div>
   );
