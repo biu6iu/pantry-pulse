@@ -120,31 +120,40 @@ function toImpactTotals(row: ImpactTotalsRow) {
   };
 }
 
+// limit and offset are deliberately ignored here so the same filter serves both the page and its total
+function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
+  const { status, recipientId, from, to } = filters;
+
+  return {
+    ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
+    ...(recipientId ? { recipientId } : {}),
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
 export class DonationRepository implements IDonationRepository {
   async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
-    const { status, recipientId, from, to, limit, offset } = filters;
-
-    const where: Prisma.DonationWhereInput = {
-      ...(status ? { status: { equals: status, mode: "insensitive" } } : {}),
-      ...(recipientId ? { recipientId } : {}),
-      ...(from || to
-        ? {
-            createdAt: {
-              ...(from ? { gte: from } : {}),
-              ...(to ? { lte: to } : {}),
-            },
-          }
-        : {}),
-    };
+    const { limit, offset } = filters;
 
     const rows = await prisma.donation.findMany({
-      where,
+      where: toDonationWhere(filters),
       include: donationInclude,
       orderBy: { createdAt: "desc" },
       ...(limit !== undefined ? { take: limit } : {}),
       ...(offset !== undefined ? { skip: offset } : {}),
     });
     return rows.map(toDonation);
+  }
+
+  async count(filters: DonationFilters = {}): Promise<number> {
+    return prisma.donation.count({ where: toDonationWhere(filters) });
   }
 
   async getById(id: string): Promise<Donation | null> {
