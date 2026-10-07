@@ -63,18 +63,18 @@ export function CountUp({ value, suffix = '', duration }: CountUpProps) {
 }
 
 
-export function StatsBanner() {
+export function StatsBanner({ stats = STATS }: { stats?: string[] }) {
   return (
     <div className="marquee-banner-style">
       <div className="marquee-track">
         {/* two identical groups so the strip loops with no gap */}
         <div className="marquee-group">
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <span key={s}>{s}</span>
           ))}
         </div>
         <div className="marquee-group" aria-hidden="true">
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <span key={`${s}-dup`}>{s}</span>
           ))}
         </div>
