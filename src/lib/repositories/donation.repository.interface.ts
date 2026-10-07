@@ -28,7 +28,7 @@ export interface IDonationRepository {
   getAll(filters?: DonationFilters): Promise<Donation[]>;
   getById(id: string): Promise<Donation | null>;
   getOverallImpactSummary(filters?: DonationFilters): Promise<OverallImpactSummary>;
-  getImpactByCategory(): Promise<CategoryImpactSummary[]>;
-  getImpactByRecipient(): Promise<RecipientImpactSummary[]>;
-  getImpactByMonth(): Promise<MonthlyImpactSummary[]>;
+  getImpactByCategory(filters?: DonationFilters): Promise<CategoryImpactSummary[]>;
+  getImpactByRecipient(filters?: DonationFilters): Promise<RecipientImpactSummary[]>;
+  getImpactByMonth(filters?: DonationFilters): Promise<MonthlyImpactSummary[]>;
 }

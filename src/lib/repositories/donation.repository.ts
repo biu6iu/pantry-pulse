@@ -175,24 +175,24 @@ export class DonationRepository implements IDonationRepository {
     return toImpactTotals(rows[0]);
   }
 
-  async getImpactByCategory(): Promise<CategoryImpactSummary[]> {
+  async getImpactByCategory(filters: DonationFilters = {}): Promise<CategoryImpactSummary[]> {
     const rows = await prisma.$queryRaw<(ImpactTotalsRow & { category: string })[]>`
       SELECT
         COALESCE(i.category, ${UNCATEGORISED}) AS category,
         ${IMPACT_TOTALS}
-      ${impactSource()} AND e.id IS NOT NULL
+      ${impactSource(filters)} AND e.id IS NOT NULL
       GROUP BY i.category
     `;
     return rows.map((row) => ({ category: row.category, ...toImpactTotals(row) }));
   }
 
-  async getImpactByRecipient(): Promise<RecipientImpactSummary[]> {
+  async getImpactByRecipient(filters: DonationFilters = {}): Promise<RecipientImpactSummary[]> {
     const rows = await prisma.$queryRaw<(ImpactTotalsRow & { recipientId: string; organisation: string })[]>`
       SELECT
         d."recipientId" AS "recipientId",
         u.name AS "organisation",
         ${IMPACT_TOTALS}
-      ${impactSource()}
+      ${impactSource(filters)}
       GROUP BY d."recipientId", u.name
     `;
     return rows.map((row) => ({
@@ -202,12 +202,12 @@ export class DonationRepository implements IDonationRepository {
     }));
   }
 
-  async getImpactByMonth(): Promise<MonthlyImpactSummary[]> {
+  async getImpactByMonth(filters: DonationFilters = {}): Promise<MonthlyImpactSummary[]> {
     const rows = await prisma.$queryRaw<(ImpactTotalsRow & { month: string })[]>`
       SELECT
         to_char(d."createdAt", 'YYYY-MM') AS "month",
         ${IMPACT_TOTALS}
-      ${impactSource()}
+      ${impactSource(filters)}
       GROUP BY 1
       ORDER BY 1
     `;
