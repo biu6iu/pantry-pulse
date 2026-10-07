@@ -133,6 +133,35 @@ describe("getOverallImpactSummary", () => {
             averageHealthImpactScore: 2.6,
         });
     });
+
+    
+    it("filters by country and state", async () => {
+        const us = await repo.getOverallImpactSummary({ country: "US" });
+        expect(us).toMatchObject({ totalDonations: 1, totalItems: 7, totalCO2eAvoidedKg: 50 });
+
+        const sh = await repo.getOverallImpactSummary({ state: "sh" });
+        expect(sh).toMatchObject({ totalDonations: 1, totalItems: 7, totalCO2eAvoidedKg: 24 });
+    });
+
+    it("filters by date range", async () => {
+        const fromJuly = await repo.getOverallImpactSummary({ from: new Date("2026-07-01T00:00:00Z") });
+        expect(fromJuly).toMatchObject({ totalDonations: 1, totalCO2eAvoidedKg: 50 });
+
+        const toJuly = await repo.getOverallImpactSummary({ to: new Date("2026-07-01T00:00:00Z") });
+        expect(toJuly).toMatchObject({ totalDonations: 1, totalCO2eAvoidedKg: 24 });
+    });
+
+    it("returns zeros when nothing matches", async () => {
+        const none = await repo.getOverallImpactSummary({ country: "AU" });
+        expect(none).toEqual({
+            totalDonations: 0,
+            totalItems: 0,
+            totalUnitsDelivered: 0,
+            totalWeightDivertedKg: 0,
+            totalCO2eAvoidedKg: 0,
+            averageHealthImpactScore: null,
+        });
+    });
 });
 
 describe("getAll", () => {
