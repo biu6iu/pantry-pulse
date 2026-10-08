@@ -35,6 +35,7 @@ describe("getImpactReport", () => {
         expect(report.byMonth.map((m) => m.month)).toEqual(["2026-08"]);
         expect(report.byCategory.reduce((sum, c) => sum + c.totalItems, 0)).toBe(7);
         expect(report.byItem.map((i) => i.name)).toEqual(["IV Giving Set", "Infusion Pump"]);
+        expect(report.byLocation.map((l) => l.city)).toEqual(["Cleveland"]);
     });
 
     it("aggregates totals per month in chronological order", async () => {
@@ -61,6 +62,15 @@ describe("getImpactReport", () => {
             ["IV Giving Set", 7],
             ["Bandages", 4],
             ["Infusion Pump", 3],
+        ]);
+    });
+
+    it("lists the locations reached with their deliveries", async () => {
+        const report = await service.getImpactReport();
+
+        expect(report.byLocation.map((l) => [l.city, l.state, l.totalDonations])).toEqual([
+            ["Cleveland", "OH", 1],
+            ["Shanghai", "SH", 1],
         ]);
     });
 

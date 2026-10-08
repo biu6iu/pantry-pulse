@@ -28,6 +28,7 @@ export interface ImpactReportDTO {
   byRecipient: RecipientImpactSummary[];
   byMonth: MonthlyImpactSummary[];
   byItem: ItemImpactSummary[];
+  byLocation: LocationImpactSummary[];
 }
 
 export interface ItemImpactSummary extends ImpactTotals {
