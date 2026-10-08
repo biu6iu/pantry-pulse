@@ -28,6 +28,7 @@ export interface ImpactReportDTO {
   byRecipient: RecipientImpactSummary[];
   byMonth: MonthlyImpactSummary[];
   byItem: ItemImpactSummary[];
+  byLocation: LocationImpactSummary[];
 }
 
 export interface ItemImpactSummary extends ImpactTotals {
@@ -35,4 +36,11 @@ export interface ItemImpactSummary extends ImpactTotals {
   name: string;
   sku: string | null;
   category: string;
+}
+
+export interface LocationImpactSummary extends ImpactTotals {
+  city: string | null;
+  state: string | null;
+  lat: number | null; // rounded to ~1.1km, see models/location.ts
+  lng: number | null;
 }

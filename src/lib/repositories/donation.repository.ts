@@ -7,11 +7,13 @@ import {
   RecipientImpactSummary,
   MonthlyImpactSummary,
   ItemImpactSummary,
+  LocationImpactSummary,
 } from "./donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
 import { DonatedItem, UNCATEGORISED } from "@/lib/models/donatedItem";
 import { HEALTH_IMPACT_TIER_COUNT, INTERNAL_RECIPIENT_TYPE, roundImpact } from "@/lib/models/impact";
+import { roundCoordinate } from "@/lib/models/location";
 import { User } from "@/lib/models/user";
 import { DonationStatus } from "@/lib/models/donationStatus";
 import { Prisma } from "@/generated/prisma/client";
@@ -255,6 +257,30 @@ export class DonationRepository implements IDonationRepository {
       name: row.name,
       sku: row.sku,
       category: row.category,
+      ...toImpactTotals(row),
+    }));
+  }
+
+  // One row per suburb + state; the pin sits at the average of its recipients' coordinates
+  async getImpactByLocation(filters: DonationFilters = {}): Promise<LocationImpactSummary[]> {
+    const rows = await prisma.$queryRaw<
+      (ImpactTotalsRow & { city: string | null; state: string | null; lat: number | null; lng: number | null })[]
+    >`
+      SELECT
+        u.city AS "city",
+        u.state AS "state",
+        AVG(u.lat) AS "lat",
+        AVG(u.lng) AS "lng",
+        ${IMPACT_TOTALS}
+      ${impactSource(filters)}
+      GROUP BY u.city, u.state
+      ORDER BY "totalDonations" DESC, "totalItems" DESC, u.city
+    `;
+    return rows.map((row) => ({
+      city: row.city,
+      state: row.state,
+      lat: roundCoordinate(row.lat),
+      lng: roundCoordinate(row.lng),
       ...toImpactTotals(row),
     }));
   }
