@@ -160,6 +160,32 @@ describe("getImpactByMonth", () => {
     });
 });
 
+describe("getImpactByItem", () => {
+    it("ranks items by quantity across completed donations", async () => {
+        const results = await repo.getImpactByItem();
+
+        expect(results.map((r) => r.name)).toEqual(["IV Giving Set", "Bandages", "Infusion Pump"]);
+        expect(results[0]).toMatchObject({ category: "Medical Supplies", totalItems: 7, totalDonations: 2 });
+        expect(results[1]).toMatchObject({ category: "Uncategorised", totalItems: 4, totalDonations: 1 });
+        expect(results[2]).toMatchObject({ category: "Equipment", totalItems: 3, totalDonations: 2 });
+    });
+
+    it("filters by region", async () => {
+        const results = await repo.getImpactByItem({ country: "US" });
+
+        expect(results.map((r) => [r.name, r.totalItems])).toEqual([
+            ["IV Giving Set", 5],
+            ["Infusion Pump", 2],
+        ]);
+    });
+
+    it("returns at most the requested number of items", async () => {
+        const results = await repo.getImpactByItem({}, 2);
+
+        expect(results.map((r) => r.name)).toEqual(["IV Giving Set", "Bandages"]);
+    });
+});
+
 describe("getOverallImpactSummary", () => {
     it("sums totals across completed donations", async () => {
         const result = await repo.getOverallImpactSummary();

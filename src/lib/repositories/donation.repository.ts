@@ -6,6 +6,7 @@ import {
   CategoryImpactSummary,
   RecipientImpactSummary,
   MonthlyImpactSummary,
+  ItemImpactSummary,
 } from "./donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
@@ -160,6 +161,9 @@ function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
   };
 }
 
+// "Top donated resources" shows this many items unless a caller asks for a different number
+const TOP_ITEMS_LIMIT = 10;
+
 export class DonationRepository implements IDonationRepository {
   async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
     const { limit, offset } = filters;
@@ -228,5 +232,30 @@ export class DonationRepository implements IDonationRepository {
       ORDER BY 1
     `;
     return rows.map((row) => ({ month: row.month, ...toImpactTotals(row) }));
+  }
+
+
+  async getImpactByItem(filters: DonationFilters = {}, limit = TOP_ITEMS_LIMIT): Promise<ItemImpactSummary[]> {
+    const rows = await prisma.$queryRaw<
+      (ImpactTotalsRow & { itemId: string; name: string; sku: string | null; category: string })[]
+    >`
+      SELECT
+        i.id AS "itemId",
+        i.name AS "name",
+        i.sku AS "sku",
+        COALESCE(i.category, ${UNCATEGORISED}) AS category,
+        ${IMPACT_TOTALS}
+      ${impactSource(filters)} AND e.id IS NOT NULL
+      GROUP BY i.id, i.name, i.sku, i.category
+      ORDER BY "totalItems" DESC, i.name
+      LIMIT ${limit}
+    `;
+    return rows.map((row) => ({
+      itemId: row.itemId,
+      name: row.name,
+      sku: row.sku,
+      category: row.category,
+      ...toImpactTotals(row),
+    }));
   }
 }
