@@ -226,6 +226,22 @@ describe("getImpactByLocation", () => {
 
         expect(results.map((r) => r.city)).toEqual(["Shanghai"]);
     });
+
+    it("leaves out orders with no known destination", async () => {
+        const noAddress = await prisma.user.create({ data: { name: "Recipient With No Address" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-C1",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: noAddress.id,
+            },
+        });
+
+        const results = await repo.getImpactByLocation();
+
+        expect(results.map((r) => r.city)).toEqual(["Cleveland", "Shanghai"]);
+    });
 });
 
 describe("getOverallImpactSummary", () => {

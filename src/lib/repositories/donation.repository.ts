@@ -261,7 +261,8 @@ export class DonationRepository implements IDonationRepository {
     }));
   }
 
-  // One row per suburb + state; the pin sits at the average of its recipients' coordinates
+  // One row per suburb + state; the pin sits at the average of its recipients' coordinates.
+  // Orders with no known destination still count in the totals but have no place to show here
   async getImpactByLocation(filters: DonationFilters = {}): Promise<LocationImpactSummary[]> {
     const rows = await prisma.$queryRaw<
       (ImpactTotalsRow & { city: string | null; state: string | null; lat: number | null; lng: number | null })[]
@@ -272,7 +273,7 @@ export class DonationRepository implements IDonationRepository {
         AVG(u.lat) AS "lat",
         AVG(u.lng) AS "lng",
         ${IMPACT_TOTALS}
-      ${impactSource(filters)}
+      ${impactSource(filters)} AND u.city IS NOT NULL
       GROUP BY u.city, u.state
       ORDER BY "totalDonations" DESC, "totalItems" DESC, u.city
     `;
