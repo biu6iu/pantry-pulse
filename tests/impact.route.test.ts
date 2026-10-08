@@ -24,6 +24,7 @@ describe("GET /api/impact", () => {
             totalWeightDivertedKg: 19,
             totalCO2eAvoidedKg: 74,
             averageHealthImpactScore: 2.6,
+            locationsReached: 2,
         });
     });
 
@@ -46,6 +47,7 @@ describe("GET /api/impact query parameters", () => {
 
         expect(response.status).toBe(200);
         expect(body.overall.totalDonations).toBe(1);
+        expect(body.overall.locationsReached).toBe(1);
         expect(body.byRecipient.map((r: { organisation: string }) => r.organisation)).toEqual(["Recipient A"]);
         expect(body.byItem.map((i: { name: string }) => i.name)).toEqual(["IV Giving Set", "Infusion Pump"]);
         expect(body.byLocation.map((l: { city: string }) => l.city)).toEqual(["Cleveland"]);

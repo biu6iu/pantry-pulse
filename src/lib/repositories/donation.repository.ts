@@ -190,11 +190,13 @@ export class DonationRepository implements IDonationRepository {
   }
 
   async getOverallImpactSummary(filters: DonationFilters = {}): Promise<OverallImpactSummary> {
-    const rows = await prisma.$queryRaw<ImpactTotalsRow[]>`
-      SELECT ${IMPACT_TOTALS}
+    const rows = await prisma.$queryRaw<(ImpactTotalsRow & { locationsReached: RawNumber })[]>`
+      SELECT
+        ${IMPACT_TOTALS},
+        COUNT(DISTINCT concat_ws('|', u.city, u.state)) FILTER (WHERE u.city IS NOT NULL) AS "locationsReached"
       ${impactSource(filters)}
     `;
-    return toImpactTotals(rows[0]);
+    return { ...toImpactTotals(rows[0]), locationsReached: toNum(rows[0].locationsReached) };
   }
 
   async getImpactByCategory(filters: DonationFilters = {}): Promise<CategoryImpactSummary[]> {

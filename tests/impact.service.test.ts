@@ -24,6 +24,7 @@ describe("getImpactReport", () => {
             totalWeightDivertedKg: 19,
             totalCO2eAvoidedKg: 74,
             averageHealthImpactScore: 2.6,
+            locationsReached: 2,
         });
     });
 

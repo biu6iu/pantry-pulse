@@ -255,6 +255,7 @@ describe("getOverallImpactSummary", () => {
             totalWeightDivertedKg: 19,
             totalCO2eAvoidedKg: 74,
             averageHealthImpactScore: 2.6,
+            locationsReached: 2,
         });
     });
 
@@ -284,7 +285,37 @@ describe("getOverallImpactSummary", () => {
             totalWeightDivertedKg: 0,
             totalCO2eAvoidedKg: 0,
             averageHealthImpactScore: null,
+            locationsReached: 0,
         });
+    });
+
+    it("counts the locations reached, matching the byLocation rows", async () => {
+        const filterSets = [{}, { country: "US" }, { country: "AU" }, { from: new Date("2026-07-01T00:00:00Z") }];
+
+        for (const filters of filterSets) {
+            const overall = await repo.getOverallImpactSummary(filters);
+            const locations = await repo.getImpactByLocation(filters);
+
+            expect(overall.locationsReached).toBe(locations.length);
+        }
+        expect((await repo.getOverallImpactSummary()).locationsReached).toBe(2);
+    });
+
+    it("does not count an order with no known destination as a location", async () => {
+        const noAddress = await prisma.user.create({ data: { name: "Recipient With No Address" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-C1",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: noAddress.id,
+            },
+        });
+
+        const overall = await repo.getOverallImpactSummary();
+
+        expect(overall.totalDonations).toBe(3);
+        expect(overall.locationsReached).toBe(2);
     });
 });
 
