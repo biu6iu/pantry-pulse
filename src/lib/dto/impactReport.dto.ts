@@ -7,7 +7,9 @@ export interface ImpactTotals {
   averageHealthImpactScore: number | null; // null when no item in the group has a health impact tier
 }
 
-export type OverallImpactSummary = ImpactTotals;
+export interface OverallImpactSummary extends ImpactTotals {
+  locationsReached: number; // distinct suburb + state pairs with a known destination, i.e. the rows of byLocation
+}
 
 export interface CategoryImpactSummary extends ImpactTotals {
   category: string;
