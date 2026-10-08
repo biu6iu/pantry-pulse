@@ -47,6 +47,7 @@ describe("GET /api/impact query parameters", () => {
         expect(response.status).toBe(200);
         expect(body.overall.totalDonations).toBe(1);
         expect(body.byRecipient.map((r: { organisation: string }) => r.organisation)).toEqual(["Recipient A"]);
+        expect(body.byItem.map((i: { name: string }) => i.name)).toEqual(["IV Giving Set", "Infusion Pump"]);
     });
 
     it("filters every figure by date range", async () => {
