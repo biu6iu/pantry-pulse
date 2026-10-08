@@ -27,6 +27,15 @@ describe("getImpactReport", () => {
         });
     });
 
+    it("passes filters through to every breakdown", async () => {
+        const report = await service.getImpactReport({ country: "US" });
+
+        expect(report.overall.totalDonations).toBe(1);
+        expect(report.byRecipient.map((r) => r.organisation)).toEqual(["Recipient A"]);
+        expect(report.byMonth.map((m) => m.month)).toEqual(["2026-08"]);
+        expect(report.byCategory.reduce((sum, c) => sum + c.totalItems, 0)).toBe(7);
+    });
+
     it("aggregates totals per month in chronological order", async () => {
         const report = await service.getImpactReport();
 
