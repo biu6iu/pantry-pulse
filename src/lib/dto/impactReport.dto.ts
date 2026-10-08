@@ -36,3 +36,10 @@ export interface ItemImpactSummary extends ImpactTotals {
   sku: string | null;
   category: string;
 }
+
+export interface LocationImpactSummary extends ImpactTotals {
+  city: string | null;
+  state: string | null;
+  lat: number | null; // rounded to ~1.1km, see models/location.ts
+  lng: number | null;
+}

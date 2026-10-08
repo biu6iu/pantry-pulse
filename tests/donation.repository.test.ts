@@ -186,6 +186,48 @@ describe("getImpactByItem", () => {
     });
 });
 
+describe("getImpactByLocation", () => {
+    it("groups completed donations by suburb and state", async () => {
+        const results = await repo.getImpactByLocation();
+
+        expect(results).toEqual([
+            expect.objectContaining({ city: "Cleveland", state: "OH", totalDonations: 1, totalItems: 7 }),
+            expect.objectContaining({ city: "Shanghai", state: "SH", totalDonations: 1, totalItems: 7 }),
+        ]);
+    });
+
+    it("puts the location with the most deliveries first", async () => {
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-B2",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: fixtures.recipientB.id,
+            },
+        });
+
+        const results = await repo.getImpactByLocation();
+
+        expect(results.map((r) => [r.city, r.totalDonations])).toEqual([
+            ["Shanghai", 2],
+            ["Cleveland", 1],
+        ]);
+    });
+
+    it("rounds coordinates to the shared precision and keeps missing ones null", async () => {
+        const [cleveland, shanghai] = await repo.getImpactByLocation();
+
+        expect([cleveland.lat, cleveland.lng]).toEqual([41.5, -81.69]);
+        expect([shanghai.lat, shanghai.lng]).toEqual([null, null]);
+    });
+
+    it("filters by region", async () => {
+        const results = await repo.getImpactByLocation({ country: "CN" });
+
+        expect(results.map((r) => r.city)).toEqual(["Shanghai"]);
+    });
+});
+
 describe("getOverallImpactSummary", () => {
     it("sums totals across completed donations", async () => {
         const result = await repo.getOverallImpactSummary();
