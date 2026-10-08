@@ -124,7 +124,7 @@ Because services depend on the `IDonationRepository` interface rather than the P
 | --- | --- |
 | `GET /api/donations` | `donationService.listDonations(filters)` |
 | `GET /api/donations/[id]` | `donationService.getDonationDetail(id)` |
-| `GET /api/impact` | `impactService.getImpactReport()` |
+| `GET /api/impact` | `impactService.getImpactReport(filters)` |
 | `GET /api/tracking/[id]` | `trackingService.getTracking(id)` |
 
 ### Adding a feature
