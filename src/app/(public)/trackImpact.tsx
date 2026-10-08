@@ -32,7 +32,7 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
 
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-md">
-      <div className="bg-[#c4453a] px-4 py-3 text-white">
+      <div className="bg-[#D02327] px-4 py-3 text-white">
         <h4 className="text-sm font-semibold uppercase tracking-wide">Health impact</h4>
       </div>
       <div className="p-5">
@@ -40,7 +40,6 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
         {pinPercent != null ? (
           <div
             className="absolute -top-1 z-10"
-            style={{ left: `${pinPercent}%`, transform: "translateX(-50%)" }}
             aria-hidden="true"
           >
             <div
@@ -52,11 +51,20 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
           className="absolute bottom-0 h-5 w-full rounded-md"
           style={{
             background:
-              "linear-gradient(to right, #e53935, #fb8c00, #fdd835, #9ccc65, #43a047)",
+              "linear-gradient(to right, #141A43, #2e3565, #535a87, #7e84aa, #a8acca)",
           }}
         />
       </div>
-      <p className="mt-2 text-lg font-bold">{label}</p>
+      <p className="mt-2 text-lg font-bold">
+        {label}
+        {donation?.healthImpact ? ` (${donation.healthImpact.score} out of a score of 4)` : ""}
+      </p>
+      <a
+        href="#health-impact-calculation"
+        className="mt-1 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#D02327]"
+      >
+        See how we calculate health impact*
+      </a>
       </div>
     </article>
   );
@@ -82,7 +90,7 @@ function LeafIcon() {
 function PinGlyph() {
   return (
     <span
-      className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-white bg-[#c4453a] shadow"
+      className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-white bg-[#D02327] shadow"
       aria-hidden="true"
     />
   );
@@ -143,13 +151,13 @@ function DestinationCard({
             {originPlace ? <p className="text-sm text-slate-600">{originPlace}</p> : null}
           </div>
         </div>
-        <div className="hidden items-center px-2 text-2xl text-[#c4453a] sm:flex" aria-hidden="true">
+        <div className="hidden items-center px-2 text-2xl text-[#D02327] sm:flex" aria-hidden="true">
           →
         </div>
         <div className="flex gap-3 border-t border-slate-100 p-5 sm:border-t-0">
           <PinGlyph />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#c4453a]">To</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#D02327]">To</p>
             <p className="text-lg font-bold">
               {receiver?.organisation ?? fallbackOrg ?? "Not available"}
             </p>
@@ -215,6 +223,57 @@ function DeliveryStatusCard({ tracking }: { tracking: TrackingDTO }) {
         </ol>
       </div>
     </article>
+  );
+}
+
+function HealthImpactMethodology() {
+  return (
+    <section
+      id="health-impact-calculation"
+      aria-labelledby="health-impact-calculation-heading"
+      className="overflow-hidden rounded-2xl bg-white p-4 shadow-md"
+    >
+      <div className="-mx-4 -mt-4 mb-6 bg-[#D02327] px-4 py-3">
+        <h3
+          id="health-impact-calculation-heading"
+          className="text-sm font-semibold uppercase tracking-wide text-white"
+        >
+          *Health Impact Calculation
+        </h3>
+      </div>
+      <p className="mt-4 text-lg font-semibold leading-relaxed text-[#141a43]">
+        Calculated by averaging individual health impact scores based on tiered categories.
+      </p>
+      <div className="mt-8 space-y-7 text-[#141a43]">
+        <div>
+          <h4 className="text-lg font-bold text-[#2a7d9d]">
+            Tier 1: Critical and high impact (immediate life saving and intervention)
+          </h4>
+          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 4</p>
+        </div>
+        <div>
+          <h4 className="text-lg font-bold text-[#2a7d9d]">
+            Tier 2: High to moderate impact (diagnostics and disease monitoring)
+          </h4>
+          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 3</p>
+        </div>
+        <div>
+          <h4 className="text-lg font-bold text-[#2a7d9d]">
+            Tier 3: Moderate impact (infection control and delivery systems)
+          </h4>
+          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 2</p>
+        </div>
+        <div>
+          <h4 className="text-lg font-bold text-[#2a7d9d]">
+            Tier 4: Low-risk, high utility impact (mobility, wound care, and rehabilitation)
+          </h4>
+          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 1</p>
+        </div>
+      </div>
+      <p className="mt-8 text-lg font-bold leading-relaxed text-[#141a43]">
+        The higher the health impact score (out of 4), the higher the health impact.
+      </p>
+    </section>
   );
 }
 
@@ -290,7 +349,7 @@ export default function TrackYourImpact() {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-full bg-[#c4453a] px-8 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70"
+                className="rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70"
               >
                 {loading ? "Searching…" : "Track"}
               </button>
@@ -321,7 +380,12 @@ export default function TrackYourImpact() {
                 />
               </div>
 
-              {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
+              {tracking ? (
+                <>
+                  <DeliveryStatusCard tracking={tracking} />
+                  <HealthImpactMethodology />
+                </>
+              ) : null}
             </>
           ) : null}
         </div>
