@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: "Pantry Pulse",
   description:
     "Pantry Pulse is a Medical Pantry project that visualises donations to make their impact visible.",
+  icons: {
+    icon: "/favicon/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
