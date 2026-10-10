@@ -32,15 +32,22 @@ export default async function Header() {
             />
           </div>
         
-          <span className="text-xl font-bold text-white">Medical Pantry</span>
+          <span className="text-xl font-bold text-white">Medical Pantry - Pantry Pulse</span>
         </div>
 
         {/** page navigation section */}
-        <div className="flex items-center gap-6">
-          <nav className="flex gap-6 text-white font-bold bg-brand-red p-3">
-            <a href="https://www.givenow.com.au/medicalpantry">DONATE</a>
-          </nav>
-        </div>
+        <nav className="flex items-center gap-8 text-white">
+          <a href="https://medicalpantry.org/" className="font-medium hover:underline">
+            Main Site
+          </a>
+          {/* pill with a lighter rim and lip underneath, like the button on medicalpantry.org */}
+          <a
+            href="https://www.givenow.com.au/medicalpantry"
+            className="rounded-full border border-[#f08a8d] bg-brand-red px-5 py-1.5 font-bold shadow-[0_4px_0_#e8676b] hover:brightness-110"
+          >
+            Donate
+          </a>
+        </nav>
       </header>
 
 

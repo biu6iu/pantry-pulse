@@ -26,7 +26,7 @@ The frontend never touches the database directly. It calls the API routes throug
 
 Server component. Fetches the impact report and renders:
 
-- the logo, site name and `DONATE` button (links to GiveNow)
+- the logo, site name, a `Main Site` text link (to medicalpantry.org) and the `Donate` button (links to GiveNow)
 - the red scrolling stats banner (`StatsBanner`)
 - the hero image with the total CO₂e avoided over it (`ImageBanner`)
 
