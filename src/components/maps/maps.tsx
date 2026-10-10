@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { TrackingDTO, TrackingLocationDTO } from '@/lib/dto/tracking.dto';
-import { getTracking } from "@/lib/api/client";
+import { ORIGIN } from "@/lib/config/origin";
 import OsmRouteMapLoader from "./osmRouteMapLoader";
 
 function hasCoords(
@@ -10,72 +9,44 @@ function hasCoords(
 ): location is TrackingLocationDTO & { lat: number; lng: number } {
   return location.lat != null && location.lng != null;
 }
+
 function labelFor(location: TrackingLocationDTO) {
   const place = [location.city, location.state, location.country].filter(Boolean).join(", ");
   return place ? `${location.organisation} (${place})` : location.organisation;
 }
 
+const DEFAULT_ORIGIN = {
+  lat: ORIGIN.lat as number,
+  lng: ORIGIN.lng as number,
+  label: labelFor(ORIGIN),
+};
 
-export function TrackingMap({ donationId }: { donationId: string }) {
-  const [tracking, setTracking] = useState<TrackingDTO | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-
-    getTracking(donationId)
-      .then((data) => {
-        if (cancelled) return;
-
-        if (!data) {
-          setTracking(null);
-          setError("Donation not found");
-          return;
-        }
-
-        setError(null);
-        setTracking(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) {
-          setTracking(null);
-          setError(err.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [donationId]);
-  if (loading) return <p>Loading tracking info...</p>;
-  if (error) return <p className="text-red-600">Failed to load tracking info: {error}</p>;
-  if (!tracking) return null;
-  if (!hasCoords(tracking.origin) || !hasCoords(tracking.receiver)) {
-    return (
-      <p>
-        This order does not have mapped coordinates yet. Origin and destination
-        pins come from the backend (`lat` / `lng`), not from the map.
-      </p>
-    );
-  }
-  return (
-    <div className="tracking-map">
-      <OsmRouteMapLoader
-        origin={{
+export function TrackingMap({ tracking }: { tracking: TrackingDTO | null }) {
+  const origin =
+    tracking && hasCoords(tracking.origin)
+      ? {
           lat: tracking.origin.lat,
           lng: tracking.origin.lng,
           label: labelFor(tracking.origin),
-        }}
-        destination={{
+        }
+      : DEFAULT_ORIGIN;
+
+  const destination =
+    tracking && hasCoords(tracking.receiver)
+      ? {
           lat: tracking.receiver.lat,
           lng: tracking.receiver.lng,
           label: labelFor(tracking.receiver),
-        }}
+        }
+      : null;
+
+  return (
+    <div className="tracking-map" aria-label="Donation route map">
+      <OsmRouteMapLoader
+        origin={origin}
+        destination={destination}
+        routeKey={tracking?.id ?? "empty"}
       />
     </div>
   );
 }
-

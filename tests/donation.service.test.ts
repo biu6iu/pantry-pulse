@@ -25,7 +25,7 @@ describe("listDonations", () => {
         const donationA1 = results.find((d) => d.id === "#TEST-A1");
         expect(donationA1).toMatchObject({
             status: "COMPLETED",
-            receiver: { organisation: "Recipient A" },
+            receiver: { organisation: "Recipient A", city: "Cleveland", state: "OH", type: null },
             totalItems: 7,
             healthImpactScore: 2.57,
             weightDivertedKg: 13,

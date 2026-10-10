@@ -2,7 +2,6 @@ import {StatsBanner, ImageBanner} from '../../components/ui/ui';
 import {IMAGES, STATS} from '../../components/statsData';
 import { getImpactReport } from '@/lib/api/server';
 import { formatWeight } from '@/lib/format';
-import { constants } from 'node:fs';
 
 export default async function Header() {
   const report = await getImpactReport();
@@ -38,12 +37,8 @@ export default async function Header() {
 
         {/** page navigation section */}
         <div className="flex items-center gap-6">
-          <nav className="flex gap-6 text-white">
-            <a href="/impact">Impact </a>
-            <a href="/redistribution">Redistribution</a>
-          </nav>
           <nav className="flex gap-6 text-white font-bold bg-brand-red p-3">
-            <a href="/donate">DONATE</a>
+            <a href="https://www.givenow.com.au/medicalpantry">DONATE</a>
           </nav>
         </div>
       </header>
