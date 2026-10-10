@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { getDonation, getTracking } from "@/lib/api/client";
 import type { DonationDTO } from "@/lib/dto/donation.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 import { TrackingMap } from "@/components/maps/maps";
+import BrowseOrders from "./browseOrders";
 
 // API healthImpact.score is a quantity-weighted average of item scores.
 // Item score = 5 − healthImpactTier, and tiers are 1 (highest) … 4 (lowest), so score is ~1–4.
@@ -283,8 +284,9 @@ export default function TrackYourImpact() {
   const [error, setError] = useState<string | null>(null);
   const [donation, setDonation] = useState<DonationDTO | null>(null);
   const [tracking, setTracking] = useState<TrackingDTO | null>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const id = input.trim();
 
@@ -295,6 +297,18 @@ export default function TrackYourImpact() {
       return;
     }
 
+    void trackOrder(id);
+  }
+
+  // an order picked from the browse list is tracked the same way as one typed into the search box
+  async function onTrackFromList(id: string) {
+    setInput(id);
+    await trackOrder(id);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    resultsRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }
+
+  async function trackOrder(id: string) {
     setLoading(true);
     setError(null);
     setDonation(null);
@@ -360,10 +374,12 @@ export default function TrackYourImpact() {
               </p>
             ) : null}
           </form>
+
+          <BrowseOrders onTrack={(id) => void onTrackFromList(id)} />
         </div>
       </div>
 
-      <div className="bg-[#d7e3ec] px-6 py-10">
+      <div ref={resultsRef} className="bg-[#d7e3ec] px-6 py-10">
         <div className="mx-auto max-w-4xl space-y-6 text-[#141a43]">
           <TrackingMap tracking={tracking} />
 
