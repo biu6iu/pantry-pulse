@@ -2,7 +2,7 @@
 
 import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 import type { DonationStatus } from "@/lib/models/donationStatus";
-import { formatDate, formatWeight } from "@/lib/format";
+import { formatCategory, formatDate } from "@/lib/format";
 
 const STATUS_LABELS: Record<DonationStatus, string> = {
   COMPLETED: "Completed",
@@ -28,10 +28,18 @@ function StatusPill({ status }: { status: DonationStatus }) {
   );
 }
 
-function formatCO2e(kg: number | null): string {
-  if (kg === null) return "Not recorded";
-  const weight = formatWeight(kg);
-  return `${weight.value} ${weight.unit}`;
+// The list says where an order went and to what kind of recipient, not who received it:
+// a public, browsable list of every recipient's name has not been agreed with the client
+function Destination({ receiver }: { receiver: DonationSummaryDTO["receiver"] }) {
+  const place = [receiver.city, receiver.state].filter(Boolean).join(", ");
+  const type = receiver.type && receiver.type !== "unknown" ? formatCategory(receiver.type) : null;
+
+  return (
+    <>
+      <span className="block">{place || "Not recorded"}</span>
+      {type ? <span className="block text-xs text-slate-500">{type}</span> : null}
+    </>
+  );
 }
 
 interface DonationResultsTableProps {
@@ -57,34 +65,24 @@ export function DonationResultsTable({
   if (total === 0) {
     return (
       <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-600" role="status">
-        No orders match these filters. Try a wider date range, or reset the filters.
+        No orders match these filters. Try a wider date range, or clear the filters.
       </p>
     );
   }
 
   const pageCount = Math.ceil(total / pageSize);
-  const first = page * pageSize + 1;
-  const last = page * pageSize + items.length;
 
   return (
     <div>
-      <p className="mb-3 text-sm text-slate-600" role="status">
-        Showing {first}–{last} of {total} order{total === 1 ? "" : "s"}
-      </p>
-
       <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full min-w-[640px] border-collapse text-sm text-[#141a43]">
+        <table className="w-full min-w-[520px] border-collapse text-sm text-[#141a43]">
           <caption className="sr-only">Orders matching the selected filters</caption>
           <thead className="bg-slate-50">
             <tr>
               <th scope="col" className={HEADER_CELL_CLASS}>Order</th>
               <th scope="col" className={HEADER_CELL_CLASS}>Created</th>
-              <th scope="col" className={HEADER_CELL_CLASS}>Recipient</th>
+              <th scope="col" className={HEADER_CELL_CLASS}>Destination</th>
               <th scope="col" className={HEADER_CELL_CLASS}>Status</th>
-              <th scope="col" className={`${HEADER_CELL_CLASS} text-right`}>Items</th>
-              <th scope="col" className={`${HEADER_CELL_CLASS} text-right`}>
-                CO<sub>2</sub>e avoided
-              </th>
               <th scope="col" className={HEADER_CELL_CLASS}>
                 <span className="sr-only">Actions</span>
               </th>
@@ -95,12 +93,8 @@ export function DonationResultsTable({
               <tr key={donation.id} className="border-t border-slate-200">
                 <th scope="row" className="px-4 py-3 text-left font-bold">{donation.id}</th>
                 <td className="px-4 py-3 whitespace-nowrap">{formatDate(donation.dateCreated)}</td>
-                <td className="px-4 py-3">{donation.receiver.organisation}</td>
+                <td className="px-4 py-3"><Destination receiver={donation.receiver} /></td>
                 <td className="px-4 py-3"><StatusPill status={donation.status} /></td>
-                <td className="px-4 py-3 text-right tabular-nums">{donation.totalItems}</td>
-                <td className="px-4 py-3 text-right whitespace-nowrap tabular-nums">
-                  {formatCO2e(donation.co2eAvoidedKg)}
-                </td>
                 <td className="px-4 py-3 text-right">
                   <button
                     type="button"

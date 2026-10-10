@@ -1,10 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
-import { listDonations } from "@/lib/api/client";
+import { useId, useRef, useState } from "react";
+import { getImpactReport, listDonations } from "@/lib/api/client";
 import type { DonationListDTO } from "@/lib/dto/donationSummary.dto";
+import type { OverallImpactSummary } from "@/lib/dto/impactReport.dto";
 import { DonationFilterBar } from "@/components/filters/filters";
 import { DonationResultsTable } from "@/components/donations/donations";
+import { ImpactSummary } from "@/components/impact/impact";
 import {
   EMPTY_FILTER_VALUES,
   FilterValues,
@@ -12,36 +14,44 @@ import {
   validateFilterValues,
 } from "@/components/filters/filterValues";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 /* lets a visitor without an order number find one by date, state or status, then track it */
 export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => void }) {
   const panelId = useId();
+  const latestRequest = useRef(0);
   const [open, setOpen] = useState(false);
-  const [values, setValues] = useState<FilterValues>(EMPTY_FILTER_VALUES); // what the form shows
-  const [applied, setApplied] = useState<FilterValues>(EMPTY_FILTER_VALUES); // what the list was fetched with
+  const [values, setValues] = useState<FilterValues>(EMPTY_FILTER_VALUES);
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<DonationListDTO | null>(null);
+  const [summary, setSummary] = useState<OverallImpactSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function load(nextValues: FilterValues, nextPage: number) {
+  // Filters apply as soon as they change, so a slow response for older filters must not overwrite newer ones
+  async function load(nextValues: FilterValues, nextPage: number, withSummary: boolean) {
+    const request = ++latestRequest.current;
+    const filters = toDonationFilters(nextValues);
     setLoading(true);
     setError(null);
 
     try {
-      const data = await listDonations({
-        ...toDonationFilters(nextValues),
-        limit: PAGE_SIZE,
-        offset: nextPage * PAGE_SIZE,
-      });
-      setResult(data ?? { items: [], total: 0 });
-      setApplied(nextValues);
+      // open orders have no impact figures yet, so there is nothing to total for them
+      const wantsSummary = withSummary && nextValues.status !== "OPEN";
+      const [list, report] = await Promise.all([
+        listDonations({ ...filters, limit: PAGE_SIZE, offset: nextPage * PAGE_SIZE }),
+        wantsSummary ? getImpactReport(filters) : null,
+      ]);
+      if (request !== latestRequest.current) return;
+
+      setResult(list ?? { items: [], total: 0 });
       setPage(nextPage);
+      if (withSummary) setSummary(report?.overall ?? null);
     } catch (err) {
+      if (request !== latestRequest.current) return;
       setError(err instanceof Error ? err.message : "Couldn't load orders. Try again.");
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   }
 
@@ -49,21 +59,18 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
     const next = !open;
     setOpen(next);
     // the first time the panel opens, show the most recent orders straight away
-    if (next && result === null) void load(applied, 0);
+    if (next && result === null) void load(values, 0, true);
   }
 
-  function apply() {
-    const problem = validateFilterValues(values);
+  function change(nextValues: FilterValues) {
+    setValues(nextValues);
+
+    const problem = validateFilterValues(nextValues);
     if (problem) {
       setError(problem);
       return;
     }
-    void load(values, 0);
-  }
-
-  function reset() {
-    setValues(EMPTY_FILTER_VALUES);
-    void load(EMPTY_FILTER_VALUES, 0);
+    void load(nextValues, 0, true);
   }
 
   return (
@@ -91,26 +98,27 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
       </h3>
 
       {open ? (
-        <div id={panelId} className="space-y-6 border-t border-slate-200 p-4 md:p-5">
+        <div id={panelId} className="space-y-5 border-t border-slate-200 p-4 md:p-5" aria-busy={loading}>
           <DonationFilterBar
             values={values}
-            onChange={setValues}
-            onApply={apply}
-            onReset={reset}
-            loading={loading}
+            onChange={change}
+            onClear={() => change(EMPTY_FILTER_VALUES)}
             error={error}
           />
 
           {result ? (
-            <DonationResultsTable
-              items={result.items}
-              total={result.total}
-              page={page}
-              pageSize={PAGE_SIZE}
-              onPageChange={(nextPage) => void load(applied, nextPage)}
-              onTrack={onTrack}
-              loading={loading}
-            />
+            <>
+              <ImpactSummary totalOrders={result.total} summary={summary} />
+              <DonationResultsTable
+                items={result.items}
+                total={result.total}
+                page={page}
+                pageSize={PAGE_SIZE}
+                onPageChange={(nextPage) => void load(values, nextPage, false)}
+                onTrack={onTrack}
+                loading={loading}
+              />
+            </>
           ) : loading ? (
             <p className="text-sm text-slate-600" role="status">
               Loading orders…

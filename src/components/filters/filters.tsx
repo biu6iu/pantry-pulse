@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useId } from "react";
+import { useId } from "react";
 import { FilterValues, STATE_OPTIONS, STATUS_OPTIONS, countActiveFilters } from "./filterValues";
 
 const LABEL_CLASS = "mb-2 block text-sm font-medium text-slate-700";
@@ -9,33 +9,19 @@ const CONTROL_CLASS =
 
 interface DonationFilterBarProps {
   values: FilterValues;
-  onChange: (values: FilterValues) => void;
-  onApply: () => void;
-  onReset: () => void;
-  loading?: boolean;
+  onChange: (values: FilterValues) => void; // called on every change; there is no separate apply step
+  onClear: () => void;
   error?: string | null;
 }
 
 /* the date, state and status controls for narrowing a list of orders; it holds no data of its own */
-export function DonationFilterBar({
-  values,
-  onChange,
-  onApply,
-  onReset,
-  loading = false,
-  error = null,
-}: DonationFilterBarProps) {
+export function DonationFilterBar({ values, onChange, onClear, error = null }: DonationFilterBarProps) {
   const id = useId();
   const errorId = `${id}-error`;
-  const activeCount = countActiveFilters(values);
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    onApply();
-  }
+  const hasFilters = countActiveFilters(values) > 0;
 
   return (
-    <form onSubmit={onSubmit} aria-describedby={error ? errorId : undefined}>
+    <div role="group" aria-label="Filter orders" aria-describedby={error ? errorId : undefined}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label htmlFor={`${id}-from`} className={LABEL_CLASS}>
@@ -112,26 +98,15 @@ export function DonationFilterBar({
         </p>
       ) : null}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70"
-        >
-          {loading ? "Searching…" : "Apply filters"}
-        </button>
+      {hasFilters ? (
         <button
           type="button"
-          onClick={onReset}
-          disabled={loading || activeCount === 0}
-          className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-[#141a43] hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+          onClick={onClear}
+          className="mt-3 text-sm font-semibold text-[#2a7d9d] underline underline-offset-2 hover:text-[#141a43] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          Reset
+          Clear filters
         </button>
-        <p className="text-sm text-slate-600" aria-live="polite">
-          {activeCount === 0 ? "No filters applied" : `${activeCount} filter${activeCount === 1 ? "" : "s"} selected`}
-        </p>
-      </div>
-    </form>
+      ) : null}
+    </div>
   );
 }
