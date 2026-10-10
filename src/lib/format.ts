@@ -10,6 +10,11 @@ export function formatWeight(kg: number) {
   return { value: Math.round(kg).toLocaleString(LOCALE), unit: 'kg' };
 }
 
+/* a whole number with thousands separators, e.g. 3740 -> '3,740' */
+export function formatCount(value: number) {
+  return Math.round(value).toLocaleString(LOCALE);
+}
+
 /* a short date such as '29 Aug 2026', read in UTC so every visitor sees the same day */
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(LOCALE, {
