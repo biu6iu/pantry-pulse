@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "csv-parse/sync";
 import { prisma } from "../src/lib/config/db";
+import type { Prisma } from "../src/generated/prisma/client";
 
 interface ItemRow {
   item_key: string;
@@ -43,6 +44,9 @@ interface OrderItemRow {
 }
 
 const UNKNOWN_ORG = "Unknown organisation";
+
+// Prisma's default 5 s transaction limit is far too short for hundreds of upserts over the network
+const IMPORT_TIMEOUT_MS = 10 * 60 * 1000;
 
 // cleaning helpers
 
@@ -83,7 +87,11 @@ function readCsv<T>(dir: string, file: string): T[] {
 }
 
 // Orders with no organisation name share a placeholder recipient per distinct type + location.
-async function findOrCreateRecipient(order: OrderRow, warnings: string[]): Promise<string> {
+async function findOrCreateRecipient(
+  db: Prisma.TransactionClient,
+  order: OrderRow,
+  warnings: string[],
+): Promise<string> {
   const orgName = cleanText(order.recipient_org);
   const details = {
     type: cleanText(order.recipient_type),
@@ -97,11 +105,11 @@ async function findOrCreateRecipient(order: OrderRow, warnings: string[]): Promi
     warnings.push(`${order.order_id}: no recipient_org, used "${UNKNOWN_ORG}" as the recipient name instead`);
   }
 
-  const existing = await prisma.user.findFirst({
+  const existing = await db.user.findFirst({
     where: orgName ? { name: orgName } : { name: UNKNOWN_ORG, ...details },
   });
   if (!existing) {
-    const created = await prisma.user.create({ data: { name: orgName ?? UNKNOWN_ORG, ...details } });
+    const created = await db.user.create({ data: { name: orgName ?? UNKNOWN_ORG, ...details } });
     return created.id;
   }
 
@@ -126,82 +134,87 @@ async function main() {
   let entryCount = 0;
   const warnings: string[] = [];
 
-  // Upserts throughout (keyed on ids taken from the source data) so re-running the script is safe
+  // Every write runs in one transaction, so a failed import leaves the database exactly as it was.
+  // Upserts are keyed on ids taken from the source data, so re-running the script is safe.
+  await prisma.$transaction(
+    async (tx) => {
+      const itemIds = new Set<string>();
+      for (const row of items) {
+        const id = cleanText(row.item_key);
+        if (!id) continue;
 
-  const itemIds = new Set<string>();
-  for (const row of items) {
-    const id = cleanText(row.item_key);
-    if (!id) continue;
+        const data = {
+          name: cleanText(row.display_name) ?? id,
+          category: cleanText(row.category),
+          unitsPerPack: cleanInt(row.units_per_pack),
+          unitWeightKg: cleanFloat(row.unit_weight_kg),
+          weightSource: cleanText(row.weight_source),
+          co2eKgPerUnit: cleanFloat(row.co2e_kg_per_unit),
+          co2eSource: cleanText(row.co2e_source),
+          healthImpactTier: cleanInt(row.health_impact_tier),
+        };
+        await tx.donatedItem.upsert({ where: { id }, update: data, create: { id, ...data } });
+        itemIds.add(id);
+        itemCount++;
+      }
 
-    const data = {
-      name: cleanText(row.display_name) ?? id,
-      category: cleanText(row.category),
-      unitsPerPack: cleanInt(row.units_per_pack),
-      unitWeightKg: cleanFloat(row.unit_weight_kg),
-      weightSource: cleanText(row.weight_source),
-      co2eKgPerUnit: cleanFloat(row.co2e_kg_per_unit),
-      co2eSource: cleanText(row.co2e_source),
-      healthImpactTier: cleanInt(row.health_impact_tier),
-    };
-    await prisma.donatedItem.upsert({ where: { id }, update: data, create: { id, ...data } });
-    itemIds.add(id);
-    itemCount++;
-  }
+      const donationIds = new Set<string>();
+      for (const row of orders) {
+        const id = cleanText(row.order_id);
+        if (!id) continue;
 
-  const donationIds = new Set<string>();
-  for (const row of orders) {
-    const id = cleanText(row.order_id);
-    if (!id) continue;
+        const createdAt = parseCsvDate(row.created_at);
+        if (!createdAt) {
+          warnings.push(`${id}: no valid created_at date, skipped entirely`);
+          continue;
+        }
 
-    const createdAt = parseCsvDate(row.created_at);
-    if (!createdAt) {
-      warnings.push(`${id}: no valid created_at date, skipped entirely`);
-      continue;
-    }
+        const data = {
+          status: cleanStatus(row.status),
+          createdAt,
+          completedAt: parseCsvDate(row.completed_at),
+          shopifyOrderId: cleanText(row.shopify_order_id),
+          deliveryMethod: cleanText(row.delivery_method),
+          recipientId: await findOrCreateRecipient(tx, row, warnings),
+        };
+        await tx.donation.upsert({ where: { id }, update: data, create: { id, ...data } });
+        donationIds.add(id);
+        donationCount++;
+      }
 
-    const data = {
-      status: cleanStatus(row.status),
-      createdAt,
-      completedAt: parseCsvDate(row.completed_at),
-      shopifyOrderId: cleanText(row.shopify_order_id),
-      deliveryMethod: cleanText(row.delivery_method),
-      recipientId: await findOrCreateRecipient(row, warnings),
-    };
-    await prisma.donation.upsert({ where: { id }, update: data, create: { id, ...data } });
-    donationIds.add(id);
-    donationCount++;
-  }
+      for (const row of orderItems) {
+        const donationId = cleanText(row.order_id);
+        const itemId = cleanText(row.item_key);
+        const lineNo = cleanInt(row.line_no);
+        const label = `${donationId ?? "?"} line ${row.line_no || "?"}`;
 
-  for (const row of orderItems) {
-    const donationId = cleanText(row.order_id);
-    const itemId = cleanText(row.item_key);
-    const lineNo = cleanInt(row.line_no);
-    const label = `${donationId ?? "?"} line ${row.line_no || "?"}`;
+        if (!donationId || !donationIds.has(donationId)) {
+          warnings.push(`${label}: order was not imported, line skipped`);
+          continue;
+        }
+        if (!itemId || !itemIds.has(itemId)) {
+          warnings.push(`${label}: unknown item_key "${row.item_key}", line skipped`);
+          continue;
+        }
+        if (lineNo === null) {
+          warnings.push(`${label}: no valid line_no, line skipped`);
+          continue;
+        }
 
-    if (!donationId || !donationIds.has(donationId)) {
-      warnings.push(`${label}: order was not imported, line skipped`);
-      continue;
-    }
-    if (!itemId || !itemIds.has(itemId)) {
-      warnings.push(`${label}: unknown item_key "${row.item_key}", line skipped`);
-      continue;
-    }
-    if (lineNo === null) {
-      warnings.push(`${label}: no valid line_no, line skipped`);
-      continue;
-    }
-
-    const id = `${donationId}-${lineNo}`;
-    const data = {
-      donationId,
-      itemId,
-      lineNo,
-      variant: cleanText(row.variant),
-      quantity: cleanQuantity(row.quantity),
-    };
-    await prisma.donationEntry.upsert({ where: { id }, update: data, create: { id, ...data } });
-    entryCount++;
-  }
+        const id = `${donationId}-${lineNo}`;
+        const data = {
+          donationId,
+          itemId,
+          lineNo,
+          variant: cleanText(row.variant),
+          quantity: cleanQuantity(row.quantity),
+        };
+        await tx.donationEntry.upsert({ where: { id }, update: data, create: { id, ...data } });
+        entryCount++;
+      }
+    },
+    { timeout: IMPORT_TIMEOUT_MS },
+  );
 
   console.log(`Imported ${itemCount} items, ${donationCount} donations, ${entryCount} line items.`);
   if (warnings.length > 0) {
@@ -213,6 +226,7 @@ async function main() {
 main()
   .catch((error) => {
     console.error(error);
+    console.error("Import failed, so no changes were saved.");
     process.exitCode = 1;
   })
   .finally(() => prisma.$disconnect());

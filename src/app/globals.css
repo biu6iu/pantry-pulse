@@ -203,8 +203,9 @@
     color: white;
   }
 
+  /* the bottom margin leaves room for the tooltip above the tallest bar */
   .impact-over-time__total {
-    margin: 0 0 24px;
+    margin: 0 0 64px;
     font-size: clamp(1rem, 1.5vw, 1.3rem);
     color: var(--color-brand-blue);
   }
@@ -288,9 +289,9 @@
     white-space: nowrap;
   }
 
+  /* bottom is set inline so the tooltip sits just above its bar */
   .impact-over-time__tooltip {
     position: absolute;
-    top: -8px;
     z-index: 1;
     display: none;
     flex-direction: column;
@@ -305,17 +306,15 @@
 
   .impact-over-time__tooltip--center {
     left: 50%;
-    transform: translate(-50%, -100%);
+    transform: translateX(-50%);
   }
 
   .impact-over-time__tooltip--start {
     left: 0;
-    transform: translateY(-100%);
   }
 
   .impact-over-time__tooltip--end {
     right: 0;
-    transform: translateY(-100%);
   }
 
   .impact-over-time__column:hover .impact-over-time__tooltip,
