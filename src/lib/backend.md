@@ -67,17 +67,18 @@ Because services depend on the `IDonationRepository` interface rather than the P
 | --- | --- | --- |
 | `GET /api/donations` | `donationService.listDonations(filters)` | `{ items, total }`: a page of donation summaries and the total matching the filters |
 | `GET /api/donations/[id]` | `donationService.getDonationDetail(id)` | One donation with its line items and impact, or 404 |
-| `GET /api/impact` | `impactService.getImpactReport()` | Impact totals overall, by category, by recipient and by month |
+| `GET /api/impact` | `impactService.getImpactReport(filters)` | Impact totals overall, by category, by recipient, by month, by item and by location |
 | `GET /api/tracking/[id]` | `trackingService.getTracking(id)` | Origin, recipient location and timeline for one donation, or 404 |
 
-`GET /api/donations` accepts these optional query parameters, and responds with 400 if one is invalid:
+`GET /api/donations` and `GET /api/impact` accept these optional query parameters, parsed by the shared `parseDonationFilters` in `api/filters.ts`, and respond with 400 if one is invalid:
 
 | Parameter | Meaning |
 | --- | --- |
-| `status` | `OPEN` or `COMPLETED` (case-insensitive) |
-| `recipientId` | Only donations to this recipient |
-| `from`, `to` | Date range on the donation's creation date (any format `new Date()` parses) |
-| `limit`, `offset` | Paging: `limit` is a positive integer, `offset` a non-negative integer |
+| `status` | `OPEN` or `COMPLETED` (case-insensitive). The impact report ignores it, because it only ever counts completed orders. |
+| `recipientId` | Only donations to this recipient (donations list only) |
+| `from`, `to` | Date range on the donation's creation date (any format `new Date()` parses). A date-only `to`, such as `2026-08-31`, covers that whole day. |
+| `country`, `state` | The recipient's country and state (case-insensitive). Without a country, or with Australia, `state` must be an Australian state code. |
+| `limit`, `offset` | Paging: `limit` is a positive integer, `offset` a non-negative integer (donations list only) |
 
 ## Data model
 
