@@ -182,22 +182,32 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
       {/* the same numbers as a table, for screen readers and anyone who prefers it */}
       <details className="impact-over-time__table-toggle">
         <summary>View as table</summary>
-        <table className="impact-over-time__table">
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col">{metric.label}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {columns.map((c) => (
-              <tr key={c.key}>
-                <td>{c.fullLabel}</td>
-                <td>{metric.format(c.value)}</td>
+        {/* months run across, lining up with the chart, rather than down the page */}
+        <div className="impact-over-time__table-scroll">
+          <table className="impact-over-time__table">
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                {columns.map((c) => (
+                  <th key={c.key} scope="col">
+                    {c.label}
+                    <span className="impact-over-time__table-year">{c.date.getFullYear()}</span>
+                  </th>
+                ))}
+                <th scope="col">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">{metric.label}</th>
+                {columns.map((c) => (
+                  <td key={c.key}>{metric.format(c.value)}</td>
+                ))}
+                <td>{metric.format(total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </details>
     </div>
   );
