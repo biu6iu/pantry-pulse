@@ -10,6 +10,16 @@ export function formatWeight(kg: number) {
   return { value: Math.round(kg).toLocaleString(LOCALE), unit: 'kg' };
 }
 
+/* a short date such as '29 Aug 2026', read in UTC so every visitor sees the same day */
+export function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(LOCALE, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 /* turns a category key into a readable name, e.g. 'medical_equipment' -> 'Medical equipment' */
 export function formatCategory(category: string) {
   const words = category.replace(/_/g, ' ').trim();
