@@ -8,8 +8,10 @@ import { DonationFilterBar } from "@/components/filters/filters";
 import { DonationResultsTable } from "@/components/donations/donations";
 import { ImpactSummary } from "@/components/impact/impact";
 import {
+  CountryOption,
   EMPTY_FILTER_VALUES,
   FilterValues,
+  countryOptionsFromCodes,
   toDonationFilters,
   validateFilterValues,
 } from "@/components/filters/filterValues";
@@ -25,6 +27,7 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<DonationListDTO | null>(null);
   const [summary, setSummary] = useState<OverallImpactSummary | null>(null);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,9 +47,11 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
       ]);
       if (request !== latestRequest.current) return;
 
-      setResult(list ?? { items: [], total: 0 });
+      setResult(list ?? { items: [], total: 0, countries: [] });
       setPage(nextPage);
       if (withSummary) setSummary(report?.overall ?? null);
+      // the choices cover every order, so they don't shrink as the visitor narrows the list
+      if (list) setCountries(countryOptionsFromCodes(list.countries));
     } catch (err) {
       if (request !== latestRequest.current) return;
       setError(err instanceof Error ? err.message : "Couldn't load orders. Try again.");
@@ -103,6 +108,7 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
             values={values}
             onChange={change}
             onClear={() => change(EMPTY_FILTER_VALUES)}
+            countries={countries}
             error={error}
           />
 

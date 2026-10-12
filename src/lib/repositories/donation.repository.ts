@@ -184,6 +184,18 @@ export class DonationRepository implements IDonationRepository {
     return prisma.donation.count({ where: toDonationWhere(filters) });
   }
 
+  // Every country an order has been sent to, whatever its status, so the list can offer them as a filter.
+  // The impact figures can't be used for this because they leave out orders that are still open
+  async getCountries(): Promise<string[]> {
+    const rows = await prisma.user.findMany({
+      where: { country: { not: null }, donations: { some: {} } },
+      select: { country: true },
+      distinct: ["country"],
+      orderBy: { country: "asc" },
+    });
+    return rows.map((row) => row.country as string);
+  }
+
   async getById(id: string): Promise<Donation | null> {
     const row = await prisma.donation.findUnique({ where: { id }, include: donationInclude });
     return row ? toDonation(row) : null;

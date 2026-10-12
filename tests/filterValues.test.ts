@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     EMPTY_FILTER_VALUES,
     countActiveFilters,
+    countryOptionsFromCodes,
     toDonationFilters,
     validateFilterValues,
 } from "@/components/filters/filterValues";
@@ -14,10 +15,17 @@ describe("toDonationFilters", () => {
     });
 
     it("keeps only the values that are set", () => {
-        expect(toDonationFilters({ ...EMPTY_FILTER_VALUES, state: "VIC", status: "COMPLETED" })).toEqual({
+        expect(
+            toDonationFilters({ ...EMPTY_FILTER_VALUES, country: "AU", state: "VIC", status: "COMPLETED" }),
+        ).toEqual({
+            country: "AU",
             state: "VIC",
             status: "COMPLETED",
         });
+    });
+
+    it("filters by an international country on its own", () => {
+        expect(toDonationFilters({ ...EMPTY_FILTER_VALUES, country: "ID" })).toEqual({ country: "ID" });
     });
 
     it("starts the range at the start of the from day and ends it at the end of the to day", () => {
@@ -28,7 +36,20 @@ describe("toDonationFilters", () => {
     });
 
     it("produces a query string the API's filter parser accepts unchanged", () => {
-        const filters = toDonationFilters({ from: "2026-08-01", to: "2026-08-31", state: "VIC", status: "OPEN" });
+        const filters = toDonationFilters({
+            from: "2026-08-01",
+            to: "2026-08-31",
+            country: "AU",
+            state: "VIC",
+            status: "OPEN",
+        });
+        const parsed = parseDonationFilters(new URLSearchParams(toQueryString(filters)));
+
+        expect(parsed).toEqual({ ok: true, filters });
+    });
+
+    it("produces an international filter the API accepts, with no state to confuse it", () => {
+        const filters = toDonationFilters({ ...EMPTY_FILTER_VALUES, country: "ID" });
         const parsed = parseDonationFilters(new URLSearchParams(toQueryString(filters)));
 
         expect(parsed).toEqual({ ok: true, filters });
@@ -51,6 +72,27 @@ describe("validateFilterValues", () => {
 describe("countActiveFilters", () => {
     it("counts the values that are set", () => {
         expect(countActiveFilters(EMPTY_FILTER_VALUES)).toBe(0);
-        expect(countActiveFilters({ from: "2026-08-01", to: "", state: "VIC", status: "" })).toBe(2);
+        expect(countActiveFilters({ from: "2026-08-01", to: "", country: "AU", state: "VIC", status: "" })).toBe(3);
+    });
+});
+
+describe("countryOptionsFromCodes", () => {
+    it("lists each country once, with Australia first and the rest alphabetically by name", () => {
+        const options = countryOptionsFromCodes(["VN", "AU", "ID", "AU", "FJ"]);
+
+        expect(options).toEqual([
+            { value: "AU", label: "Australia" },
+            { value: "FJ", label: "Fiji" },
+            { value: "ID", label: "Indonesia" },
+            { value: "VN", label: "Vietnam" },
+        ]);
+    });
+
+    it("leaves out blank values", () => {
+        expect(countryOptionsFromCodes(["", "TH"])).toEqual([{ value: "TH", label: "Thailand" }]);
+    });
+
+    it("falls back to the stored value when it is not a standard country code", () => {
+        expect(countryOptionsFromCodes(["Atlantis"])).toEqual([{ value: "Atlantis", label: "Atlantis" }]);
     });
 });

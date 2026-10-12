@@ -1,7 +1,14 @@
 "use client";
 
 import { useId } from "react";
-import { FilterValues, STATE_OPTIONS, STATUS_OPTIONS, countActiveFilters } from "./filterValues";
+import {
+  AUSTRALIA_COUNTRY_CODE,
+  CountryOption,
+  FilterValues,
+  STATE_OPTIONS,
+  STATUS_OPTIONS,
+  countActiveFilters,
+} from "./filterValues";
 
 const LABEL_CLASS = "mb-2 block text-sm font-medium text-slate-700";
 const CONTROL_CLASS =
@@ -11,18 +18,27 @@ interface DonationFilterBarProps {
   values: FilterValues;
   onChange: (values: FilterValues) => void; // called on every change; there is no separate apply step
   onClear: () => void;
+  countries?: CountryOption[]; // the countries orders were delivered to, built from the data
   error?: string | null;
 }
 
-/* the date, state and status controls for narrowing a list of orders; it holds no data of its own */
-export function DonationFilterBar({ values, onChange, onClear, error = null }: DonationFilterBarProps) {
+/* the date, country, state and status controls for narrowing a list of orders; it holds no data of its own */
+export function DonationFilterBar({
+  values,
+  onChange,
+  onClear,
+  countries = [],
+  error = null,
+}: DonationFilterBarProps) {
   const id = useId();
   const errorId = `${id}-error`;
   const hasFilters = countActiveFilters(values) > 0;
+  // states are only listed for Australia; other countries are filtered by country alone
+  const showStates = values.country === AUSTRALIA_COUNTRY_CODE;
 
   return (
     <div role="group" aria-label="Filter orders" aria-describedby={error ? errorId : undefined}>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
         <div>
           <label htmlFor={`${id}-from`} className={LABEL_CLASS}>
             From
@@ -54,23 +70,51 @@ export function DonationFilterBar({ values, onChange, onClear, error = null }: D
         </div>
 
         <div>
-          <label htmlFor={`${id}-state`} className={LABEL_CLASS}>
-            State
+          <label htmlFor={`${id}-country`} className={LABEL_CLASS}>
+            Country
           </label>
           <select
-            id={`${id}-state`}
-            value={values.state}
-            onChange={(event) => onChange({ ...values, state: event.target.value })}
+            id={`${id}-country`}
+            value={values.country}
+            // a state only belongs to Australia, so it is cleared when the country changes
+            onChange={(event) =>
+              onChange({
+                ...values,
+                country: event.target.value,
+                state: event.target.value === AUSTRALIA_COUNTRY_CODE ? values.state : "",
+              })
+            }
             className={CONTROL_CLASS}
           >
-            <option value="">All states</option>
-            {STATE_OPTIONS.map((option) => (
+            <option value="">All countries</option>
+            {countries.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
         </div>
+
+        {showStates ? (
+          <div>
+            <label htmlFor={`${id}-state`} className={LABEL_CLASS}>
+              State
+            </label>
+            <select
+              id={`${id}-state`}
+              value={values.state}
+              onChange={(event) => onChange({ ...values, state: event.target.value })}
+              className={CONTROL_CLASS}
+            >
+              <option value="">All states</option>
+              {STATE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         <div>
           <label htmlFor={`${id}-status`} className={LABEL_CLASS}>
