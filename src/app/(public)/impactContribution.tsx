@@ -135,7 +135,7 @@ export default async function ImpactContribution() {
         </div>
       ) : null}
 
-      {report && report.byMonth.length > 0 ? (
+      {report && (report.byMonth.length > 0 || report.byHealthImpactScore.length > 0) ? (
         <div className="impact-over-time">
           <h2 className="impact-contribution__summary-title">IMPACT OVER TIME</h2>
 
@@ -143,7 +143,10 @@ export default async function ImpactContribution() {
             How much difference delivered donations have made each month.
           </p>
 
-          <ImpactOverTimeChart months={report.byMonth} />
+          <ImpactOverTimeChart
+            months={report.byMonth}
+            healthImpactScores={report.byHealthImpactScore}
+          />
         </div>
       ) : null}
     </section>

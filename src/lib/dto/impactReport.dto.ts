@@ -22,9 +22,15 @@ export interface MonthlyImpactSummary extends ImpactTotals {
   month: string; // "YYYY-MM"
 }
 
+export interface HealthImpactScoreSummary {
+  score: number;
+  totalDonations: number;
+}
+
 export interface ImpactReportDTO {
   overall: OverallImpactSummary;
   byCategory: CategoryImpactSummary[];
   byRecipient: RecipientImpactSummary[];
   byMonth: MonthlyImpactSummary[];
+  byHealthImpactScore: HealthImpactScoreSummary[];
 }

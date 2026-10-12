@@ -6,6 +6,7 @@ import {
   CategoryImpactSummary,
   RecipientImpactSummary,
   MonthlyImpactSummary,
+  HealthImpactScoreSummary,
 } from "./donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
@@ -86,6 +87,11 @@ interface ImpactTotalsRow {
   totalWeightDivertedKg: RawNumber;
   totalCO2eAvoidedKg: RawNumber;
   averageHealthImpactScore: RawNumber | null;
+}
+
+interface HealthImpactScoreRow {
+  score: RawNumber;
+  totalDonations: RawNumber;
 }
 
 // Only completed donations to external recipients count towards impact figures, so status is
@@ -228,5 +234,35 @@ export class DonationRepository implements IDonationRepository {
       ORDER BY 1
     `;
     return rows.map((row) => ({ month: row.month, ...toImpactTotals(row) }));
+  }
+
+  async getImpactByHealthImpactScore(filters: DonationFilters = {}): Promise<HealthImpactScoreSummary[]> {
+    const rows = await prisma.$queryRaw<HealthImpactScoreRow[]>`
+      WITH donation_scores AS (
+        SELECT
+          ROUND((
+            SUM(e.quantity * (${HEALTH_IMPACT_TIER_COUNT + 1}::int - i."healthImpactTier"))
+            / NULLIF(SUM(e.quantity) FILTER (WHERE i."healthImpactTier" IS NOT NULL), 0)
+          )::numeric, 2)::float AS score
+        ${impactSource(filters)}
+        GROUP BY d.id
+      )
+      SELECT score, COUNT(*) AS "totalDonations"
+      FROM donation_scores
+      WHERE score IS NOT NULL
+      GROUP BY score
+      ORDER BY score
+    `;
+    const scores = rows.map((row) => ({
+      score: roundImpact(toNum(row.score)),
+      totalDonations: toNum(row.totalDonations),
+    }));
+
+    if (scores.length === 0) return [];
+
+    const byScore = new Map(scores.map((entry) => [entry.score, entry.totalDonations]));
+    return [...new Set([...scores.map((entry) => entry.score), 1, 2, 3, 4])]
+      .sort((a, b) => a - b)
+      .map((score) => ({ score, totalDonations: byScore.get(score) ?? 0 }));
   }
 }

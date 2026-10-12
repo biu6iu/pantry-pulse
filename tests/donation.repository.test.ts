@@ -160,6 +160,21 @@ describe("getImpactByMonth", () => {
     });
 });
 
+describe("getImpactByHealthImpactScore", () => {
+    it("counts completed donations in rounded score buckets", async () => {
+        const results = await repo.getImpactByHealthImpactScore();
+
+        expect(results).toEqual([
+            { score: 1, totalDonations: 0 },
+            { score: 2, totalDonations: 0 },
+            { score: 2.57, totalDonations: 1 },
+            { score: 2.67, totalDonations: 1 },
+            { score: 3, totalDonations: 0 },
+            { score: 4, totalDonations: 0 },
+        ]);
+    });
+});
+
 describe("getOverallImpactSummary", () => {
     it("sums totals across completed donations", async () => {
         const result = await repo.getOverallImpactSummary();

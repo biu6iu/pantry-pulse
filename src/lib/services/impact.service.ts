@@ -5,13 +5,14 @@ export class ImpactService {
   constructor(private readonly repo: IDonationRepository) {}
 
   async getImpactReport(): Promise<ImpactReportDTO> {
-    const [overall, byCategory, byRecipient, byMonth] = await Promise.all([
+    const [overall, byCategory, byRecipient, byMonth, byHealthImpactScore] = await Promise.all([
       this.repo.getOverallImpactSummary(),
       this.repo.getImpactByCategory(),
       this.repo.getImpactByRecipient(),
       this.repo.getImpactByMonth(),
+      this.repo.getImpactByHealthImpactScore(),
     ]);
 
-    return { overall, byCategory, byRecipient, byMonth };
+    return { overall, byCategory, byRecipient, byMonth, byHealthImpactScore };
   }
 }
