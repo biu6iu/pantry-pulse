@@ -117,7 +117,13 @@ describe("GET /api/donations query parameters", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body).toEqual({ items: [], total: 0 });
+        // the country choices cover every order, so they stay the same when the filters match nothing
+        expect(body).toEqual({
+            items: [],
+            total: 0,
+            countries: ["CN", "US"],
+            regions: { CN: ["SH"], US: ["OH"] },
+        });
     });
 });
 

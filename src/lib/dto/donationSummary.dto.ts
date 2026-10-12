@@ -25,4 +25,8 @@ export interface DonationSummaryDTO {
 export interface DonationListDTO {
   items: DonationSummaryDTO[];
   total: number;
+  // every country an order has been sent to, whatever the filters or status, so a page can offer them all
+  countries: string[];
+  // for each country, the regions (state, or city where there is no state) orders were sent to
+  regions: Record<string, string[]>;
 }

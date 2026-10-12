@@ -456,6 +456,77 @@ describe("getAll filters", () => {
     });
 });
 
+describe("getCountries", () => {
+    it("lists each country that has orders, in alphabetical order", async () => {
+        expect(await repo.getCountries()).toEqual(["CN", "US"]);
+    });
+
+    it("includes a country whose only order is still open", async () => {
+        const hanoi = await prisma.user.create({ data: { name: "Hanoi Clinic", city: "Hanoi", country: "VN" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-V1",
+                status: "open",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: hanoi.id,
+            },
+        });
+
+        expect(await repo.getCountries()).toEqual(["CN", "US", "VN"]);
+    });
+
+    it("leaves out recipients with no orders and recipients with no country", async () => {
+        await prisma.user.create({ data: { name: "Suva Clinic", city: "Suva", country: "FJ" } });
+        const noCountry = await prisma.user.create({ data: { name: "No Country Clinic" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-N1",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: noCountry.id,
+            },
+        });
+
+        expect(await repo.getCountries()).toEqual(["CN", "US"]);
+    });
+});
+
+describe("getRegions", () => {
+    it("lists each country's states", async () => {
+        expect(await repo.getRegions()).toEqual({ CN: ["SH"], US: ["OH"] });
+    });
+
+    it("uses the city for a place with no state, and skips places with no order", async () => {
+        const hanoi = await prisma.user.create({ data: { name: "Hanoi Clinic", city: "Hanoi", country: "VN" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-V1",
+                status: "open",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: hanoi.id,
+            },
+        });
+        await prisma.user.create({ data: { name: "Suva Clinic", city: "Suva", country: "FJ" } });
+
+        expect(await repo.getRegions()).toEqual({ CN: ["SH"], US: ["OH"], VN: ["Hanoi"] });
+    });
+
+    it("lets a city stand in for the region when filtering", async () => {
+        const hanoi = await prisma.user.create({ data: { name: "Hanoi Clinic", city: "Hanoi", country: "VN" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-V1",
+                status: "open",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: hanoi.id,
+            },
+        });
+
+        const rows = await repo.getAll({ country: "VN", state: "hanoi" });
+        expect(rows.map((d) => d.id)).toEqual(["#TEST-V1"]);
+    });
+});
+
 describe("count", () => {
     it("counts every donation with no filters", async () => {
         expect(await repo.count()).toBe(3);

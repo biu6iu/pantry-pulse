@@ -6,6 +6,7 @@ import type { DonationDTO } from "@/lib/dto/donation.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 import { TrackingMap } from "@/components/maps/maps";
 import { BUTTON_MOTION_CLASS } from "@/components/ui/buttonStyles";
+import { regionName } from "@/lib/regionNames";
 import BrowseOrders from "./browseOrders";
 
 // API healthImpact.score is a quantity-weighted average of item scores.
@@ -73,7 +74,7 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
 }
 
 function placeLabel(city: string | null, state: string | null, country: string | null) {
-  return [city, state, country].filter(Boolean).join(", ");
+  return [city, regionName(state), country].filter(Boolean).join(", ");
 }
 
 function formatWhen(iso: string | null): string {

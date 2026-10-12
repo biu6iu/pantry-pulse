@@ -1,5 +1,7 @@
 "use client";
 
+import { regionName } from "@/lib/regionNames";
+
 import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 import type { DonationStatus } from "@/lib/models/donationStatus";
 import { formatCategory, formatDate } from "@/lib/format";
@@ -35,7 +37,7 @@ function StatusPill({ status }: { status: DonationStatus }) {
 // The list says where an order went and to what kind of recipient, not who received it:
 // a public, browsable list of every recipient's name has not been agreed with the client
 function Destination({ receiver }: { receiver: DonationSummaryDTO["receiver"] }) {
-  const place = [receiver.city, receiver.state].filter(Boolean).join(", ");
+  const place = [receiver.city, regionName(receiver.state)].filter(Boolean).join(", ");
   const type = receiver.type && receiver.type !== "unknown" ? formatCategory(receiver.type) : null;
 
   return (
@@ -79,8 +81,16 @@ export function DonationResultsTable({
   return (
     <div>
       <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full min-w-[520px] border-collapse text-sm text-[#141a43]">
+        {/* fixed layout and column widths, so the columns and row heights stay put from page to page */}
+        <table className="w-full min-w-[46rem] table-fixed border-collapse text-sm text-[#141a43]">
           <caption className="sr-only">Orders matching the selected filters</caption>
+          <colgroup>
+            <col className="w-[15%]" />
+            <col className="w-[25%]" />
+            <col className="w-[28%]" />
+            <col className="w-[18%]" />
+            <col className="w-[14%]" />
+          </colgroup>
           <thead className="bg-slate-50">
             <tr>
               <th scope="col" className={HEADER_CELL_CLASS}>Order</th>
@@ -94,12 +104,12 @@ export function DonationResultsTable({
           </thead>
           <tbody>
             {items.map((donation) => (
-              <tr key={donation.id} className="border-t border-slate-200">
-                <th scope="row" className="px-4 py-3 text-left font-bold">{donation.id}</th>
-                <td className="px-4 py-3 whitespace-nowrap">{formatDate(donation.dateCreated)}</td>
-                <td className="px-4 py-3"><Destination receiver={donation.receiver} /></td>
-                <td className="px-4 py-3"><StatusPill status={donation.status} /></td>
-                <td className="px-4 py-3 text-right">
+              <tr key={donation.id} className="h-[4.75rem] border-t border-slate-200">
+                <th scope="row" className="px-4 py-3 text-left align-middle font-bold">{donation.id}</th>
+                <td className="px-4 py-3 align-middle whitespace-nowrap">{formatDate(donation.dateCreated)}</td>
+                <td className="px-4 py-3 align-middle"><Destination receiver={donation.receiver} /></td>
+                <td className="px-4 py-3 align-middle"><StatusPill status={donation.status} /></td>
+                <td className="px-4 py-3 text-right align-middle">
                   <button
                     type="button"
                     onClick={() => onTrack(donation.id)}

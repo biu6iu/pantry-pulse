@@ -2,6 +2,7 @@
 
 import type { TrackingDTO, TrackingLocationDTO } from '@/lib/dto/tracking.dto';
 import { ORIGIN } from "@/lib/config/origin";
+import { regionName } from "@/lib/regionNames";
 import OsmRouteMapLoader from "./osmRouteMapLoader";
 
 function hasCoords(
@@ -11,7 +12,7 @@ function hasCoords(
 }
 
 function labelFor(location: TrackingLocationDTO) {
-  const place = [location.city, location.state, location.country].filter(Boolean).join(", ");
+  const place = [location.city, regionName(location.state), location.country].filter(Boolean).join(", ");
   return place ? `${location.organisation} (${place})` : location.organisation;
 }
 
