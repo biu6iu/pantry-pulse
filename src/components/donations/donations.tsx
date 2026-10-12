@@ -3,6 +3,7 @@
 import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 import type { DonationStatus } from "@/lib/models/donationStatus";
 import { formatCategory, formatDate } from "@/lib/format";
+import { BUTTON_MOTION_CLASS } from "@/components/ui/buttonStyles";
 
 const STATUS_LABELS: Record<DonationStatus, string> = {
   COMPLETED: "Completed",
@@ -17,16 +18,11 @@ const STATUS_CLASSES: Record<DonationStatus, string> = {
 };
 
 const HEADER_CELL_CLASS = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600";
-// Shared by the buttons in this file: they lift and fill with the brand teal on hover, press down on click,
-// and stay still when disabled or when the visitor has asked for reduced motion
-const BUTTON_MOTION_CLASS =
-  "transition duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#2a7d9d] hover:shadow-md active:translate-y-0 active:scale-95 " +
-  "motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100 " +
-  "disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none";
+// The table's buttons fill with the brand teal on hover
 const TRACK_BUTTON_CLASS =
-  `rounded-full bg-[#141a43] px-5 py-2 text-xs font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#141a43] ${BUTTON_MOTION_CLASS}`;
+  `rounded-full bg-[#141a43] px-5 py-2 text-xs font-semibold text-white hover:bg-[#2a7d9d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#141a43] ${BUTTON_MOTION_CLASS}`;
 const PAGE_BUTTON_CLASS =
-  `rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-[#141a43] hover:border-[#2a7d9d] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:hover:border-slate-300 disabled:hover:bg-transparent disabled:hover:text-[#141a43] ${BUTTON_MOTION_CLASS}`;
+  `rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-[#141a43] hover:border-[#2a7d9d] hover:bg-[#2a7d9d] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:hover:border-slate-300 disabled:hover:bg-transparent disabled:hover:text-[#141a43] ${BUTTON_MOTION_CLASS}`;
 
 function StatusPill({ status }: { status: DonationStatus }) {
   return (

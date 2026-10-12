@@ -5,6 +5,7 @@ import { getDonation, getTracking } from "@/lib/api/client";
 import type { DonationDTO } from "@/lib/dto/donation.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 import { TrackingMap } from "@/components/maps/maps";
+import { BUTTON_MOTION_CLASS } from "@/components/ui/buttonStyles";
 import BrowseOrders from "./browseOrders";
 
 // API healthImpact.score is a quantity-weighted average of item scores.
@@ -363,7 +364,7 @@ export default function TrackYourImpact() {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70"
+                className={`rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#141a43] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#D02327] ${BUTTON_MOTION_CLASS}`}
               >
                 {loading ? "Searching…" : "Track"}
               </button>
