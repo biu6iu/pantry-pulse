@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Apply hover: styles whenever the pointer is over an element. Tailwind v4 only applies them on devices that
+   report hover support, and touch-screen laptops often report none, so hover effects would never show there. */
+@custom-variant hover (&:hover);
+
 @theme {
     --color-brand-red: #d02327;
     --color-brand-blue: #141a43;

@@ -5,6 +5,7 @@ import { regionName } from "@/lib/regionNames";
 import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 import type { DonationStatus } from "@/lib/models/donationStatus";
 import { formatCategory, formatDate } from "@/lib/format";
+import { BUTTON_MOTION_CLASS } from "@/components/ui/buttonStyles";
 
 const STATUS_LABELS: Record<DonationStatus, string> = {
   COMPLETED: "Completed",
@@ -19,8 +20,11 @@ const STATUS_CLASSES: Record<DonationStatus, string> = {
 };
 
 const HEADER_CELL_CLASS = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600";
+// The table's buttons fill with the brand teal on hover
+const TRACK_BUTTON_CLASS =
+  `rounded-full bg-[#141a43] px-5 py-2 text-xs font-semibold text-white hover:bg-[#2a7d9d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#141a43] ${BUTTON_MOTION_CLASS}`;
 const PAGE_BUTTON_CLASS =
-  "rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-[#141a43] hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50";
+  `rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-[#141a43] hover:border-[#2a7d9d] hover:bg-[#2a7d9d] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:hover:border-slate-300 disabled:hover:bg-transparent disabled:hover:text-[#141a43] ${BUTTON_MOTION_CLASS}`;
 
 function StatusPill({ status }: { status: DonationStatus }) {
   return (
@@ -111,7 +115,7 @@ export function DonationResultsTable({
                     onClick={() => onTrack(donation.id)}
                     disabled={loading}
                     aria-label={`Track order ${donation.id}`}
-                    className="rounded-full bg-[#141a43] px-5 py-2 text-xs font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70"
+                    className={TRACK_BUTTON_CLASS}
                   >
                     Track
                   </button>
