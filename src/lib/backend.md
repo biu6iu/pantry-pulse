@@ -65,9 +65,9 @@ Because services depend on the `IDonationRepository` interface rather than the P
 
 | Route | Service call | Returns |
 | --- | --- | --- |
-| `GET /api/donations` | `donationService.listDonations(filters)` | `{ items, total }`: a page of donation summaries and the total matching the filters |
+| `GET /api/donations` | `donationService.listDonations(filters)` | `{ items, total }`: a page of donation summaries and the total matching the filters, plus `countries` (every country an order was sent to) and `regions` (for each country, the states or cities orders went to), which the order filters are built from |
 | `GET /api/donations/[id]` | `donationService.getDonationDetail(id)` | One donation with its line items and impact, or 404 |
-| `GET /api/impact` | `impactService.getImpactReport(filters)` | Impact totals overall, by category, by recipient, by month, by item and by location |
+| `GET /api/impact` | `impactService.getImpactReport(filters)` | Impact totals overall, by category, by recipient, by month, by item, by location and by health impact score |
 | `GET /api/tracking/[id]` | `trackingService.getTracking(id)` | Origin, recipient location and timeline for one donation, or 404 |
 
 `GET /api/donations` and `GET /api/impact` accept these optional query parameters, parsed by the shared `parseDonationFilters` in `api/filters.ts`, and respond with 400 if one is invalid:
@@ -128,7 +128,7 @@ Shared constants (`HEALTH_IMPACT_TIER_COUNT`, `INTERNAL_RECIPIENT_TYPE`) live in
 
 - `getAll`, `count` and `getById` use the Prisma query API and map rows to models with `toDonation`. `getAll` orders by creation date, newest first.
 - `getAll` and `count` build their `where` from the same function (`toDonationWhere`), so the total always matches the list. `limit` and `offset` only apply to `getAll`.
-- The four impact queries use raw SQL (`prisma.$queryRaw`). They ignore `status`, `limit` and `offset`: only completed donations count, and aggregates are not paged.
+- The five impact queries use raw SQL (`prisma.$queryRaw`). They ignore `status`, `limit` and `offset`: only completed donations count, and aggregates are not paged.
 - Raw queries return `bigint` and numeric strings. Convert them with `toNum` before returning.
 
 ## Filters

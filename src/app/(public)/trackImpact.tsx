@@ -26,7 +26,8 @@ function healthTier(donation: DonationDTO): string {
 
 function healthPinPercent(donation: DonationDTO): number | null {
   if (donation.status !== "COMPLETED" || !donation.healthImpact) return null;
-  return Math.min(96, Math.max(4, (donation.healthImpact.score / 4) * 100));
+  // 0 sits at the left end of the scale and 4 at the right
+  return Math.min(100, Math.max(0, (donation.healthImpact.score / 4) * 100));
 }
 
 function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
@@ -42,7 +43,8 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
       <div className="relative mt-2 mb-2 h-10">
         {pinPercent != null ? (
           <div
-            className="absolute -top-1 z-10"
+            className="absolute -top-1 z-10 -translate-x-1/2"
+            style={{ left: `${pinPercent}%` }}
             aria-hidden="true"
           >
             <div
@@ -54,9 +56,13 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
           className="absolute bottom-0 h-5 w-full rounded-md"
           style={{
             background:
-              "linear-gradient(to right, #141A43, #2e3565, #535a87, #7e84aa, #a8acca)",
+              "linear-gradient(to right, #a8acca, #7e84aa, #535a87, #2e3565, #141A43)",
           }}
         />
+      </div>
+      <div className="flex justify-between text-xs font-semibold text-slate-600" aria-hidden="true">
+        <span>0</span>
+        <span>4</span>
       </div>
       <p className="mt-2 text-lg font-bold">
         {label}
@@ -66,7 +72,7 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
         href="#health-impact-calculation"
         className="mt-1 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#D02327]"
       >
-        See how we calculate health impact*
+        See how we calculate health impact
       </a>
       </div>
     </article>
@@ -123,6 +129,12 @@ function EnvironmentalCard({ donation }: { donation: DonationDTO | null }) {
         ) : (
           <p className="text-lg font-bold">Not recorded</p>
         )}
+        <a
+          href="#environmental-impact-calculation"
+          className="mt-3 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#1b7a4e]"
+        >
+          See how we calculate environmental impact
+        </a>
       </div>
     </article>
   );
@@ -229,54 +241,97 @@ function DeliveryStatusCard({ tracking }: { tracking: TrackingDTO }) {
   );
 }
 
-function HealthImpactMethodology() {
+function CalculationPanel({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section
-      id="health-impact-calculation"
-      aria-labelledby="health-impact-calculation-heading"
-      className="overflow-hidden rounded-2xl bg-white p-4 shadow-md"
+      id={id}
+      className="scroll-mt-6 rounded-2xl border border-white/60 bg-white/45 p-6 text-[#141a43]"
     >
-      <div className="-mx-4 -mt-4 mb-6 bg-[#D02327] px-4 py-3">
-        <h3
-          id="health-impact-calculation-heading"
-          className="text-sm font-semibold uppercase tracking-wide text-white"
-        >
-          *Health Impact Calculation
-        </h3>
-      </div>
-      <p className="mt-4 text-lg font-semibold leading-relaxed text-[#141a43]">
+      <h3 className="mb-4 text-lg font-extrabold uppercase tracking-wide">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function HealthImpactMethodology() {
+  return (
+    <CalculationPanel
+      id="health-impact-calculation"
+      title="Health Impact Calculation"
+    >
+      <p className="font-semibold leading-relaxed">
         Calculated by averaging individual health impact scores based on tiered categories.
       </p>
-      <div className="mt-8 space-y-7 text-[#141a43]">
+      <div className="mt-6 space-y-5">
         <div>
-          <h4 className="text-lg font-bold text-[#2a7d9d]">
+          <h4 className="font-bold text-[#2a7d9d]">
             Tier 1: Critical and high impact (immediate life saving and intervention)
           </h4>
-          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 4</p>
+          <p className="mt-1 pl-4 font-semibold">• Health impact score of 4</p>
         </div>
         <div>
-          <h4 className="text-lg font-bold text-[#2a7d9d]">
+          <h4 className="font-bold text-[#2a7d9d]">
             Tier 2: High to moderate impact (diagnostics and disease monitoring)
           </h4>
-          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 3</p>
+          <p className="mt-1 pl-4 font-semibold">• Health impact score of 3</p>
         </div>
         <div>
-          <h4 className="text-lg font-bold text-[#2a7d9d]">
+          <h4 className="font-bold text-[#2a7d9d]">
             Tier 3: Moderate impact (infection control and delivery systems)
           </h4>
-          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 2</p>
+          <p className="mt-1 pl-4 font-semibold">• Health impact score of 2</p>
         </div>
         <div>
-          <h4 className="text-lg font-bold text-[#2a7d9d]">
+          <h4 className="font-bold text-[#2a7d9d]">
             Tier 4: Low-risk, high utility impact (mobility, wound care, and rehabilitation)
           </h4>
-          <p className="mt-1 pl-4 text-lg font-semibold">• Health impact score of 1</p>
+          <p className="mt-1 pl-4 font-semibold">• Health impact score of 1</p>
         </div>
       </div>
-      <p className="mt-8 text-lg font-bold leading-relaxed text-[#141a43]">
+      <p className="mt-6 font-bold leading-relaxed">
         The higher the health impact score (out of 4), the higher the health impact.
       </p>
-    </section>
+    </CalculationPanel>
+  );
+}
+
+function EnvironmentalImpactMethodology() {
+  return (
+    <CalculationPanel
+      id="environmental-impact-calculation"
+      title="Environmental Impact Calculation"
+    >
+      <p className="font-semibold leading-relaxed">
+        Calculated from the items in the order, using the pack size, weight and CO₂e figure
+        recorded for each item.
+      </p>
+      <div className="mt-6 space-y-5">
+        <div>
+          <h4 className="font-bold text-[#2a7d9d]">Units delivered</h4>
+          <p className="mt-1 pl-4 font-semibold">• Quantity ordered × units in one pack</p>
+        </div>
+        <div>
+          <h4 className="font-bold text-[#2a7d9d]">Weight diverted from landfill</h4>
+          <p className="mt-1 pl-4 font-semibold">• Units delivered × weight of one unit</p>
+        </div>
+        <div>
+          <h4 className="font-bold text-[#2a7d9d]">CO₂e emissions avoided</h4>
+          <p className="mt-1 pl-4 font-semibold">• Units delivered × CO₂e figure for one unit</p>
+        </div>
+      </div>
+      <p className="mt-6 font-bold leading-relaxed">
+        The results for each item are added together to give the order&apos;s total. Items with no
+        recorded weight or CO₂e figure are left out, and only completed orders are counted.
+      </p>
+    </CalculationPanel>
   );
 }
 
@@ -398,14 +453,15 @@ export default function TrackYourImpact() {
                 />
               </div>
 
-              {tracking ? (
-                <>
-                  <DeliveryStatusCard tracking={tracking} />
-                  <HealthImpactMethodology />
-                </>
-              ) : null}
+              {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
             </>
           ) : null}
+
+          {/* always shown, whether or not an order has been looked up */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <HealthImpactMethodology />
+            <EnvironmentalImpactMethodology />
+          </div>
         </div>
       </div>
 

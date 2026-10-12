@@ -11,26 +11,44 @@ function formatKg(kg: number) {
   return `${weight.value} ${weight.unit}`;
 }
 
-const METRICS = [
-  {
-    key: 'co2e',
-    label: 'CO₂e avoided',
-    getValue: (m: MonthlyImpactSummary) => m.totalCO2eAvoidedKg,
-    format: formatKg,
-  },
-  {
-    key: 'weight',
-    label: 'Weight diverted',
-    getValue: (m: MonthlyImpactSummary) => m.totalWeightDivertedKg,
-    format: formatKg,
-  },
+/* metrics that add up across months */
+const TOTAL_METRICS = [
   {
     key: 'donations',
     label: 'Donations',
     getValue: (m: MonthlyImpactSummary) => m.totalDonations,
     format: (v: number) => Math.round(v).toLocaleString('en-AU'),
   },
+  {
+    key: 'co2e',
+    label: 'CO₂e Avoided',
+    getValue: (m: MonthlyImpactSummary) => m.totalCO2eAvoidedKg,
+    format: formatKg,
+  },
+  {
+    key: 'weight',
+    label: 'Weight Diverted',
+    getValue: (m: MonthlyImpactSummary) => m.totalWeightDivertedKg,
+    format: formatKg,
+  },
 ] as const;
+
+/* a monthly average, so it has no total and its axis always runs to the top score */
+const HEALTH_METRIC = {
+  key: 'health',
+  label: 'Health Impact',
+  getValue: (m: MonthlyImpactSummary) => m.averageHealthImpactScore ?? 0,
+  format: (v: number) => v.toFixed(2),
+} as const;
+
+const MAX_HEALTH_SCORE = 4;
+
+const [DONATIONS_METRIC, ...WEIGHT_METRICS] = TOTAL_METRICS;
+
+/* in the order the buttons and table rows are shown */
+const MONTHLY_METRICS = [DONATIONS_METRIC, HEALTH_METRIC, ...WEIGHT_METRICS] as const;
+
+type MetricKey = (typeof MONTHLY_METRICS)[number]['key'];
 
 const MONTHS_SHOWN = 12;
 
@@ -65,8 +83,9 @@ function niceMax(max: number) {
 }
 
 export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[] }) {
-  const [metricKey, setMetricKey] = useState<(typeof METRICS)[number]['key']>('co2e');
-  const metric = METRICS.find((m) => m.key === metricKey)!;
+  const [metricKey, setMetricKey] = useState<MetricKey>('donations');
+  const metric = MONTHLY_METRICS.find((m) => m.key === metricKey)!;
+  const isHealth = metric.key === 'health';
 
   const columns = lastTwelveMonths(months).map((c) => ({
     ...c,
@@ -78,14 +97,14 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
   if (columns.length === 0) return null;
 
   const total = columns.reduce((sum, c) => sum + c.value, 0);
-  const axisMax = niceMax(Math.max(...columns.map((c) => c.value)));
+  const axisMax = isHealth ? MAX_HEALTH_SCORE : niceMax(Math.max(...columns.map((c) => c.value)));
   const ticks = [axisMax, axisMax / 2, 0];
 
   return (
     <div className="impact-over-time__chart-wrapper">
       {/* metric switch */}
       <div className="impact-over-time__controls" role="group" aria-label="Choose what to show">
-        {METRICS.map((m) => (
+        {MONTHLY_METRICS.map((m) => (
           <button
             key={m.key}
             type="button"
@@ -99,8 +118,15 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
       </div>
 
       <p className="impact-over-time__total">
-        <span className="impact-over-time__total-value">{metric.format(total)}</span>{' '}
-        {metric.label.toLowerCase()} from {columns[0].fullLabel} to {columns.at(-1)!.fullLabel}
+        {isHealth ? (
+          `Average health impact score (out of ${MAX_HEALTH_SCORE}) each month`
+        ) : (
+          <>
+            <span className="impact-over-time__total-value">{metric.format(total)}</span>{' '}
+            {metric.label.toLowerCase()}
+          </>
+        )}{' '}
+        from {columns[0].fullLabel} to {columns.at(-1)!.fullLabel}
       </p>
 
       <div className="impact-over-time__chart">
@@ -182,22 +208,47 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
       {/* the same numbers as a table, for screen readers and anyone who prefers it */}
       <details className="impact-over-time__table-toggle">
         <summary>View as table</summary>
-        <table className="impact-over-time__table">
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col">{metric.label}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {columns.map((c) => (
-              <tr key={c.key}>
-                <td>{c.fullLabel}</td>
-                <td>{metric.format(c.value)}</td>
+        {/* every metric by month; months run across, lining up with the chart, rather than down the page */}
+        <div className="impact-over-time__table-scroll">
+          <table className="impact-over-time__table">
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                {columns.map((c) => (
+                  <th key={c.key} scope="col">
+                    {c.label}
+                    <span className="impact-over-time__table-year">{c.date.getFullYear()}</span>
+                  </th>
+                ))}
+                <th scope="col">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {MONTHLY_METRICS.map((m) =>
+                m.key === 'health' ? (
+                  <tr key={m.key}>
+                    <th scope="row">Avg. Health Impact Score</th>
+                    {columns.map((c) => (
+                      <td key={c.key}>{c.data?.averageHealthImpactScore?.toFixed(2) ?? '–'}</td>
+                    ))}
+                    {/* monthly averages cannot be added up into a total */}
+                    <td>–</td>
+                  </tr>
+                ) : (
+                  <tr key={m.key}>
+                    <th scope="row">{m.label}</th>
+                    {columns.map((c) => (
+                      <td key={c.key}>{m.format(c.data ? m.getValue(c.data) : 0)}</td>
+                    ))}
+                    <td>
+                      {m.format(columns.reduce((sum, c) => sum + (c.data ? m.getValue(c.data) : 0), 0))}
+                    </td>
+                  </tr>
+                ),
+              )}
+            </tbody>
+          </table>
+        </div>
       </details>
     </div>
   );
