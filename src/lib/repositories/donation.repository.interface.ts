@@ -7,6 +7,7 @@ import {
   MonthlyImpactSummary,
   ItemImpactSummary,
   LocationImpactSummary,
+  HealthImpactScoreSummary,
 } from "@/lib/dto/impactReport.dto";
 
 export type {
@@ -16,6 +17,7 @@ export type {
   MonthlyImpactSummary,
   ItemImpactSummary,
   LocationImpactSummary,
+  HealthImpactScoreSummary,
 };
 
 export type { DonationFilters };
@@ -32,4 +34,5 @@ export interface IDonationRepository {
   getImpactByMonth(filters?: DonationFilters): Promise<MonthlyImpactSummary[]>;
   getImpactByItem(filters?: DonationFilters, limit?: number): Promise<ItemImpactSummary[]>;
   getImpactByLocation(filters?: DonationFilters): Promise<LocationImpactSummary[]>;
+  getImpactByHealthImpactScore(filters?: DonationFilters): Promise<HealthImpactScoreSummary[]>;
 }

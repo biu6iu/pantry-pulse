@@ -29,7 +29,7 @@ The frontend never touches the database directly. It calls the API routes throug
 
 Server component. Fetches the impact report and renders:
 
-- the logo, site name and `DONATE` button (links to GiveNow)
+- the logo, site name, a `Main Site` text link (to medicalpantry.org) and the `Donate` button (links to GiveNow)
 - the red scrolling stats banner (`StatsBanner`)
 - the hero image with the total CO₂e avoided over it (`ImageBanner`)
 
@@ -53,11 +53,11 @@ The chart shows the 12 months up to the latest month with data, with empty month
 Client component. The visitor enters an order number, and the donation and its tracking details are fetched together. The results are:
 
 - **Health impact**: the order's score on a Low / Medium / High scale (below 2, 2 to under 3, 3 and above)
-- **Environmental impact**: units delivered, weight diverted and CO₂e avoided
+- **Environmental impact**: CO₂e avoided, in kg
 - **Recipient and destination**
 - **Delivery status**: the created and completed stages with their dates
 - **Map**: the route from Medical Pantry to the recipient (`TrackingMap` in `src/components/maps`)
-- **Health impact calculation**: the explanation of the four tiers
+- **Health and environmental impact calculation**: two collapsible panels, side by side, explaining the four health tiers and the environmental formulas. They start collapsed; the "See how we calculate" links in the cards open them.
 
 A visitor without an order number can open **Browse orders** (`browseOrders.tsx`) under the search box. It lists orders five at a time, newest first, through `listDonations` in `src/lib/api/client.ts`, and can be narrowed by creation date range, state and status. Filters apply as soon as they change; there is no apply button. Above the list, a row of figures totals the selection (orders, deliveries, items, CO₂e avoided and locations reached) from `getImpactReport` with the same filters. Those impact figures only count completed orders to external recipients, so "delivered" can be lower than the number of orders, and they are left out when the status filter is Open. Each row shows the order's destination (suburb and state) and the kind of recipient, not the organisation's name, because publishing a browsable list of recipient names has not been agreed with the client. Choosing **Track** on a row loads that order exactly as if its number had been typed in. The filter form sends dates as full timestamps, so `toDonationFilters` moves the end date to the end of its day; otherwise orders created during that day would be left out.
 
