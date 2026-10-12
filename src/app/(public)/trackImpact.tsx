@@ -70,7 +70,7 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
         onClick={() => openCalculation("health-impact-calculation")}
         className="mt-1 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#D02327]"
       >
-        See how we calculate health impact*
+        See how we calculate health impact
       </a>
       </div>
     </article>
@@ -132,7 +132,7 @@ function EnvironmentalCard({ donation }: { donation: DonationDTO | null }) {
           onClick={() => openCalculation("environmental-impact-calculation")}
           className="mt-3 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#1b7a4e]"
         >
-          See how we calculate environmental impact*
+          See how we calculate environmental impact
         </a>
       </div>
     </article>
@@ -249,18 +249,16 @@ function openCalculation(id: string) {
 function CalculationPanel({
   id,
   title,
-  headerClassName,
   children,
 }: {
   id: string;
   title: string;
-  headerClassName: string;
   children: React.ReactNode;
 }) {
   return (
     <details id={id} className="group overflow-hidden rounded-2xl bg-white shadow-md">
       <summary
-        className={`flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-white [&::-webkit-details-marker]:hidden ${headerClassName}`}
+        className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[#141a43] px-4 py-3 text-white [&::-webkit-details-marker]:hidden"
       >
         <h3 className="text-sm font-semibold uppercase tracking-wide">{title}</h3>
         <svg
@@ -280,8 +278,7 @@ function HealthImpactMethodology() {
   return (
     <CalculationPanel
       id="health-impact-calculation"
-      title="*Health Impact Calculation"
-      headerClassName="bg-[#D02327]"
+      title="Health Impact Calculation"
     >
       <p className="font-semibold leading-relaxed">
         Calculated by averaging individual health impact scores based on tiered categories.
@@ -323,8 +320,7 @@ function EnvironmentalImpactMethodology() {
   return (
     <CalculationPanel
       id="environmental-impact-calculation"
-      title="*Environmental Impact Calculation"
-      headerClassName="bg-[#1b7a4e]"
+      title="Environmental Impact Calculation"
     >
       <p className="font-semibold leading-relaxed">
         Calculated from the items in the order, using the pack size, weight and CO₂e figure
@@ -332,15 +328,15 @@ function EnvironmentalImpactMethodology() {
       </p>
       <div className="mt-6 space-y-5">
         <div>
-          <h4 className="font-bold text-[#1b7a4e]">Units delivered</h4>
+          <h4 className="font-bold text-[#2a7d9d]">Units delivered</h4>
           <p className="mt-1 pl-4 font-semibold">• Quantity ordered × units in one pack</p>
         </div>
         <div>
-          <h4 className="font-bold text-[#1b7a4e]">Weight diverted from landfill</h4>
+          <h4 className="font-bold text-[#2a7d9d]">Weight diverted from landfill</h4>
           <p className="mt-1 pl-4 font-semibold">• Units delivered × weight of one unit</p>
         </div>
         <div>
-          <h4 className="font-bold text-[#1b7a4e]">CO₂e emissions avoided</h4>
+          <h4 className="font-bold text-[#2a7d9d]">CO₂e emissions avoided</h4>
           <p className="mt-1 pl-4 font-semibold">• Units delivered × CO₂e figure for one unit</p>
         </div>
       </div>
@@ -455,17 +451,15 @@ export default function TrackYourImpact() {
                 />
               </div>
 
-              {tracking ? (
-                <>
-                  <DeliveryStatusCard tracking={tracking} />
-                  <div className="grid items-start gap-4 sm:grid-cols-2">
-                    <HealthImpactMethodology />
-                    <EnvironmentalImpactMethodology />
-                  </div>
-                </>
-              ) : null}
+              {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
             </>
           ) : null}
+
+          {/* always shown, whether or not an order has been looked up */}
+          <div className="grid items-start gap-4 sm:grid-cols-2">
+            <HealthImpactMethodology />
+            <EnvironmentalImpactMethodology />
+          </div>
         </div>
       </div>
 
