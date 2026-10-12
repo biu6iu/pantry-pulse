@@ -60,16 +60,21 @@ export default async function ImpactContribution() {
     });
 
   // orders by health impact score, highest score first, each shown as a share of all scored orders
-  const healthScores = report?.byHealthImpactScore.filter((s) => s.totalDonations > 0) ?? [];
-  const totalScoredOrders = healthScores.reduce((sum, s) => sum + s.totalDonations, 0);
+  const ordersByScore = new Map<number, number>();
+  for (const s of report?.byHealthImpactScore ?? []) {
+    const score = Math.round(s.score);
+    ordersByScore.set(score, (ordersByScore.get(score) ?? 0) + s.totalDonations);
+  }
+  const healthScores = [...ordersByScore].filter(([, orders]) => orders > 0);
+  const totalScoredOrders = healthScores.reduce((sum, [, orders]) => sum + orders, 0);
   const healthRows = healthScores
-    .toSorted((a, b) => b.score - a.score)
-    .map((s) => ({
-      label: HEALTH_SCORE_LABELS[s.score]
-        ? `Score ${s.score}: ${HEALTH_SCORE_LABELS[s.score]}`
-        : `Score ${s.score}`,
-      value: s.totalDonations.toLocaleString('en-AU'),
-      percent: (s.totalDonations / totalScoredOrders) * 100,
+    .toSorted(([a], [b]) => b - a)
+    .map(([score, orders]) => ({
+      label: HEALTH_SCORE_LABELS[score]
+        ? `Score ${score}: ${HEALTH_SCORE_LABELS[score]}`
+        : `Score ${score}`,
+      value: orders.toLocaleString('en-AU'),
+      percent: (orders / totalScoredOrders) * 100,
     }));
 
   return (

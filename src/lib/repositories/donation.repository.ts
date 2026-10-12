@@ -241,7 +241,7 @@ export class DonationRepository implements IDonationRepository {
       WITH donation_scores AS (
         SELECT
           ROUND((
-            SUM(e.quantity * (${HEALTH_IMPACT_TIER_COUNT + 1}::int - i."healthImpactTier"))
+            SUM(e.quantity * (${HEALTH_IMPACT_TIER_COUNT + 1}::int - i."healthImpactTier"))::float
             / NULLIF(SUM(e.quantity) FILTER (WHERE i."healthImpactTier" IS NOT NULL), 0)
           )::numeric, 2)::float AS score
         ${impactSource(filters)}
