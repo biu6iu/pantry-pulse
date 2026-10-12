@@ -8,15 +8,17 @@ import { DonationFilterBar } from "@/components/filters/filters";
 import { DonationResultsTable } from "@/components/donations/donations";
 import { ImpactSummary } from "@/components/impact/impact";
 import {
+  CountryOption,
   EMPTY_FILTER_VALUES,
   FilterValues,
+  countryOptionsFromCodes,
   toDonationFilters,
   validateFilterValues,
 } from "@/components/filters/filterValues";
 
 const PAGE_SIZE = 5;
 
-/* lets a visitor without an order number find one by date, state or status, then track it */
+/* lets a visitor without an order number find one by date, location or status, then track it */
 export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => void }) {
   const panelId = useId();
   const latestRequest = useRef(0);
@@ -25,6 +27,8 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<DonationListDTO | null>(null);
   const [summary, setSummary] = useState<OverallImpactSummary | null>(null);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [regions, setRegions] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,9 +48,14 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
       ]);
       if (request !== latestRequest.current) return;
 
-      setResult(list ?? { items: [], total: 0 });
+      setResult(list ?? { items: [], total: 0, countries: [], regions: {} });
       setPage(nextPage);
       if (withSummary) setSummary(report?.overall ?? null);
+      // the choices cover every order, so they don't shrink as the visitor narrows the list
+      if (list) {
+        setCountries(countryOptionsFromCodes(list.countries));
+        setRegions(list.regions);
+      }
     } catch (err) {
       if (request !== latestRequest.current) return;
       setError(err instanceof Error ? err.message : "Couldn't load orders. Try again.");
@@ -88,7 +97,7 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
               Browse orders
             </span>
             <span className="mt-1 block text-sm font-normal text-slate-600">
-              No order number? Find an order by date, state or status.
+              No order number? Find an order by date, location or status.
             </span>
           </span>
           <span aria-hidden="true" className={`text-xl text-[#141a43] transition-transform ${open ? "rotate-180" : ""}`}>
@@ -103,6 +112,8 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
             values={values}
             onChange={change}
             onClear={() => change(EMPTY_FILTER_VALUES)}
+            countries={countries}
+            regions={regions}
             error={error}
           />
 

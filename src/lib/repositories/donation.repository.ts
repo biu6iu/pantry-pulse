@@ -102,7 +102,8 @@ function impactSource(filters: DonationFilters = {}) {
     ...(from ? [Prisma.sql`d."createdAt" >= ${from}`] : []),
     ...(to ? [Prisma.sql`d."createdAt" <= ${to}`] : []),
     ...(country ? [Prisma.sql`lower(u.country) = lower(${country})`] : []),
-    ...(state ? [Prisma.sql`lower(u.state) = lower(${state})`] : []),
+    // a region is the state, or the city for places that have no state
+    ...(state ? [Prisma.sql`(lower(u.state) = lower(${state}) OR lower(u.city) = lower(${state}))`] : []),
   ];
 
   return Prisma.sql`
@@ -156,7 +157,15 @@ function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
       ? {
           recipient: {
             ...(country ? { country: { equals: country, mode: "insensitive" } } : {}),
-            ...(state ? { state: { equals: state, mode: "insensitive" } } : {}),
+            // a region is the state, or the city for places that have no state
+            ...(state
+              ? {
+                  OR: [
+                    { state: { equals: state, mode: "insensitive" as const } },
+                    { city: { equals: state, mode: "insensitive" as const } },
+                  ],
+                }
+              : {}),
           },
         }
       : {}),
@@ -182,6 +191,38 @@ export class DonationRepository implements IDonationRepository {
 
   async count(filters: DonationFilters = {}): Promise<number> {
     return prisma.donation.count({ where: toDonationWhere(filters) });
+  }
+
+  // Every country an order has been sent to, whatever its status, so the list can offer them as a filter.
+  // The impact figures can't be used for this because they leave out orders that are still open
+  async getCountries(): Promise<string[]> {
+    const rows = await prisma.user.findMany({
+      where: { country: { not: null }, donations: { some: {} } },
+      select: { country: true },
+      distinct: ["country"],
+      orderBy: { country: "asc" },
+    });
+    return rows.map((row) => row.country as string);
+  }
+
+  // For each country, the regions orders were sent to: the state, or the city where there is no state
+  async getRegions(): Promise<Record<string, string[]>> {
+    const rows = await prisma.user.findMany({
+      where: { country: { not: null }, donations: { some: {} } },
+      select: { country: true, state: true, city: true },
+    });
+
+    const sets = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const region = (row.state?.trim() || row.city?.trim()) ?? "";
+      if (!row.country || !region) continue;
+      if (!sets.has(row.country)) sets.set(row.country, new Set());
+      sets.get(row.country)!.add(region);
+    }
+
+    return Object.fromEntries(
+      [...sets].map(([country, regions]) => [country, [...regions].sort((a, b) => a.localeCompare(b))]),
+    );
   }
 
   async getById(id: string): Promise<Donation | null> {
