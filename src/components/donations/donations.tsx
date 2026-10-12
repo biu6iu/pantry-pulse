@@ -1,5 +1,7 @@
 "use client";
 
+import { regionName } from "@/lib/regionNames";
+
 import type { DonationSummaryDTO } from "@/lib/dto/donationSummary.dto";
 import type { DonationStatus } from "@/lib/models/donationStatus";
 import { formatCategory, formatDate } from "@/lib/format";
@@ -31,7 +33,7 @@ function StatusPill({ status }: { status: DonationStatus }) {
 // The list says where an order went and to what kind of recipient, not who received it:
 // a public, browsable list of every recipient's name has not been agreed with the client
 function Destination({ receiver }: { receiver: DonationSummaryDTO["receiver"] }) {
-  const place = [receiver.city, receiver.state].filter(Boolean).join(", ");
+  const place = [receiver.city, regionName(receiver.state)].filter(Boolean).join(", ");
   const type = receiver.type && receiver.type !== "unknown" ? formatCategory(receiver.type) : null;
 
   return (

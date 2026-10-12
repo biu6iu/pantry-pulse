@@ -3,6 +3,7 @@ import {
     EMPTY_FILTER_VALUES,
     countActiveFilters,
     countryOptionsFromCodes,
+    regionOptionsForCountry,
     toDonationFilters,
     validateFilterValues,
 } from "@/components/filters/filterValues";
@@ -73,6 +74,33 @@ describe("countActiveFilters", () => {
     it("counts the values that are set", () => {
         expect(countActiveFilters(EMPTY_FILTER_VALUES)).toBe(0);
         expect(countActiveFilters({ from: "2026-08-01", to: "", country: "AU", state: "VIC", status: "" })).toBe(3);
+    });
+});
+
+describe("regionOptionsForCountry", () => {
+    const regions = { AU: ["NSW", "VIC"], TH: ["TH-76", "TH-83"], VN: ["Hanoi"] };
+
+    it("has no choices until a country is picked", () => {
+        expect(regionOptionsForCountry("", regions)).toEqual([]);
+    });
+
+    it("shows full names for Australian states", () => {
+        expect(regionOptionsForCountry("AU", regions)).toEqual([
+            { value: "NSW", label: "New South Wales" },
+            { value: "VIC", label: "Victoria" },
+        ]);
+    });
+
+    it("lists another country's own regions, including a city where there is no state", () => {
+        expect(regionOptionsForCountry("TH", regions)).toEqual([
+            { value: "TH-76", label: "Phetchaburi" },
+            { value: "TH-83", label: "Phuket" },
+        ]);
+        expect(regionOptionsForCountry("VN", regions)).toEqual([{ value: "Hanoi", label: "Hanoi" }]);
+    });
+
+    it("has no choices for a country with none on record", () => {
+        expect(regionOptionsForCountry("FJ", regions)).toEqual([]);
     });
 });
 

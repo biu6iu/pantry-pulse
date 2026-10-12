@@ -118,7 +118,12 @@ describe("GET /api/donations query parameters", () => {
 
         expect(response.status).toBe(200);
         // the country choices cover every order, so they stay the same when the filters match nothing
-        expect(body).toEqual({ items: [], total: 0, countries: ["CN", "US"] });
+        expect(body).toEqual({
+            items: [],
+            total: 0,
+            countries: ["CN", "US"],
+            regions: { CN: ["SH"], US: ["OH"] },
+        });
     });
 });
 

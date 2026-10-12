@@ -1,11 +1,12 @@
 import type { DonationFilters } from "@/lib/dto/donationFilters.dto";
+import { regionName } from "@/lib/regionNames";
 
 // What the filter form holds: plain strings straight from the inputs, with "" meaning "not set"
 export interface FilterValues {
   from: string; // "YYYY-MM-DD"
   to: string; // "YYYY-MM-DD"
   country: string; // the stored country code, e.g. "AU"
-  state: string; // only used with Australia, which is the only country with a state list
+  state: string; // the region within the chosen country: its state, or its city where there is no state
   status: "" | "OPEN" | "COMPLETED";
 }
 
@@ -41,8 +42,8 @@ export function countryOptionsFromCodes(codes: string[]): CountryOption[] {
     });
 }
 
-// The states the API accepts when no country is given (see src/lib/api/filters.ts)
-export const STATE_OPTIONS = [
+// The Australian states, used to show full names for their codes (see src/lib/api/filters.ts)
+const STATE_OPTIONS = [
   { value: "ACT", label: "Australian Capital Territory" },
   { value: "NSW", label: "New South Wales" },
   { value: "NT", label: "Northern Territory" },
@@ -52,6 +53,22 @@ export const STATE_OPTIONS = [
   { value: "VIC", label: "Victoria" },
   { value: "WA", label: "Western Australia" },
 ];
+
+/**
+ * The region choices for a country, built from the regions orders were sent to. Each country brings its own
+ * (Australian states, another country's provinces or, where there is no state, its cities), so nothing here
+ * is specific to Australia apart from showing the full state names.
+ */
+export function regionOptionsForCountry(country: string, regions: Record<string, string[]>): CountryOption[] {
+  if (!country) return [];
+  const names = new Map(STATE_OPTIONS.map((option) => [option.value, option.label]));
+  const isAustralia = country.toUpperCase() === AUSTRALIA_COUNTRY_CODE;
+
+  return (regions[country] ?? []).map((region) => ({
+    value: region,
+    label: (isAustralia && names.get(region.toUpperCase())) || regionName(region),
+  }));
+}
 
 export const STATUS_OPTIONS: { value: FilterValues["status"]; label: string }[] = [
   { value: "COMPLETED", label: "Completed" },
