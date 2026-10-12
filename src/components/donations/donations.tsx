@@ -78,13 +78,13 @@ export function DonationResultsTable({
     <div>
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         {/* fixed layout and column widths, so the columns and row heights stay put from page to page */}
-        <table className="w-full min-w-[42rem] table-fixed border-collapse text-sm text-[#141a43]">
+        <table className="w-full min-w-[46rem] table-fixed border-collapse text-sm text-[#141a43]">
           <caption className="sr-only">Orders matching the selected filters</caption>
           <colgroup>
             <col className="w-24" />
             <col className="w-40" />
             <col />
-            <col className="w-32" />
+            <col className="w-44" />
             <col className="w-28" />
           </colgroup>
           <thead className="bg-slate-50">
