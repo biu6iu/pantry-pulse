@@ -345,21 +345,93 @@
     color: var(--color-brand-blue);
   }
 
+  /* styled like the metric buttons above the chart, with a chevron instead of the default marker */
   .impact-over-time__table-toggle summary {
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    border: 2px solid var(--color-border-ink);
     font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .impact-over-time__table-toggle summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .impact-over-time__table-toggle summary::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    margin-top: -4px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease-out;
+  }
+
+  .impact-over-time__table-toggle[open] summary::after {
+    margin-top: 4px;
+    transform: rotate(-135deg);
+  }
+
+  .impact-over-time__table-toggle summary:hover {
+    background: rgba(20, 26, 67, 0.06);
+  }
+
+  /* the card around the table; it scrolls sideways when the 12 months do not fit */
+  .impact-over-time__table-scroll {
+    margin-top: 16px;
+    overflow-x: auto;
+    border: 1px solid rgba(20, 26, 67, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
   }
 
   .impact-over-time__table {
-    margin-top: 12px;
+    width: 100%;
     border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
   }
 
   .impact-over-time__table th,
   .impact-over-time__table td {
-    padding: 6px 16px 6px 0;
+    padding: 9px 12px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .impact-over-time__table th:first-child {
     text-align: left;
-    border-bottom: 1px solid rgba(20, 26, 67, 0.12);
+    padding-left: 18px;
+  }
+
+  .impact-over-time__table thead th {
+    background: var(--color-brand-blue);
+    color: white;
+    font-weight: 600;
+  }
+
+  .impact-over-time__table-year {
+    display: block;
+    font-size: 0.75em;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  .impact-over-time__table tbody th {
+    font-weight: 700;
+  }
+
+  /* the total column is set apart from the months */
+  .impact-over-time__table tbody td:last-child {
+    border-left: 2px solid rgba(20, 26, 67, 0.25);
+    font-weight: 700;
   }
 
   @media (max-width: 900px) {
