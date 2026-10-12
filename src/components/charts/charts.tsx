@@ -274,18 +274,9 @@ export function ImpactOverTimeChart({
                 <td>{isHealthChart ? c.label : c.fullLabel}</td>
                 <td>{formatValue(c.value)}</td>
               </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">{metric.label}</th>
-                {columns.map((c) => (
-                  <td key={c.key}>{metric.format(c.value)}</td>
-                ))}
-                <td>{metric.format(total)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </details>
     </div>
   );
