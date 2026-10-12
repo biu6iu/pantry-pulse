@@ -411,7 +411,7 @@ export default function TrackYourImpact() {
                 type="search"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="e.g. A123"
+                placeholder="e.g. D000"
                 autoComplete="off"
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? "order-search-error" : undefined}
