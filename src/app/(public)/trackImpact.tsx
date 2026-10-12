@@ -364,7 +364,7 @@ export default function TrackYourImpact() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#141a43] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#D02327] ${BUTTON_MOTION_CLASS}`}
+                className={`rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#A61C1F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#D02327] ${BUTTON_MOTION_CLASS}`}
               >
                 {loading ? "Searching…" : "Track"}
               </button>
