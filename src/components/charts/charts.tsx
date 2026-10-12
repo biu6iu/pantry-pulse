@@ -1,10 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type {
-  HealthImpactScoreSummary,
-  MonthlyImpactSummary,
-} from '@/lib/dto/impactReport.dto';
+import type { MonthlyImpactSummary } from '@/lib/dto/impactReport.dto';
 import { formatWeight } from '@/lib/format';
 
 /* impact over time components */
@@ -14,7 +11,14 @@ function formatKg(kg: number) {
   return `${weight.value} ${weight.unit}`;
 }
 
-const MONTHLY_METRICS = [
+/* metrics that add up across months */
+const TOTAL_METRICS = [
+  {
+    key: 'donations',
+    label: 'Donations',
+    getValue: (m: MonthlyImpactSummary) => m.totalDonations,
+    format: (v: number) => Math.round(v).toLocaleString('en-AU'),
+  },
   {
     key: 'co2e',
     label: 'CO₂e Avoided',
@@ -27,15 +31,24 @@ const MONTHLY_METRICS = [
     getValue: (m: MonthlyImpactSummary) => m.totalWeightDivertedKg,
     format: formatKg,
   },
-  {
-    key: 'donations',
-    label: 'Donations',
-    getValue: (m: MonthlyImpactSummary) => m.totalDonations,
-    format: (v: number) => Math.round(v).toLocaleString('en-AU'),
-  },
 ] as const;
 
-type MetricKey = (typeof MONTHLY_METRICS)[number]['key'] | 'health';
+/* a monthly average, so it has no total and its axis always runs to the top score */
+const HEALTH_METRIC = {
+  key: 'health',
+  label: 'Health Impact',
+  getValue: (m: MonthlyImpactSummary) => m.averageHealthImpactScore ?? 0,
+  format: (v: number) => v.toFixed(2),
+} as const;
+
+const MAX_HEALTH_SCORE = 4;
+
+const [DONATIONS_METRIC, ...WEIGHT_METRICS] = TOTAL_METRICS;
+
+/* in the order the buttons and table rows are shown */
+const MONTHLY_METRICS = [DONATIONS_METRIC, HEALTH_METRIC, ...WEIGHT_METRICS] as const;
+
+type MetricKey = (typeof MONTHLY_METRICS)[number]['key'];
 
 const MONTHS_SHOWN = 12;
 
@@ -69,42 +82,22 @@ function niceMax(max: number) {
   return Math.max(step * pow, 2);
 }
 
-export function ImpactOverTimeChart({
-  months,
-  healthImpactScores = [],
-}: {
-  months: MonthlyImpactSummary[];
-  healthImpactScores?: HealthImpactScoreSummary[];
-}) {
-  const [metricKey, setMetricKey] = useState<MetricKey>('co2e');
-  const [showHealthExplanation, setShowHealthExplanation] = useState(false);
-  const metric = MONTHLY_METRICS.find((m) => m.key === metricKey);
-  const isHealthChart = metricKey === 'health';
+export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[] }) {
+  const [metricKey, setMetricKey] = useState<MetricKey>('donations');
+  const metric = MONTHLY_METRICS.find((m) => m.key === metricKey)!;
+  const isHealth = metric.key === 'health';
 
-  const monthlyColumns = lastTwelveMonths(months).map((c) => ({
+  const columns = lastTwelveMonths(months).map((c) => ({
     ...c,
-    value: c.data && metric ? metric.getValue(c.data) : 0,
+    value: c.data ? metric.getValue(c.data) : 0,
     label: MONTH_NAMES[c.date.getMonth()].slice(0, 3),
     fullLabel: `${MONTH_NAMES[c.date.getMonth()]} ${c.date.getFullYear()}`,
   }));
 
-  const healthColumns = healthImpactScores.map((c) => ({
-    key: String(c.score),
-    value: c.totalDonations,
-    label: String(c.score),
-    fullLabel: `Health impact score ${c.score}`,
-    date: undefined,
-  }));
-  const columns = isHealthChart ? healthColumns : monthlyColumns;
-  const activeLabel = isHealthChart ? 'orders' : metric?.label.toLowerCase() ?? '';
-  const formatValue = isHealthChart
-    ? (value: number) => Math.round(value).toLocaleString('en-AU')
-    : metric?.format ?? ((value: number) => value.toLocaleString('en-AU'));
-
-  if (columns.length === 0 || (!isHealthChart && !metric)) return null;
+  if (columns.length === 0) return null;
 
   const total = columns.reduce((sum, c) => sum + c.value, 0);
-  const axisMax = niceMax(Math.max(...columns.map((c) => c.value)));
+  const axisMax = isHealth ? MAX_HEALTH_SCORE : niceMax(Math.max(...columns.map((c) => c.value)));
   const ticks = [axisMax, axisMax / 2, 0];
 
   return (
@@ -122,23 +115,18 @@ export function ImpactOverTimeChart({
             {m.label}
           </button>
         ))}
-        {healthImpactScores.length > 0 ? (
-          <button
-            type="button"
-            className="impact-over-time__control"
-            aria-pressed={isHealthChart}
-            onClick={() => setMetricKey('health')}
-          >
-            Health Impact
-          </button>
-        ) : null}
       </div>
 
       <p className="impact-over-time__total">
-        <span className="impact-over-time__total-value">{formatValue(total)}</span>{' '}
-        {isHealthChart
-          ? 'orders by health impact score'
-          : `${activeLabel} from ${columns[0].fullLabel} to ${columns.at(-1)!.fullLabel}`}
+        {isHealth ? (
+          `Average health impact score (out of ${MAX_HEALTH_SCORE}) each month`
+        ) : (
+          <>
+            <span className="impact-over-time__total-value">{metric.format(total)}</span>{' '}
+            {metric.label.toLowerCase()}
+          </>
+        )}{' '}
+        from {columns[0].fullLabel} to {columns.at(-1)!.fullLabel}
       </p>
 
       <div className="impact-over-time__chart">
@@ -150,7 +138,7 @@ export function ImpactOverTimeChart({
               className="impact-over-time__tick"
               style={{ bottom: `${(t / axisMax) * 100}%` }}
             >
-              {formatValue(t)}
+              {metric.format(t)}
             </span>
           ))}
         </div>
@@ -176,21 +164,21 @@ export function ImpactOverTimeChart({
                   key={c.key}
                   className="impact-over-time__column"
                   tabIndex={0}
-                  aria-label={`${c.fullLabel}: ${formatValue(c.value)} ${activeLabel}`}
+                  aria-label={`${c.fullLabel}: ${metric.format(c.value)} ${metric.label.toLowerCase()}`}
                 >
                   <span
                     className={`impact-over-time__tooltip impact-over-time__tooltip--${tooltipPosition}`}
                     style={{ bottom: `calc(${(c.value / axisMax) * 100}% + 8px)` }}
                     aria-hidden="true"
                   >
-                    <strong>{formatValue(c.value)}</strong>
+                    <strong>{metric.format(c.value)}</strong>
                     <span>{c.fullLabel}</span>
                   </span>
 
                   {/* only the latest month is labelled directly, the rest are in the tooltip */}
-                  {(!isHealthChart && isLatest && c.value > 0) || (isHealthChart && c.value > 0) ? (
+                  {isLatest && c.value > 0 ? (
                     <span className="impact-over-time__bar-label" aria-hidden="true">
-                      {formatValue(c.value)}
+                      {metric.format(c.value)}
                     </span>
                   ) : null}
 
@@ -208,7 +196,7 @@ export function ImpactOverTimeChart({
             {columns.map((c, i) => (
               <span key={c.key} className="impact-over-time__month">
                 {c.label}
-                {!isHealthChart && c.date && (i === 0 || c.date.getMonth() === 0) ? (
+                {i === 0 || c.date.getMonth() === 0 ? (
                   <span className="impact-over-time__year">{c.date.getFullYear()}</span>
                 ) : null}
               </span>
@@ -217,72 +205,47 @@ export function ImpactOverTimeChart({
         </div>
       </div>
 
-      {healthImpactScores.length > 0 ? (
-        <div className={`impact-over-time__health-help${showHealthExplanation ? ' impact-over-time__health-help--open' : ''}`}>
-          <button
-            type="button"
-            className="impact-over-time__health-help-trigger"
-            aria-expanded={showHealthExplanation}
-            aria-controls="health-impact-explanation"
-            onClick={() => setShowHealthExplanation((shown) => !shown)}
-          >
-            See how health impact is calculated *
-          </button>
-          <div
-            id="health-impact-explanation"
-            className="impact-over-time__health-explanation"
-            role="tooltip"
-          >
-            <strong>Health Impact</strong>
-            <p>Calculated by averaging individual health impact scores based on tiered categories.</p>
-            <dl>
-              <div>
-                <dt>Tier 1: Critical and high impact (immediate life saving and intervention)</dt>
-                <dd>Health impact score of 4</dd>
-              </div>
-              <div>
-                <dt>Tier 2: High to moderate impact (diagnostics and disease monitoring)</dt>
-                <dd>Health impact score of 3</dd>
-              </div>
-              <div>
-                <dt>Tier 3: Moderate impact (infection control and delivery systems)</dt>
-                <dd>Health impact score of 2</dd>
-              </div>
-              <div>
-                <dt>Tier 4: Low-risk, high utility impact (mobility, wound care, and rehabilitation)</dt>
-                <dd>Health impact score of 1</dd>
-              </div>
-            </dl>
-            <p><strong>The higher the health impact score (out of 4), the higher the health impact.</strong></p>
-          </div>
-        </div>
-      ) : null}
-
       {/* the same numbers as a table, for screen readers and anyone who prefers it */}
       <details className="impact-over-time__table-toggle">
         <summary>View as table</summary>
-        <table className="impact-over-time__table">
-          <thead>
-            <tr>
-              <th scope="col">{isHealthChart ? 'Health impact score' : 'Month'}</th>
-              <th scope="col">{isHealthChart ? 'Orders' : metric?.label}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {columns.map((c) => (
-              <tr key={c.key}>
-                <td>{isHealthChart ? c.label : c.fullLabel}</td>
-                <td>{formatValue(c.value)}</td>
+        {/* every metric by month; months run across, lining up with the chart, rather than down the page */}
+        <div className="impact-over-time__table-scroll">
+          <table className="impact-over-time__table">
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                {columns.map((c) => (
+                  <th key={c.key} scope="col">
+                    {c.label}
+                    <span className="impact-over-time__table-year">{c.date.getFullYear()}</span>
+                  </th>
+                ))}
+                <th scope="col">Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row">{metric.label}</th>
-                {columns.map((c) => (
-                  <td key={c.key}>{metric.format(c.value)}</td>
-                ))}
-                <td>{metric.format(total)}</td>
-              </tr>
+              {MONTHLY_METRICS.map((m) =>
+                m.key === 'health' ? (
+                  <tr key={m.key}>
+                    <th scope="row">Avg. Health Impact Score</th>
+                    {columns.map((c) => (
+                      <td key={c.key}>{c.data?.averageHealthImpactScore?.toFixed(2) ?? '–'}</td>
+                    ))}
+                    {/* monthly averages cannot be added up into a total */}
+                    <td>–</td>
+                  </tr>
+                ) : (
+                  <tr key={m.key}>
+                    <th scope="row">{m.label}</th>
+                    {columns.map((c) => (
+                      <td key={c.key}>{m.format(c.data ? m.getValue(c.data) : 0)}</td>
+                    ))}
+                    <td>
+                      {m.format(columns.reduce((sum, c) => sum + (c.data ? m.getValue(c.data) : 0), 0))}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>

@@ -83,6 +83,11 @@
     align-items: stretch;
   }
 
+  /* same grid mirrored, with the image on the right */
+  .impact-contribution__grid--visual-right {
+    grid-template-columns: minmax(360px, 1.35fr) minmax(300px, 0.98fr);
+  }
+
   .impact-contribution__visual {
     min-height: 420px;
     position: relative;
@@ -201,67 +206,6 @@
   .impact-over-time__control[aria-pressed='true'] {
     background: var(--color-brand-blue);
     color: white;
-  }
-
-  .impact-over-time__health-help {
-    position: relative;
-    margin-top: 16px;
-  }
-
-  .impact-over-time__health-help-trigger {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--color-brand-blue);
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  .impact-over-time__health-explanation {
-    position: absolute;
-    z-index: 2;
-    top: calc(100% + 8px);
-    left: 0;
-    display: none;
-    width: min(430px, calc(100vw - 36px));
-    padding: 16px;
-    border: 1px solid rgba(20, 26, 67, 0.18);
-    border-radius: 10px;
-    background: white;
-    color: var(--color-brand-blue);
-    box-shadow: 0 8px 24px rgba(20, 26, 67, 0.18);
-    font-size: 0.9rem;
-    line-height: 1.4;
-  }
-
-  .impact-over-time__health-help:hover .impact-over-time__health-explanation,
-  .impact-over-time__health-help:focus-within .impact-over-time__health-explanation,
-  .impact-over-time__health-help--open .impact-over-time__health-explanation {
-    display: block;
-  }
-
-  .impact-over-time__health-explanation > strong {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 1rem;
-  }
-
-  .impact-over-time__health-explanation p {
-    margin: 0 0 12px;
-  }
-
-  .impact-over-time__health-explanation dl {
-    display: grid;
-    gap: 10px;
-    margin: 0 0 12px;
-  }
-
-  .impact-over-time__health-explanation dt {
-    font-weight: 700;
-  }
-
-  .impact-over-time__health-explanation dd {
-    margin: 2px 0 0 12px;
   }
 
   /* the bottom margin leaves room for the tooltip above the tallest bar */
