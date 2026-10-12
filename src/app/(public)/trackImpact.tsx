@@ -67,7 +67,6 @@ function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
       </p>
       <a
         href="#health-impact-calculation"
-        onClick={() => openCalculation("health-impact-calculation")}
         className="mt-1 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#D02327]"
       >
         See how we calculate health impact
@@ -129,7 +128,6 @@ function EnvironmentalCard({ donation }: { donation: DonationDTO | null }) {
         )}
         <a
           href="#environmental-impact-calculation"
-          onClick={() => openCalculation("environmental-impact-calculation")}
           className="mt-3 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#1b7a4e]"
         >
           See how we calculate environmental impact
@@ -240,12 +238,6 @@ function DeliveryStatusCard({ tracking }: { tracking: TrackingDTO }) {
   );
 }
 
-// the calculation panels start collapsed, so a link to one has to open it as well as jump to it
-function openCalculation(id: string) {
-  const panel = document.getElementById(id);
-  if (panel instanceof HTMLDetailsElement) panel.open = true;
-}
-
 function CalculationPanel({
   id,
   title,
@@ -256,21 +248,13 @@ function CalculationPanel({
   children: React.ReactNode;
 }) {
   return (
-    <details id={id} className="group overflow-hidden rounded-2xl bg-white shadow-md">
-      <summary
-        className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[#141a43] px-4 py-3 text-white [&::-webkit-details-marker]:hidden"
-      >
-        <h3 className="text-sm font-semibold uppercase tracking-wide">{title}</h3>
-        <svg
-          viewBox="0 0 24 24"
-          className="h-5 w-5 shrink-0 fill-none stroke-current stroke-2 transition-transform group-open:rotate-180"
-          aria-hidden="true"
-        >
-          <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </summary>
-      <div className="p-5 text-[#141a43]">{children}</div>
-    </details>
+    <section
+      id={id}
+      className="scroll-mt-6 rounded-2xl border border-white/60 bg-white/45 p-6 text-[#141a43]"
+    >
+      <h3 className="mb-4 text-lg font-extrabold uppercase tracking-wide">{title}</h3>
+      {children}
+    </section>
   );
 }
 
@@ -456,7 +440,7 @@ export default function TrackYourImpact() {
           ) : null}
 
           {/* always shown, whether or not an order has been looked up */}
-          <div className="grid items-start gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <HealthImpactMethodology />
             <EnvironmentalImpactMethodology />
           </div>
