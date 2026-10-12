@@ -10,6 +10,10 @@ export interface DonationSummaryDTO {
   receiver: {
     id: string;
     organisation: string;
+    // enough to say where an order went and to what kind of recipient without naming them
+    city: string | null;
+    state: string | null;
+    type: string | null; // e.g. "wildlife_rescue"
   };
 
   totalItems: number;
@@ -21,4 +25,8 @@ export interface DonationSummaryDTO {
 export interface DonationListDTO {
   items: DonationSummaryDTO[];
   total: number;
+  // every country an order has been sent to, whatever the filters or status, so a page can offer them all
+  countries: string[];
+  // for each country, the regions (state, or city where there is no state) orders were sent to
+  regions: Record<string, string[]>;
 }

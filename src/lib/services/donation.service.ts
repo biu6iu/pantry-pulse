@@ -32,6 +32,9 @@ function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
     receiver: {
       id: donation.recipient.id,
       organisation: donation.recipient.organisation,
+      city: donation.recipient.city,
+      state: donation.recipient.state,
+      type: donation.recipient.type,
     },
     totalItems: donation.getTotalItems(),
     healthImpactScore: toHealthImpactScore(donation),
@@ -70,8 +73,13 @@ export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
   async listDonations(filters?: DonationFilters): Promise<DonationListDTO> {
-    const [donations, total] = await Promise.all([this.repo.getAll(filters), this.repo.count(filters)]);
-    return { items: donations.map(toDonationSummaryDTO), total };
+    const [donations, total, countries, regions] = await Promise.all([
+      this.repo.getAll(filters),
+      this.repo.count(filters),
+      this.repo.getCountries(),
+      this.repo.getRegions(),
+    ]);
+    return { items: donations.map(toDonationSummaryDTO), total, countries, regions };
   }
 
   async getDonationDetail(id: string): Promise<DonationDTO | null> {

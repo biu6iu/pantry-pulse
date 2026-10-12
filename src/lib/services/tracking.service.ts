@@ -1,15 +1,8 @@
 import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { ORIGIN } from "@/lib/config/origin";
+import { roundCoordinate } from "@/lib/models/location";
 import { TrackingDTO, TrackingStageDTO } from "@/lib/dto/tracking.dto";
-
-// rounds to ~1.1km precision so recipients exact street addresses aren't derivable from order tracking data
-const COORDINATE_PRECISION = 2;
-
-function roundCoordinate(value: number | null): number | null {
-  if (value === null) return null;
-  return Number(value.toFixed(COORDINATE_PRECISION));
-}
 
 function toTrackingDTO(donation: Donation): TrackingDTO {
   const completed = donation.status === "COMPLETED";

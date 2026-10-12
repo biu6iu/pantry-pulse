@@ -160,6 +160,90 @@ describe("getImpactByMonth", () => {
     });
 });
 
+describe("getImpactByItem", () => {
+    it("ranks items by quantity across completed donations", async () => {
+        const results = await repo.getImpactByItem();
+
+        expect(results.map((r) => r.name)).toEqual(["IV Giving Set", "Bandages", "Infusion Pump"]);
+        expect(results[0]).toMatchObject({ category: "Medical Supplies", totalItems: 7, totalDonations: 2 });
+        expect(results[1]).toMatchObject({ category: "Uncategorised", totalItems: 4, totalDonations: 1 });
+        expect(results[2]).toMatchObject({ category: "Equipment", totalItems: 3, totalDonations: 2 });
+    });
+
+    it("filters by region", async () => {
+        const results = await repo.getImpactByItem({ country: "US" });
+
+        expect(results.map((r) => [r.name, r.totalItems])).toEqual([
+            ["IV Giving Set", 5],
+            ["Infusion Pump", 2],
+        ]);
+    });
+
+    it("returns at most the requested number of items", async () => {
+        const results = await repo.getImpactByItem({}, 2);
+
+        expect(results.map((r) => r.name)).toEqual(["IV Giving Set", "Bandages"]);
+    });
+});
+
+describe("getImpactByLocation", () => {
+    it("groups completed donations by suburb and state", async () => {
+        const results = await repo.getImpactByLocation();
+
+        expect(results).toEqual([
+            expect.objectContaining({ city: "Cleveland", state: "OH", totalDonations: 1, totalItems: 7 }),
+            expect.objectContaining({ city: "Shanghai", state: "SH", totalDonations: 1, totalItems: 7 }),
+        ]);
+    });
+
+    it("puts the location with the most deliveries first", async () => {
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-B2",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: fixtures.recipientB.id,
+            },
+        });
+
+        const results = await repo.getImpactByLocation();
+
+        expect(results.map((r) => [r.city, r.totalDonations])).toEqual([
+            ["Shanghai", 2],
+            ["Cleveland", 1],
+        ]);
+    });
+
+    it("rounds coordinates to the shared precision and keeps missing ones null", async () => {
+        const [cleveland, shanghai] = await repo.getImpactByLocation();
+
+        expect([cleveland.lat, cleveland.lng]).toEqual([41.5, -81.69]);
+        expect([shanghai.lat, shanghai.lng]).toEqual([null, null]);
+    });
+
+    it("filters by region", async () => {
+        const results = await repo.getImpactByLocation({ country: "CN" });
+
+        expect(results.map((r) => r.city)).toEqual(["Shanghai"]);
+    });
+
+    it("leaves out orders with no known destination", async () => {
+        const noAddress = await prisma.user.create({ data: { name: "Recipient With No Address" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-C1",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: noAddress.id,
+            },
+        });
+
+        const results = await repo.getImpactByLocation();
+
+        expect(results.map((r) => r.city)).toEqual(["Cleveland", "Shanghai"]);
+    });
+});
+
 describe("getImpactByHealthImpactScore", () => {
     it("counts completed donations in rounded score buckets", async () => {
         const results = await repo.getImpactByHealthImpactScore();
@@ -186,6 +270,7 @@ describe("getOverallImpactSummary", () => {
             totalWeightDivertedKg: 19,
             totalCO2eAvoidedKg: 74,
             averageHealthImpactScore: 2.6,
+            locationsReached: 2,
         });
     });
 
@@ -215,7 +300,37 @@ describe("getOverallImpactSummary", () => {
             totalWeightDivertedKg: 0,
             totalCO2eAvoidedKg: 0,
             averageHealthImpactScore: null,
+            locationsReached: 0,
         });
+    });
+
+    it("counts the locations reached, matching the byLocation rows", async () => {
+        const filterSets = [{}, { country: "US" }, { country: "AU" }, { from: new Date("2026-07-01T00:00:00Z") }];
+
+        for (const filters of filterSets) {
+            const overall = await repo.getOverallImpactSummary(filters);
+            const locations = await repo.getImpactByLocation(filters);
+
+            expect(overall.locationsReached).toBe(locations.length);
+        }
+        expect((await repo.getOverallImpactSummary()).locationsReached).toBe(2);
+    });
+
+    it("does not count an order with no known destination as a location", async () => {
+        const noAddress = await prisma.user.create({ data: { name: "Recipient With No Address" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-C1",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: noAddress.id,
+            },
+        });
+
+        const overall = await repo.getOverallImpactSummary();
+
+        expect(overall.totalDonations).toBe(3);
+        expect(overall.locationsReached).toBe(2);
     });
 });
 
@@ -353,6 +468,77 @@ describe("getAll filters", () => {
     it("returns an empty array when combined filters match nothing", async () => {
         const results = await repo.getAll({ status: "OPEN", recipientId: fixtures.recipientB.id });
         expect(results).toEqual([]);
+    });
+});
+
+describe("getCountries", () => {
+    it("lists each country that has orders, in alphabetical order", async () => {
+        expect(await repo.getCountries()).toEqual(["CN", "US"]);
+    });
+
+    it("includes a country whose only order is still open", async () => {
+        const hanoi = await prisma.user.create({ data: { name: "Hanoi Clinic", city: "Hanoi", country: "VN" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-V1",
+                status: "open",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: hanoi.id,
+            },
+        });
+
+        expect(await repo.getCountries()).toEqual(["CN", "US", "VN"]);
+    });
+
+    it("leaves out recipients with no orders and recipients with no country", async () => {
+        await prisma.user.create({ data: { name: "Suva Clinic", city: "Suva", country: "FJ" } });
+        const noCountry = await prisma.user.create({ data: { name: "No Country Clinic" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-N1",
+                status: "completed",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: noCountry.id,
+            },
+        });
+
+        expect(await repo.getCountries()).toEqual(["CN", "US"]);
+    });
+});
+
+describe("getRegions", () => {
+    it("lists each country's states", async () => {
+        expect(await repo.getRegions()).toEqual({ CN: ["SH"], US: ["OH"] });
+    });
+
+    it("uses the city for a place with no state, and skips places with no order", async () => {
+        const hanoi = await prisma.user.create({ data: { name: "Hanoi Clinic", city: "Hanoi", country: "VN" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-V1",
+                status: "open",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: hanoi.id,
+            },
+        });
+        await prisma.user.create({ data: { name: "Suva Clinic", city: "Suva", country: "FJ" } });
+
+        expect(await repo.getRegions()).toEqual({ CN: ["SH"], US: ["OH"], VN: ["Hanoi"] });
+    });
+
+    it("lets a city stand in for the region when filtering", async () => {
+        const hanoi = await prisma.user.create({ data: { name: "Hanoi Clinic", city: "Hanoi", country: "VN" } });
+        await prisma.donation.create({
+            data: {
+                id: "#TEST-V1",
+                status: "open",
+                createdAt: new Date("2026-09-01T00:00:00Z"),
+                recipientId: hanoi.id,
+            },
+        });
+
+        const rows = await repo.getAll({ country: "VN", state: "hanoi" });
+        expect(rows.map((d) => d.id)).toEqual(["#TEST-V1"]);
     });
 });
 

@@ -1,18 +1,21 @@
-import { IDonationRepository } from "@/lib/repositories/donation.repository.interface";
+import { IDonationRepository, DonationFilters } from "@/lib/repositories/donation.repository.interface";
 import { ImpactReportDTO } from "@/lib/dto/impactReport.dto";
 
 export class ImpactService {
   constructor(private readonly repo: IDonationRepository) {}
 
-  async getImpactReport(): Promise<ImpactReportDTO> {
-    const [overall, byCategory, byRecipient, byMonth, byHealthImpactScore] = await Promise.all([
-      this.repo.getOverallImpactSummary(),
-      this.repo.getImpactByCategory(),
-      this.repo.getImpactByRecipient(),
-      this.repo.getImpactByMonth(),
-      this.repo.getImpactByHealthImpactScore(),
-    ]);
+  async getImpactReport(filters: DonationFilters = {}): Promise<ImpactReportDTO> {
+    const [overall, byCategory, byRecipient, byMonth, byItem, byLocation, byHealthImpactScore] =
+      await Promise.all([
+        this.repo.getOverallImpactSummary(filters),
+        this.repo.getImpactByCategory(filters),
+        this.repo.getImpactByRecipient(filters),
+        this.repo.getImpactByMonth(filters),
+        this.repo.getImpactByItem(filters),
+        this.repo.getImpactByLocation(filters),
+        this.repo.getImpactByHealthImpactScore(filters),
+      ]);
 
-    return { overall, byCategory, byRecipient, byMonth, byHealthImpactScore };
+    return { overall, byCategory, byRecipient, byMonth, byItem, byLocation, byHealthImpactScore };
   }
 }

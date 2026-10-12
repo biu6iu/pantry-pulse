@@ -64,7 +64,7 @@ describe("GET /api/impact when the repository fails", () => {
         vi.spyOn(DonationRepository.prototype, "getOverallImpactSummary").mockRejectedValue(error);
         const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        const response = await getImpact();
+        const response = await getImpact(new NextRequest("http://localhost/api/impact"));
         const body = await response.json();
 
         expect(response.status).toBe(500);

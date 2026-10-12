@@ -6,12 +6,15 @@ import {
   CategoryImpactSummary,
   RecipientImpactSummary,
   MonthlyImpactSummary,
+  ItemImpactSummary,
+  LocationImpactSummary,
   HealthImpactScoreSummary,
 } from "./donation.repository.interface";
 import { Donation } from "@/lib/models/donation";
 import { DonationEntry } from "@/lib/models/donationEntry";
 import { DonatedItem, UNCATEGORISED } from "@/lib/models/donatedItem";
 import { HEALTH_IMPACT_TIER_COUNT, INTERNAL_RECIPIENT_TYPE, roundImpact } from "@/lib/models/impact";
+import { roundCoordinate } from "@/lib/models/location";
 import { User } from "@/lib/models/user";
 import { DonationStatus } from "@/lib/models/donationStatus";
 import { Prisma } from "@/generated/prisma/client";
@@ -105,7 +108,8 @@ function impactSource(filters: DonationFilters = {}) {
     ...(from ? [Prisma.sql`d."createdAt" >= ${from}`] : []),
     ...(to ? [Prisma.sql`d."createdAt" <= ${to}`] : []),
     ...(country ? [Prisma.sql`lower(u.country) = lower(${country})`] : []),
-    ...(state ? [Prisma.sql`lower(u.state) = lower(${state})`] : []),
+    // a region is the state, or the city for places that have no state
+    ...(state ? [Prisma.sql`(lower(u.state) = lower(${state}) OR lower(u.city) = lower(${state}))`] : []),
   ];
 
   return Prisma.sql`
@@ -159,12 +163,23 @@ function toDonationWhere(filters: DonationFilters): Prisma.DonationWhereInput {
       ? {
           recipient: {
             ...(country ? { country: { equals: country, mode: "insensitive" } } : {}),
-            ...(state ? { state: { equals: state, mode: "insensitive" } } : {}),
+            // a region is the state, or the city for places that have no state
+            ...(state
+              ? {
+                  OR: [
+                    { state: { equals: state, mode: "insensitive" as const } },
+                    { city: { equals: state, mode: "insensitive" as const } },
+                  ],
+                }
+              : {}),
           },
         }
       : {}),
   };
 }
+
+// "Top donated resources" shows this many items unless a caller asks for a different number
+const TOP_ITEMS_LIMIT = 10;
 
 export class DonationRepository implements IDonationRepository {
   async getAll(filters: DonationFilters = {}): Promise<Donation[]> {
@@ -184,17 +199,51 @@ export class DonationRepository implements IDonationRepository {
     return prisma.donation.count({ where: toDonationWhere(filters) });
   }
 
+  // Every country an order has been sent to, whatever its status, so the list can offer them as a filter.
+  // The impact figures can't be used for this because they leave out orders that are still open
+  async getCountries(): Promise<string[]> {
+    const rows = await prisma.user.findMany({
+      where: { country: { not: null }, donations: { some: {} } },
+      select: { country: true },
+      distinct: ["country"],
+      orderBy: { country: "asc" },
+    });
+    return rows.map((row) => row.country as string);
+  }
+
+  // For each country, the regions orders were sent to: the state, or the city where there is no state
+  async getRegions(): Promise<Record<string, string[]>> {
+    const rows = await prisma.user.findMany({
+      where: { country: { not: null }, donations: { some: {} } },
+      select: { country: true, state: true, city: true },
+    });
+
+    const sets = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const region = (row.state?.trim() || row.city?.trim()) ?? "";
+      if (!row.country || !region) continue;
+      if (!sets.has(row.country)) sets.set(row.country, new Set());
+      sets.get(row.country)!.add(region);
+    }
+
+    return Object.fromEntries(
+      [...sets].map(([country, regions]) => [country, [...regions].sort((a, b) => a.localeCompare(b))]),
+    );
+  }
+
   async getById(id: string): Promise<Donation | null> {
     const row = await prisma.donation.findUnique({ where: { id }, include: donationInclude });
     return row ? toDonation(row) : null;
   }
 
   async getOverallImpactSummary(filters: DonationFilters = {}): Promise<OverallImpactSummary> {
-    const rows = await prisma.$queryRaw<ImpactTotalsRow[]>`
-      SELECT ${IMPACT_TOTALS}
+    const rows = await prisma.$queryRaw<(ImpactTotalsRow & { locationsReached: RawNumber })[]>`
+      SELECT
+        ${IMPACT_TOTALS},
+        COUNT(DISTINCT concat_ws('|', u.city, u.state)) FILTER (WHERE u.city IS NOT NULL) AS "locationsReached"
       ${impactSource(filters)}
     `;
-    return toImpactTotals(rows[0]);
+    return { ...toImpactTotals(rows[0]), locationsReached: toNum(rows[0].locationsReached) };
   }
 
   async getImpactByCategory(filters: DonationFilters = {}): Promise<CategoryImpactSummary[]> {
@@ -234,6 +283,55 @@ export class DonationRepository implements IDonationRepository {
       ORDER BY 1
     `;
     return rows.map((row) => ({ month: row.month, ...toImpactTotals(row) }));
+  }
+
+  async getImpactByItem(filters: DonationFilters = {}, limit = TOP_ITEMS_LIMIT): Promise<ItemImpactSummary[]> {
+    const rows = await prisma.$queryRaw<
+      (ImpactTotalsRow & { itemId: string; name: string; sku: string | null; category: string })[]
+    >`
+      SELECT
+        i.id AS "itemId",
+        i.name AS "name",
+        i.sku AS "sku",
+        COALESCE(i.category, ${UNCATEGORISED}) AS category,
+        ${IMPACT_TOTALS}
+      ${impactSource(filters)} AND e.id IS NOT NULL
+      GROUP BY i.id, i.name, i.sku, i.category
+      ORDER BY "totalItems" DESC, i.name
+      LIMIT ${limit}
+    `;
+    return rows.map((row) => ({
+      itemId: row.itemId,
+      name: row.name,
+      sku: row.sku,
+      category: row.category,
+      ...toImpactTotals(row),
+    }));
+  }
+
+  // One row per suburb + state; the pin sits at the average of its recipients' coordinates.
+  // Orders with no known destination still count in the totals but have no place to show here
+  async getImpactByLocation(filters: DonationFilters = {}): Promise<LocationImpactSummary[]> {
+    const rows = await prisma.$queryRaw<
+      (ImpactTotalsRow & { city: string | null; state: string | null; lat: number | null; lng: number | null })[]
+    >`
+      SELECT
+        u.city AS "city",
+        u.state AS "state",
+        AVG(u.lat) AS "lat",
+        AVG(u.lng) AS "lng",
+        ${IMPACT_TOTALS}
+      ${impactSource(filters)} AND u.city IS NOT NULL
+      GROUP BY u.city, u.state
+      ORDER BY "totalDonations" DESC, "totalItems" DESC, u.city
+    `;
+    return rows.map((row) => ({
+      city: row.city,
+      state: row.state,
+      lat: roundCoordinate(row.lat),
+      lng: roundCoordinate(row.lng),
+      ...toImpactTotals(row),
+    }));
   }
 
   async getImpactByHealthImpactScore(filters: DonationFilters = {}): Promise<HealthImpactScoreSummary[]> {

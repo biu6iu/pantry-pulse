@@ -16,6 +16,15 @@ afterEach(async () => {
 });
 
 describe("listDonations", () => {
+    it("lists every country orders were sent to, whatever the filters", async () => {
+        const all = await service.listDonations();
+        const narrowed = await service.listDonations({ status: "OPEN", recipientId: fixtures.recipientB.id });
+
+        expect(all.countries).toEqual(["CN", "US"]);
+        expect(narrowed.items).toEqual([]);
+        expect(narrowed.countries).toEqual(["CN", "US"]);
+    });
+
     it("returns a summary DTO per donation", async () => {
         const { items: results, total } = await service.listDonations();
 
@@ -25,7 +34,7 @@ describe("listDonations", () => {
         const donationA1 = results.find((d) => d.id === "#TEST-A1");
         expect(donationA1).toMatchObject({
             status: "COMPLETED",
-            receiver: { organisation: "Recipient A" },
+            receiver: { organisation: "Recipient A", city: "Cleveland", state: "OH", type: null },
             totalItems: 7,
             healthImpactScore: 2.57,
             weightDivertedKg: 13,
