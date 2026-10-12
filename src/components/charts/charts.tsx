@@ -142,6 +142,7 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
                 >
                   <span
                     className={`impact-over-time__tooltip impact-over-time__tooltip--${tooltipPosition}`}
+                    style={{ bottom: `calc(${(c.value / axisMax) * 100}% + 8px)` }}
                     aria-hidden="true"
                   >
                     <strong>{metric.format(c.value)}</strong>

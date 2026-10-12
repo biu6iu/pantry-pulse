@@ -32,6 +32,9 @@ function toDonationSummaryDTO(donation: Donation): DonationSummaryDTO {
     receiver: {
       id: donation.recipient.id,
       organisation: donation.recipient.organisation,
+      city: donation.recipient.city,
+      state: donation.recipient.state,
+      type: donation.recipient.type,
     },
     totalItems: donation.getTotalItems(),
     healthImpactScore: toHealthImpactScore(donation),

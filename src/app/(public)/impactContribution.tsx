@@ -64,8 +64,8 @@ export default async function ImpactContribution() {
           </p>
 
           <p className="impact-contribution__paragraph">
-            Thank you to the sponsors and the amazing volunteers
-            which make programs like ours possible.
+            Thank you to the sponsors and volunteers
+            who make programs like ours possible.
           </p>
         </div>
 

@@ -10,6 +10,10 @@ export interface DonationSummaryDTO {
   receiver: {
     id: string;
     organisation: string;
+    // enough to say where an order went and to what kind of recipient without naming them
+    city: string | null;
+    state: string | null;
+    type: string | null; // e.g. "wildlife_rescue"
   };
 
   totalItems: number;
