@@ -26,7 +26,7 @@ The frontend never touches the database directly. It calls the API routes throug
 
 Server component. Fetches the impact report and renders:
 
-- the logo, site name and `DONATE` button (links to GiveNow)
+- the logo, site name, a `Main Site` text link (to medicalpantry.org) and the `Donate` button (links to GiveNow)
 - the red scrolling stats banner (`StatsBanner`)
 - the hero image with the total CO₂e avoided over it (`ImageBanner`)
 
@@ -50,11 +50,11 @@ The chart shows the 12 months up to the latest month with data, with empty month
 Client component. The visitor enters an order number, and the donation and its tracking details are fetched together. The results are:
 
 - **Health impact**: the order's score on a Low / Medium / High scale (below 2, 2 to under 3, 3 and above)
-- **Environmental impact**: units delivered, weight diverted and CO₂e avoided
+- **Environmental impact**: CO₂e avoided, in kg
 - **Recipient and destination**
 - **Delivery status**: the created and completed stages with their dates
 - **Map**: the route from Medical Pantry to the recipient (`TrackingMap` in `src/components/maps`)
-- **Health impact calculation**: the explanation of the four tiers
+- **Health and environmental impact calculation**: two collapsible panels, side by side, explaining the four health tiers and the environmental formulas. They start collapsed; the "See how we calculate" links in the cards open them.
 
 Orders that are not completed show the health impact as pending. The map marks the recipient with a 1.1 km circle rather than an exact point, because the API rounds recipient coordinates. The Leaflet map is loaded in the browser only (`osmRouteMapLoader.tsx`), since Leaflet cannot render on the server.
 
