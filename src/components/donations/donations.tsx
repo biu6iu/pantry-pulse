@@ -81,11 +81,11 @@ export function DonationResultsTable({
         <table className="w-full min-w-[46rem] table-fixed border-collapse text-sm text-[#141a43]">
           <caption className="sr-only">Orders matching the selected filters</caption>
           <colgroup>
-            <col className="w-24" />
-            <col className="w-40" />
-            <col />
-            <col className="w-44" />
-            <col className="w-28" />
+            <col className="w-[15%]" />
+            <col className="w-[25%]" />
+            <col className="w-[28%]" />
+            <col className="w-[18%]" />
+            <col className="w-[14%]" />
           </colgroup>
           <thead className="bg-slate-50">
             <tr>

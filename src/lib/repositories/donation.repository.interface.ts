@@ -24,6 +24,7 @@ export interface IDonationRepository {
   getAll(filters?: DonationFilters): Promise<Donation[]>;
   count(filters?: DonationFilters): Promise<number>;
   getCountries(): Promise<string[]>;
+  getRegions(): Promise<Record<string, string[]>>;
   getById(id: string): Promise<Donation | null>;
   getOverallImpactSummary(filters?: DonationFilters): Promise<OverallImpactSummary>;
   getImpactByCategory(filters?: DonationFilters): Promise<CategoryImpactSummary[]>;

@@ -73,12 +73,13 @@ export class DonationService {
   constructor(private readonly repo: IDonationRepository) {}
 
   async listDonations(filters?: DonationFilters): Promise<DonationListDTO> {
-    const [donations, total, countries] = await Promise.all([
+    const [donations, total, countries, regions] = await Promise.all([
       this.repo.getAll(filters),
       this.repo.count(filters),
       this.repo.getCountries(),
+      this.repo.getRegions(),
     ]);
-    return { items: donations.map(toDonationSummaryDTO), total, countries };
+    return { items: donations.map(toDonationSummaryDTO), total, countries, regions };
   }
 
   async getDonationDetail(id: string): Promise<DonationDTO | null> {

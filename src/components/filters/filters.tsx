@@ -13,6 +13,14 @@ const LABEL_CLASS = "mb-2 block text-sm font-medium text-slate-700";
 const CONTROL_CLASS =
   "w-full rounded-full bg-[#e8eaee] px-5 py-2.5 text-sm text-[#141a43] outline-none focus-visible:ring-2 focus-visible:ring-[#2a7d9d] disabled:cursor-not-allowed disabled:opacity-60";
 
+// A drawn arrow in place of the browser's own, which sits hard against the right edge and can't be moved
+const SELECT_CLASS = `${CONTROL_CLASS} appearance-none bg-no-repeat pr-11`;
+const SELECT_STYLE = {
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23141a43' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+  backgroundPosition: "right 1.25rem center",
+} as const;
+
 interface DonationFilterBarProps {
   values: FilterValues;
   onChange: (values: FilterValues) => void; // called on every change; there is no separate apply step
@@ -79,7 +87,8 @@ export function DonationFilterBar({
             value={values.country}
             // a region belongs to one country, so it is cleared when the country changes
             onChange={(event) => onChange({ ...values, country: event.target.value, state: "" })}
-            className={CONTROL_CLASS}
+            className={SELECT_CLASS}
+            style={SELECT_STYLE}
           >
             <option value="">All countries</option>
             {countries.map((option) => (
@@ -99,7 +108,8 @@ export function DonationFilterBar({
             value={values.state}
             disabled={regionOptions.length === 0}
             onChange={(event) => onChange({ ...values, state: event.target.value })}
-            className={CONTROL_CLASS}
+            className={SELECT_CLASS}
+            style={SELECT_STYLE}
           >
             <option value="">{values.country ? "All regions" : "Pick a country"}</option>
             {regionOptions.map((option) => (
@@ -118,7 +128,8 @@ export function DonationFilterBar({
             id={`${id}-status`}
             value={values.status}
             onChange={(event) => onChange({ ...values, status: event.target.value as FilterValues["status"] })}
-            className={CONTROL_CLASS}
+            className={SELECT_CLASS}
+            style={SELECT_STYLE}
           >
             <option value="">Any status</option>
             {STATUS_OPTIONS.map((option) => (
