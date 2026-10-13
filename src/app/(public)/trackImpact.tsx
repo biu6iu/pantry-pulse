@@ -394,10 +394,10 @@ export default function TrackYourImpact() {
   const searched = donation !== null || tracking !== null;
 
   return (
-    <section>
+    <section className="font-sans">
       <div className="bg-[#2a7d9d] px-6 py-14">
         <div className="mx-auto max-w-4xl">
-          <h2 className="mb-8 text-center text-3xl font-extrabold uppercase tracking-wide text-white">
+          <h2 className="mb-8 text-center text-[clamp(2.2rem,4vw,4.3rem)] font-bold uppercase leading-[1.05] tracking-[-0.08em] text-white">
             Track Your Impact
           </h2>
 
@@ -411,7 +411,7 @@ export default function TrackYourImpact() {
                 type="search"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="e.g. A123"
+                placeholder="e.g. D000"
                 autoComplete="off"
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? "order-search-error" : undefined}
