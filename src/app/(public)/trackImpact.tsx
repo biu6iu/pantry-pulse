@@ -407,7 +407,7 @@ export default function TrackYourImpact() {
   const searched = donation !== null || tracking !== null;
 
   return (
-    <section className="font-sans">
+    <section id="track" className="font-sans">
       <div className="bg-[#2a7d9d] px-6 py-14">
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-4 text-center text-[clamp(1.9rem,3.4vw,3.4rem)] font-bold leading-[1.1] tracking-[-0.04em] text-white">

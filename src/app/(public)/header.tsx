@@ -1,55 +1,50 @@
 import Image from 'next/image';
-import {StatsBanner} from '../../components/ui/ui';
 import { DonateButton } from '@/components/ui/donate';
-import {IMAGES, STATS} from '../../components/statsData';
-import { getImpactReport } from '@/lib/api/server';
-import { formatWeight } from '@/lib/format';
+import { IMAGES } from '../../components/statsData';
 
-export default async function Header() {
-  const report = await getImpactReport();
-  const overall = report?.overall;
+// in-page links to the sections further down; hidden on small screens, where they would crowd the bar
+const SECTION_LINKS = [
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#impact', label: 'Our impact' },
+  { href: '#track', label: 'Track a delivery' },
+];
 
-  const co2e = overall ? formatWeight(overall.totalCO2eAvoidedKg) : null;
-  const waste = overall ? formatWeight(overall.totalWeightDivertedKg) : null;
-
-  // real figures first, then the static stats
-  const stats = [
-    ...(waste ? [`PREVENTED ${waste.value} ${waste.unit.toUpperCase()} OF WASTE`] : []),
-    ...(co2e ? [`AVOIDED ${co2e.value} ${co2e.unit.toUpperCase()} OF CO2e EMISSIONS`] : []),
-    ...STATS,
-  ];
-
+export default function Header() {
   return (
     <>
+      <header
+        data-hide-sticky-donate
+        className="flex items-center justify-between gap-6 bg-brand-blue px-6 py-3 text-white md:px-12"
+      >
+        <a href="#" className="flex items-center gap-3">
+          <Image src={IMAGES.logo} alt="" width={44} height={44} priority />
+          <span className="flex flex-col leading-tight">
+            <span className="text-xl font-bold tracking-[-0.02em]">Pantry Pulse</span>
+            <span className="text-xs font-medium text-white/70">by Medical Pantry</span>
+          </span>
+        </a>
 
-      <header data-hide-sticky-donate className="flex items-center justify-between px-6 py-4 bg-brand-blue">
-
-        {/** the left section of the banner */}
-        <div className="flex items-center gap-3">
-          <div className="logo-container">
-            {/* Render the image using the imported variable */}
-            <img
-              src={IMAGES.logo} alt="Company Logo" className="header-logo"
-              style = {{height: '40px'}}
-            />
-          </div>
-        
-          <span className="text-xl font-bold text-white">Medical Pantry - Pantry Pulse</span>
-        </div>
-
-        {/** page navigation section */}
-        <nav className="flex items-center gap-8 text-white">
-          <a href="https://medicalpantry.org/" className="font-medium hover:underline">
-            Main Site
+        <nav aria-label="Main" className="flex items-center gap-6">
+          <ul className="hidden items-center gap-6 lg:flex">
+            {SECTION_LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className="font-medium text-white/85 hover:text-white hover:underline underline-offset-4">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a
+            href="https://medicalpantry.org/"
+            className="hidden font-medium text-white/85 underline-offset-4 hover:text-white hover:underline sm:inline"
+          >
+            Main site
           </a>
           <DonateButton placement="header" />
         </nav>
       </header>
 
-
-      <StatsBanner stats={stats} />
-
-      {/* the hero leads with the problem and the ask; the live figures back it up rather than lead */}
+      {/* the hero leads with the problem and the ask */}
       <section data-hide-sticky-donate className="relative flex min-h-[460px] items-center overflow-hidden">
         <Image src={IMAGES.mocBanner} alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/90 via-brand-blue/70 to-brand-blue/20" />
@@ -74,11 +69,6 @@ export default async function Header() {
           </div>
         </div>
       </section>
-
     </>
   );
-}
-
-export function imageStats(){
-
 }

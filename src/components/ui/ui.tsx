@@ -1,7 +1,6 @@
 
 'use client';
 
-import {STATS} from '../statsData'
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
@@ -59,27 +58,6 @@ export function CountUp({ value, suffix = '', duration }: CountUpProps) {
       {Math.round(current).toLocaleString('en-AU')}
       {suffix}
     </span>
-  );
-}
-
-
-export function StatsBanner({ stats = STATS }: { stats?: string[] }) {
-  return (
-    <div className="marquee-banner-style">
-      <div className="marquee-track">
-        {/* two identical groups so the strip loops with no gap */}
-        <div className="marquee-group">
-          {stats.map((s) => (
-            <span key={s}>{s}</span>
-          ))}
-        </div>
-        <div className="marquee-group" aria-hidden="true">
-          {stats.map((s) => (
-            <span key={`${s}-dup`}>{s}</span>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 

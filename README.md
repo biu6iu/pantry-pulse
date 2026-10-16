@@ -6,7 +6,7 @@ Pantry Pulse is a project of Medical Pantry which visualises the donations made 
 
 The site is a single public page (`/`) that tells the story from the problem to a donation:
 
-- **Header**: the Medical Pantry logo, a `DONATE` button linking to [GiveNow](https://www.givenow.com.au/medicalpantry), a scrolling stats banner and a hero that states the problem, with a second Donate button. The waste prevented and CO₂e avoided figures in the banner and hero are live totals from the impact report.
+- **Header**: the Medical Pantry logo, links to the sections below, a `Donate` button linking to [GiveNow](https://www.givenow.com.au/medicalpantry), and a hero that states the problem, with a second Donate button.
 - **How it works**: three steps from surplus supplies to a delivery.
 - **One recent delivery**: a recently completed, high health impact order told as a story (when it was delivered, the kind of recipient and where, the items and their impact) with its route map. The recipient is described by type, never by name.
 - **Our impact**: headline counts (organisations supplied, items saved from landfill, deliveries made, deliveries made last month), a map of every place supplies have reached, and the share of orders at each health impact score. Behind a "See the full numbers" toggle are a breakdown of CO₂e avoided by item category and a "Month by month" bar chart of the last 12 months. The chart can switch between CO₂e avoided, weight diverted and number of donations, and the same numbers are available as a table.
