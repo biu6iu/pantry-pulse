@@ -1,4 +1,6 @@
-import {StatsBanner, ImageBanner} from '../../components/ui/ui';
+import Image from 'next/image';
+import {StatsBanner} from '../../components/ui/ui';
+import { DonateButton } from '@/components/ui/donate';
 import {IMAGES, STATS} from '../../components/statsData';
 import { getImpactReport } from '@/lib/api/server';
 import { formatWeight } from '@/lib/format';
@@ -20,7 +22,7 @@ export default async function Header() {
   return (
     <>
 
-      <header className="flex items-center justify-between px-6 py-4 bg-brand-blue t">
+      <header data-hide-sticky-donate className="flex items-center justify-between px-6 py-4 bg-brand-blue">
 
         {/** the left section of the banner */}
         <div className="flex items-center gap-3">
@@ -40,42 +42,38 @@ export default async function Header() {
           <a href="https://medicalpantry.org/" className="font-medium hover:underline">
             Main Site
           </a>
-          {/* pill with a lighter rim and lip underneath, like the button on medicalpantry.org */}
-          <a
-            href="https://www.givenow.com.au/medicalpantry"
-            className="rounded-full border border-[#f08a8d] bg-brand-red px-5 py-1.5 font-bold shadow-[0_4px_0_#e8676b] hover:brightness-110"
-          >
-            Donate
-          </a>
+          <DonateButton placement="header" />
         </nav>
       </header>
 
 
       <StatsBanner stats={stats} />
 
-      <ImageBanner
-        src={IMAGES.mocBanner}
-        alt="Medical Pantry hero banner"
-        overlay={co2e ? [
-          {
-            top: '20%',
-            left: '50%',
-            fontSize: '1.25rem',
-            text: (
-              <>
-                <span style={{ fontSize: '7em', fontWeight: 700, display: 'block', lineHeight: 1 }}>
-                  {co2e.value}
-                  <span style={{ fontSize: '0.4em' }}> {co2e.unit}</span>
-                </span>
-                of CO<sub>2</sub>e emissions avoided through delivered donations
-              </>
-            ),
-          },
-        ] : []
+      {/* the hero leads with the problem and the ask; the live figures back it up rather than lead */}
+      <section data-hide-sticky-donate className="relative flex min-h-[460px] items-center overflow-hidden">
+        <Image src={IMAGES.mocBanner} alt="" fill priority sizes="100vw" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/90 via-brand-blue/70 to-brand-blue/20" />
 
-      }
-        height = "300px"
-      />
+        <div className="relative max-w-3xl px-6 py-14 text-white md:px-12">
+          <h1 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.03em]">
+            Usable medical supplies get thrown out every day. Clinics and rescues go without.
+          </h1>
+
+          <p className="mt-5 max-w-2xl text-[clamp(1.05rem,1.6vw,1.35rem)] leading-relaxed text-white/90">
+            Medical Pantry&apos;s volunteers rescue surplus medical supplies and deliver them to the clinics,
+            rescues and communities that need them.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <DonateButton placement="hero" size="lg">
+              Donate now
+            </DonateButton>
+            <a href="#impact" className="font-semibold underline-offset-4 hover:underline">
+              See where it goes ↓
+            </a>
+          </div>
+        </div>
+      </section>
 
     </>
   );

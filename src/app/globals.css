@@ -48,9 +48,10 @@
   .impact-contribution__title,
   .impact-contribution__summary-title {
     margin: 0 0 18px;
-    font-size: clamp(2.2rem, 4vw, 4.3rem);
-    line-height: 1.05;
-    letter-spacing: -0.08em;
+    /* headings are sentences now, not all-caps labels, so they are a little smaller and less tightly spaced */
+    font-size: clamp(1.9rem, 3.4vw, 3.4rem);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
     font-weight: 700;
     color: var(--color-brand-blue);
     font-family: var(--font-sans);

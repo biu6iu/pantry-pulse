@@ -6,6 +6,7 @@ import type { DonationDTO } from "@/lib/dto/donation.dto";
 import type { TrackingDTO } from "@/lib/dto/tracking.dto";
 import { TrackingMap } from "@/components/maps/maps";
 import { BUTTON_MOTION_CLASS } from "@/components/ui/buttonStyles";
+import { DonateButton } from "@/components/ui/donate";
 import { regionName } from "@/lib/regionNames";
 import BrowseOrders from "./browseOrders";
 
@@ -261,6 +262,18 @@ function CalculationPanel({
   );
 }
 
+// shown under a tracked order, while the visitor is looking at one delivery's difference
+function DonateNudge() {
+  return (
+    <div className="flex flex-col items-start gap-4 rounded-2xl bg-brand-blue p-6 text-white sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-lg font-semibold">
+        This delivery was made possible by donors. Help fund the next one.
+      </p>
+      <DonateButton placement="tracker" className="shrink-0" />
+    </div>
+  );
+}
+
 function HealthImpactMethodology() {
   return (
     <CalculationPanel
@@ -397,9 +410,12 @@ export default function TrackYourImpact() {
     <section className="font-sans">
       <div className="bg-[#2a7d9d] px-6 py-14">
         <div className="mx-auto max-w-4xl">
-          <h2 className="mb-8 text-center text-[clamp(2.2rem,4vw,4.3rem)] font-bold uppercase leading-[1.05] tracking-[-0.08em] text-white">
-            Track Your Impact
+          <h2 className="mb-4 text-center text-[clamp(1.9rem,3.4vw,3.4rem)] font-bold leading-[1.1] tracking-[-0.04em] text-white">
+            Follow a delivery
           </h2>
+          <p className="mb-8 text-center text-[clamp(1rem,1.5vw,1.25rem)] text-white/90">
+            Have an order number from Medical Pantry? See where it went and the difference it made.
+          </p>
 
           <form onSubmit={onSubmit} className="rounded-2xl bg-white p-4 md:p-5">
             <label htmlFor="order-number" className="mb-2 block text-sm font-medium text-slate-700">
@@ -454,6 +470,8 @@ export default function TrackYourImpact() {
               </div>
 
               {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
+
+              <DonateNudge />
             </>
           ) : null}
 
