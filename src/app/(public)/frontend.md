@@ -1,6 +1,6 @@
 # Frontend notes
 
-The site is one page (`/`), rendered by `src/app/page.tsx` from the section components in this folder. The page is ordered as a story that ends in a donation: the problem and the ask (header), the proof (our impact), the ask again (donate), then the order tracker for partners. Run it with `npm run dev` and open <http://localhost:3000>.
+The site is one page (`/`), rendered by `src/app/page.tsx` from the section components in this folder. The page is ordered as a story that ends in a donation: the problem and the ask (header), how Medical Pantry works, one real delivery told as a story, the proof (our impact), the ask again (donate), then the order tracker for partners. Run it with `npm run dev` and open <http://localhost:3000>.
 
 For setup and how to run the app, see the [README](../../../README.md).
 
@@ -10,7 +10,7 @@ For setup and how to run the app, see the [README](../../../README.md).
 | --- | --- |
 | `src/app/layout.tsx` | Root layout: page title and description, favicon, the Poppins font and global styles. |
 | `src/app/page.tsx` | The home page. Renders the sections in order, plus the floating donate button. |
-| `src/app/(public)/` | The page sections: `header.tsx`, `impactContribution.tsx` (server components that fetch the impact report) and `donateCta.tsx` (the closing donate section), `trackImpact.tsx` (client component for the order search), plus `browseOrders.tsx`, the filterable order list inside the tracking section. |
+| `src/app/(public)/` | The page sections: `header.tsx`, `impactContribution.tsx` (server components that fetch the impact report), `howItWorks.tsx` (the three steps), `featuredDelivery.tsx` (one recent order as a story), `donateCta.tsx` (the closing donate section), `trackImpact.tsx` (client component for the order search), plus `browseOrders.tsx`, the filterable order list inside the tracking section. |
 | `src/components/ui/` | Shared presentational components (`StatsBanner`, `ImageBanner`, `CountUp`, `PercentBar`, `ImpactCategoryRow`, `ImpactContributionStatCard`), plus `donate.tsx` (`DonateButton` and `donateHref`) and `stickyDonate.tsx` (`StickyDonate`). |
 | `src/components/charts/` | `ImpactOverTimeChart`, the monthly bar chart. |
 | `src/components/maps/` | `TrackingMap` and the Leaflet route map, which is loaded client-side only. |
@@ -18,6 +18,7 @@ For setup and how to run the app, see the [README](../../../README.md).
 | `src/components/donations/` | `DonationResultsTable`, one page of orders with paging and a Track button per row. |
 | `src/components/impact/` | `ImpactSummary`, the row of totals for a set of orders. |
 | `src/components/statsData.ts` | The static banner text, the image paths and `SUPPLIES_PER_DOLLAR` (the $1 → $350 figure). |
+| `src/lib/featuredDelivery.ts` | `pickFeaturedDelivery`, which chooses the order for the featured delivery section, and `RECIPIENT_PHRASES`, how each recipient type is described in it. |
 | `src/lib/format.ts` | Number, date and label formatting (`formatWeight`, `formatDate`, `formatCategory`) with a fixed `en-AU` locale so server and browser output match. |
 | `public/images/` | Static images. The favicon is served from `public/favicon/favicon.ico`. |
 
@@ -36,6 +37,16 @@ Server component. Fetches the impact report and renders:
 The banner text is a mix of live and fixed figures. Waste prevented and CO₂e avoided come from the impact report and are shown first; the rest is the hardcoded `STATS` list in `src/components/statsData.ts`. Edit that list to change the fixed text. If the report cannot be loaded, only the fixed text is shown and the hero leaves out the totals line.
 
 The banner scrolls using the `marquee-*` classes in `globals.css`. The text is rendered twice so the strip loops without a gap.
+
+### How it works (`howItWorks.tsx`)
+
+Static. Three numbered steps: surplus is saved, volunteers sort and pack, delivered where it is needed. Edit `STEPS` to change the wording.
+
+### One recent delivery (`featuredDelivery.tsx`)
+
+Server component. Fetches the 30 newest completed orders and features one, chosen by `pickFeaturedDelivery` in `src/lib/featuredDelivery.ts`: the most recently completed order with a high health impact score (3 or more), a known suburb and a recipient type listed in `RECIPIENT_PHRASES`. It then fetches that order's items and tracking and shows the date, the kind of recipient and place, the items, its health and environmental impact, and the route map, ending with a link down to the donate section. The section is left out if no order qualifies or a fetch fails.
+
+The recipient's name is never shown. The story says "a wildlife rescue in East Lismore, NSW", and the map is given a copy of the tracking with the organisation replaced by the same phrase, so the pin's popup does not name them either. To allow a new recipient type to be featured, add a phrase for it to `RECIPIENT_PHRASES`.
 
 ### Our impact (`impactContribution.tsx`)
 

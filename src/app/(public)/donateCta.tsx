@@ -10,7 +10,7 @@ const formatDollars = (n: number) => `$${n.toLocaleString('en-AU')}`;
 
 export default function DonateCta() {
   return (
-    <section data-hide-sticky-donate className="bg-brand-blue px-6 py-16 font-sans text-white">
+    <section id="donate" data-hide-sticky-donate className="bg-brand-blue px-6 py-16 font-sans text-white">
       <div className="mx-auto max-w-4xl text-center">
         <h2 className="text-[clamp(1.9rem,3.4vw,3.4rem)] font-bold leading-[1.1] tracking-[-0.04em]">
           Help fund the next delivery
