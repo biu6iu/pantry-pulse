@@ -32,10 +32,16 @@
 @layer components {
   .impact-contribution {
     width: 100%;
-    padding: 32px 28px 48px;
+    padding: 64px 24px;
     background: var(--color-surface-cream);
     color: var(--color-brand-blue);
     font-family: var(--font-sans);
+  }
+
+  /* each block sits in the same centred column as the other sections (max-w-6xl) */
+  .impact-contribution > * {
+    max-width: 72rem;
+    margin-inline: auto;
   }
 
   .impact-contribution__header {
@@ -499,7 +505,7 @@
 
   @media (max-width: 640px) {
     .impact-contribution {
-      padding: 24px 18px 36px;
+      padding: 48px 24px;
     }
 
     .impact-contribution__header {

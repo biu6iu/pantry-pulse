@@ -49,23 +49,26 @@ export default function Header() {
         <Image src={IMAGES.mocBanner} alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/90 via-brand-blue/70 to-brand-blue/20" />
 
-        <div className="relative max-w-3xl px-6 py-14 text-white md:px-12">
-          <h1 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.03em]">
-            Usable medical supplies get thrown out every day. Clinics and rescues go without.
-          </h1>
+        {/* the same centred column as the sections below, so the text lines up with theirs */}
+        <div className="relative mx-auto w-full max-w-6xl px-6 py-14 text-white">
+          <div className="max-w-3xl">
+            <h1 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.03em]">
+              Usable medical supplies get thrown out every day. Clinics and rescues go without.
+            </h1>
 
-          <p className="mt-5 max-w-2xl text-[clamp(1.05rem,1.6vw,1.35rem)] leading-relaxed text-white/90">
-            Medical Pantry&apos;s volunteers rescue surplus medical supplies and deliver them to the clinics,
-            rescues and communities that need them.
-          </p>
+            <p className="mt-5 max-w-2xl text-[clamp(1.05rem,1.6vw,1.35rem)] leading-relaxed text-white/90">
+              Medical Pantry&apos;s volunteers rescue surplus medical supplies and deliver them to the clinics,
+              rescues and communities that need them.
+            </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <DonateButton placement="hero" size="lg">
-              Donate now
-            </DonateButton>
-            <a href="#impact" className="font-semibold underline-offset-4 hover:underline">
-              See where it goes ↓
-            </a>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <DonateButton placement="hero" size="lg">
+                Donate now
+              </DonateButton>
+              <a href="#impact" className="font-semibold underline-offset-4 hover:underline">
+                See where it goes ↓
+              </a>
+            </div>
           </div>
         </div>
       </section>
