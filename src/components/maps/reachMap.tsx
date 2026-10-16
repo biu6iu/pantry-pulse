@@ -5,6 +5,7 @@ import L from "leaflet";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapPoint } from "./osmRouteMap";
+import { ClickToScrollZoom } from "./clickToScrollZoom";
 
 export type ReachPoint = MapPoint & {
   items: number; // sets the dot size
@@ -34,7 +35,6 @@ export default function ReachMap({ origin, points }: { origin: MapPoint; points:
     <MapContainer
       center={[origin.lat, origin.lng]}
       zoom={4}
-      // the map sits in the middle of the page, so the wheel scrolls the page rather than zooming
       scrollWheelZoom={false}
       style={{ height: "460px", width: "100%" }}
     >
@@ -60,6 +60,7 @@ export default function ReachMap({ origin, points }: { origin: MapPoint; points:
         <Popup>{origin.label}</Popup>
       </CircleMarker>
       <FitAll points={everyPoint} />
+      <ClickToScrollZoom />
     </MapContainer>
   );
 }

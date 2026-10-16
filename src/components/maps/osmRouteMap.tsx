@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { ClickToScrollZoom } from "./clickToScrollZoom";
 
 export type MapPoint = {
   lat: number;
@@ -100,7 +101,7 @@ export default function OsmRouteMap({
     <MapContainer
       center={start}
       zoom={3}
-      scrollWheelZoom
+      scrollWheelZoom={false}
       style={{ height: "420px", width: "100%" }}
     >
       <TileLayer
@@ -124,6 +125,7 @@ export default function OsmRouteMap({
         </>
       ) : null}
       <FitRoute start={origin} end={destination} />
+      <ClickToScrollZoom />
     </MapContainer>
   );
 }

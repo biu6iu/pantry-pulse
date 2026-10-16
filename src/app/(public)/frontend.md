@@ -13,7 +13,7 @@ For setup and how to run the app, see the [README](../../../README.md).
 | `src/app/(public)/` | The page sections: `header.tsx`, `impactContribution.tsx` (a server component that fetches the impact report), `howItWorks.tsx` (the three steps), `featuredDelivery.tsx` (one recent order as a story), `donateCta.tsx` (the closing donate section), `trackImpact.tsx` (client component for the order search), plus `browseOrders.tsx`, the filterable order list inside the tracking section. |
 | `src/components/ui/` | Shared presentational components (`ImageBanner`, `CountUp`, `PercentBar`, `ImpactCategoryRow`, `ImpactContributionStatCard`), plus `donate.tsx` (`DonateButton` and `donateHref`) and `stickyDonate.tsx` (`StickyDonate`). |
 | `src/components/charts/` | `ImpactOverTimeChart`, the monthly bar chart. |
-| `src/components/maps/` | `TrackingMap` and the Leaflet route map, and `reachMap.tsx`, the map of every place supplies have reached. Both Leaflet maps are loaded client-side only, through their `*Loader.tsx`. |
+| `src/components/maps/` | `TrackingMap` and the Leaflet route map, and `reachMap.tsx`, the map of every place supplies have reached. Both Leaflet maps are loaded client-side only, through their `*Loader.tsx`. Neither zooms with the scroll wheel until it is clicked (`ClickToScrollZoom`), so scrolling down the page never gets caught on a map. |
 | `src/components/filters/` | `DonationFilterBar` (the date, state and status controls) and `filterValues.ts`, which holds the form's values, its validation and the conversion to the API's `DonationFilters`. |
 | `src/components/donations/` | `DonationResultsTable`, one page of orders with paging and a Track button per row. |
 | `src/components/impact/` | `ImpactSummary`, the row of totals for a set of orders. |
@@ -51,7 +51,7 @@ Server component. Fetches the impact report and renders:
 
 - the intro copy and hero image
 - **What it has added up to so far**: stat cards (organisations supplied, items saved from landfill, deliveries made, deliveries made last month). The last-month card is left out when it is zero.
-- **Everywhere supplies have reached**: a sentence counting the places in Australia and overseas, and a map with a dot for each place in `byLocation`, sized by the number of items it received, plus a dot for Medical Pantry. A dot's popup gives the place, deliveries and items, never the recipient's name. A place counts as Australian when its state is an Australian state code, since `byLocation` has no country. The map does not zoom with the scroll wheel, so it does not catch the page scroll. Hidden if no place has coordinates.
+- **Everywhere supplies have reached**: a sentence counting the places in Australia and overseas, and a map with a dot for each place in `byLocation`, sized by the number of items it received, plus a dot for Medical Pantry. A dot's popup gives the place, deliveries and items, never the recipient's name. A place counts as Australian when its state is an Australian state code, since `byLocation` has no country. Hidden if no place has coordinates.
 - **How much these deliveries matter to care**: orders at each health impact score. Hidden if no order is scored.
 - **See the full numbers**: a closed-by-default toggle holding the detail for visitors who want it:
   - **Which supplies save the most emissions**: each item category's share of CO₂e avoided, largest first. Hidden if no category has any CO₂e avoided.

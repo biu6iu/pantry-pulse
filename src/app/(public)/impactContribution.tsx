@@ -184,7 +184,7 @@ export default async function ImpactContribution() {
         <div className="impact-breakdown">
           <div className="impact-contribution__grid impact-contribution__grid--visual-right">
             <div>
-              <h2 className="impact-contribution__summary-title">How much these deliveries matter to care</h2>
+              <h2 className="impact-contribution__summary-title">Health Impacts Made</h2>
 
               <p className="impact-contribution__paragraph">
                 Each delivery is scored by how important its supplies are to patient care,
