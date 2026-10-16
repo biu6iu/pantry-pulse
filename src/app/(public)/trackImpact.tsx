@@ -247,14 +247,25 @@ export default function TrackYourImpact() {
   }
 
   // an order picked from the browse list is tracked the same way as one typed into the search box
-  async function onTrackFromList(id: string) {
+  function onTrackFromList(id: string) {
     setInput(id);
-    await trackOrder(id);
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    resultsRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    void trackOrder(id);
   }
 
+  // Looks up an order and, once it is found, scrolls down to it. A miss leaves the page where it is,
+  // so the error stays in view under the search box.
   async function trackOrder(id: string) {
+    if (await fetchOrder(id)) {
+      // wait a frame so the results have rendered before measuring where they are
+      requestAnimationFrame(() => {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        resultsRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      });
+    }
+  }
+
+  // true when the order was found
+  async function fetchOrder(id: string): Promise<boolean> {
     setLoading(true);
     setError(null);
     setDonation(null);
@@ -268,13 +279,15 @@ export default function TrackYourImpact() {
 
       if (!donationResult && !trackingResult) {
         setError(`No order found for “${id}”. Check the number and try again.`);
-        return;
+        return false;
       }
 
       setDonation(donationResult);
       setTracking(trackingResult);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed. Try again.");
+      return false;
     } finally {
       setLoading(false);
     }
@@ -336,7 +349,7 @@ export default function TrackYourImpact() {
             ) : null}
           </form>
 
-          <BrowseOrders onTrack={(id) => void onTrackFromList(id)} />
+          <BrowseOrders onTrack={onTrackFromList} />
         </div>
 
         <div ref={resultsRef} className="scroll-mt-6">
