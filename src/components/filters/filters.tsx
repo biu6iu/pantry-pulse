@@ -11,7 +11,7 @@ import {
 
 const LABEL_CLASS = "mb-2 block text-sm font-medium text-slate-700";
 const CONTROL_CLASS =
-  "w-full rounded-full bg-[#e8eaee] px-5 py-2.5 text-sm text-[#141a43] outline-none focus-visible:ring-2 focus-visible:ring-[#2a7d9d] disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-full bg-surface-cream px-5 py-2.5 text-sm text-[#141a43] outline-none focus-visible:ring-2 focus-visible:ring-brand-blue disabled:cursor-not-allowed disabled:opacity-60";
 
 // A drawn arrow in place of the browser's own, which sits hard against the right edge and can't be moved
 const SELECT_CLASS = `${CONTROL_CLASS} appearance-none bg-no-repeat pr-11`;
@@ -151,7 +151,7 @@ export function DonationFilterBar({
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 text-sm font-semibold text-[#2a7d9d] underline underline-offset-2 hover:text-[#141a43] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="mt-3 text-sm font-semibold text-brand-red underline underline-offset-2 hover:text-[#141a43] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Clear filters
         </button>

@@ -171,7 +171,7 @@ export default async function ImpactContribution() {
           <p className="impact-contribution__paragraph">
             {plural(australianPlaces, 'place', 'places')} across Australia
             {overseasPlaces > 0 ? <>, and {plural(overseasPlaces, 'place', 'places')} overseas</> : null}, all
-            supplied from our base in {ORIGIN.city}. Bigger dots received more items.
+            supplied from our base in {ORIGIN.city}. 
           </p>
 
           <div className="impact-contribution__map">

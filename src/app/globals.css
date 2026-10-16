@@ -363,7 +363,8 @@
   /* styled like the metric buttons above the chart, with a chevron instead of the default marker;
      the full numbers toggle in the impact section uses the same pill, a size up */
   .impact-over-time__table-toggle summary,
-  .impact-contribution__more > summary {
+  .impact-contribution__more > summary,
+  .details-toggle > summary {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -377,12 +378,14 @@
   }
 
   .impact-over-time__table-toggle summary::-webkit-details-marker,
-  .impact-contribution__more > summary::-webkit-details-marker {
+  .impact-contribution__more > summary::-webkit-details-marker,
+  .details-toggle > summary::-webkit-details-marker {
     display: none;
   }
 
   .impact-over-time__table-toggle summary::after,
-  .impact-contribution__more > summary::after {
+  .impact-contribution__more > summary::after,
+  .details-toggle > summary::after {
     content: '';
     width: 7px;
     height: 7px;
@@ -394,13 +397,15 @@
   }
 
   .impact-over-time__table-toggle[open] summary::after,
-  .impact-contribution__more[open] > summary::after {
+  .impact-contribution__more[open] > summary::after,
+  .details-toggle[open] > summary::after {
     margin-top: 4px;
     transform: rotate(-135deg);
   }
 
   .impact-over-time__table-toggle summary:hover,
-  .impact-contribution__more > summary:hover {
+  .impact-contribution__more > summary:hover,
+  .details-toggle > summary:hover {
     background: rgba(20, 26, 67, 0.06);
   }
 
@@ -470,7 +475,9 @@
     color: var(--color-brand-blue);
   }
 
-  .impact-contribution__more > summary {
+  /* a size up from the table toggle, for toggles that open a whole block of the page */
+  .impact-contribution__more > summary,
+  .details-toggle > summary {
     padding: 10px 22px;
     font-size: 1.15rem;
   }

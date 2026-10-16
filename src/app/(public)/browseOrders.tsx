@@ -83,7 +83,7 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
   }
 
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl bg-white">
+    <div className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm">
       <h3>
         <button
           type="button"
@@ -93,11 +93,11 @@ export default function BrowseOrders({ onTrack }: { onTrack: (id: string) => voi
           className="flex w-full items-center justify-between gap-4 p-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 md:p-5"
         >
           <span>
-            <span className="block text-sm font-semibold uppercase tracking-wide text-[#141a43]">
-              Browse orders
+            <span className="block text-lg font-bold text-[#141a43]">
+              Don&apos;t have an order number?
             </span>
             <span className="mt-1 block text-sm font-normal text-slate-600">
-              No order number? Find an order by date, location or status.
+              Browse orders by date, location or status.
             </span>
           </span>
           <span aria-hidden="true" className={`text-xl text-[#141a43] transition-transform ${open ? "rotate-180" : ""}`}>

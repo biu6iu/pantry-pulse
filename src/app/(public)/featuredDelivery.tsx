@@ -2,9 +2,10 @@
 
 import { getDonation, getTracking, listDonations } from '@/lib/api/server';
 import { pickFeaturedDelivery, RECIPIENT_PHRASES } from '@/lib/featuredDelivery';
-import { formatCount, formatDate, formatWeight } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { regionName } from '@/lib/regionNames';
 import { TrackingMap } from '@/components/maps/maps';
+import { DeliveryImpactStats, DeliveryItemList } from '@/components/delivery/delivery';
 
 // how many of the newest completed orders to choose from
 const CANDIDATE_COUNT = 30;
@@ -29,10 +30,7 @@ export default async function FeaturedDelivery() {
   };
 
   const place = [featured.receiver.city, regionName(featured.receiver.state)].filter(Boolean).join(', ');
-  const items = donation.items.toSorted((a, b) => b.quantity - a.quantity);
   const impact = donation.environmentalImpact;
-  const weight = impact ? formatWeight(impact.weightDivertedKg) : null;
-  const co2e = impact ? formatWeight(impact.co2eAvoidedKg) : null;
 
   return (
     <section className="bg-[#d7e3ec] px-6 py-16 font-sans text-brand-blue">
@@ -48,39 +46,18 @@ export default async function FeaturedDelivery() {
             otherwise have gone to waste:
           </p>
 
-          <ul className="mt-4 space-y-2 text-lg">
-            {items.map((item) => (
-              <li key={item.entryId} className="flex gap-3">
-                <span className="shrink-0 font-bold">{formatCount(item.quantity)} ×</span>
-                <span>{item.itemName}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4">
+            <DeliveryItemList items={donation.items} />
+          </div>
 
-          <dl className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <dt className="text-sm text-slate-600">Health impact</dt>
-              <dd className="mt-1 text-2xl font-bold">High</dd>
-            </div>
-            {weight ? (
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <dt className="text-sm text-slate-600">Kept out of landfill</dt>
-                <dd className="mt-1 text-2xl font-bold">
-                  {weight.value} {weight.unit}
-                </dd>
-              </div>
-            ) : null}
-            {co2e ? (
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <dt className="text-sm text-slate-600">
-                  CO<sub>2</sub>e avoided
-                </dt>
-                <dd className="mt-1 text-2xl font-bold">
-                  {co2e.value} {co2e.unit}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
+          <div className="mt-8">
+            {/* only orders scored High are featured, see pickFeaturedDelivery */}
+            <DeliveryImpactStats
+              health="High"
+              weightKg={impact?.weightDivertedKg ?? null}
+              co2eKg={impact?.co2eAvoidedKg ?? null}
+            />
+          </div>
 
           <p className="mt-8 text-lg font-semibold">
             That&apos;s one delivery.{' '}

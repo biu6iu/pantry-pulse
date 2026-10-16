@@ -3,262 +3,141 @@
 import { FormEvent, useRef, useState } from "react";
 import { getDonation, getTracking } from "@/lib/api/client";
 import type { DonationDTO } from "@/lib/dto/donation.dto";
-import type { TrackingDTO } from "@/lib/dto/tracking.dto";
+import type { TrackingDTO, TrackingStage, TrackingStageDTO } from "@/lib/dto/tracking.dto";
+import type { DonationStatus } from "@/lib/models/donationStatus";
 import { TrackingMap } from "@/components/maps/maps";
+import { DeliveryImpactStats, DeliveryItemList } from "@/components/delivery/delivery";
+import { StatusPill } from "@/components/donations/donations";
 import { BUTTON_MOTION_CLASS } from "@/components/ui/buttonStyles";
 import { DonateButton } from "@/components/ui/donate";
+import { formatDate } from "@/lib/format";
 import { regionName } from "@/lib/regionNames";
 import BrowseOrders from "./browseOrders";
 
 // API healthImpact.score is a quantity-weighted average of item scores.
 // Item score = 5 − healthImpactTier, and tiers are 1 (highest) … 4 (lowest), so score is ~1–4.
-function healthTier(donation: DonationDTO): string {
-  if (donation.status !== "COMPLETED") {
-    return "Pending (order not completed)";
-  }
-  if (!donation.healthImpact) {
-    return "Not recorded";
-  }
+function healthRating(donation: DonationDTO | null): { label: string; detail?: string } {
+  if (!donation) return { label: "Not available" };
+  if (donation.status !== "COMPLETED") return { label: "Pending", detail: "once delivered" };
+  if (!donation.healthImpact) return { label: "Not recorded" };
+
   const score = donation.healthImpact.score;
-  if (score >= 3) return "High";
-  if (score >= 2) return "Medium";
-  return "Low";
+  const detail = `${score.toLocaleString("en-AU", { maximumFractionDigits: 1 })} out of 4`;
+  if (score >= 3) return { label: "High", detail };
+  if (score >= 2) return { label: "Medium", detail };
+  return { label: "Low", detail };
 }
 
-function healthPinPercent(donation: DonationDTO): number | null {
-  if (donation.status !== "COMPLETED" || !donation.healthImpact) return null;
-  // 0 sits at the left end of the scale and 4 at the right
-  return Math.min(100, Math.max(0, (donation.healthImpact.score / 4) * 100));
+// the heading's verb follows the order's progress
+const HEADING_VERBS: Record<DonationStatus, string> = {
+  COMPLETED: "Delivered to",
+  OPEN: "Being prepared for",
+  UNKNOWN: "Sent to",
+};
+
+const STAGE_LABELS: Record<TrackingStage, string> = {
+  CREATED: "Order placed",
+  COMPLETED: "Delivered",
+};
+
+/* the order's stages as dots on a line, filled in once each is complete */
+function DeliveryTimeline({ timeline }: { timeline: TrackingStageDTO[] }) {
+  return (
+    <ol className="flex items-start">
+      {timeline.map((stage, index) => {
+        const next = timeline[index + 1];
+        return (
+          <li key={stage.stage} className="flex-1 last:flex-none">
+            <div className="flex items-center" aria-hidden="true">
+              <span
+                className={`h-4 w-4 shrink-0 rounded-full ${
+                  stage.complete ? "bg-brand-blue" : "border-2 border-slate-300 bg-white"
+                }`}
+              />
+              {next ? (
+                <span className={`mx-2 h-0.5 flex-1 ${next.complete ? "bg-brand-blue" : "bg-slate-300"}`} />
+              ) : null}
+            </div>
+            <p className="mt-2 pr-4 font-semibold">{STAGE_LABELS[stage.stage] ?? stage.label}</p>
+            <p className="text-sm text-slate-600">
+              {stage.complete && stage.occurredAt ? formatDate(stage.occurredAt) : "Not yet"}
+            </p>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
-function HealthImpactScale({ donation }: { donation: DonationDTO | null }) {
-  const label = donation ? healthTier(donation) : "Not available";
-  const pinPercent = donation ? healthPinPercent(donation) : null;
+/* one looked-up order, laid out like the featured delivery near the top of the page */
+function TrackedOrder({
+  donation,
+  tracking,
+  onShowCalculation,
+}: {
+  donation: DonationDTO | null;
+  tracking: TrackingDTO | null;
+  onShowCalculation: () => void;
+}) {
+  const id = tracking?.id ?? donation?.id;
+  const status = tracking?.status ?? donation?.status ?? "UNKNOWN";
+  const recipient = tracking?.receiver.organisation ?? donation?.receiver.organisation ?? "the recipient";
+  const place = tracking
+    ? [tracking.receiver.city, regionName(tracking.receiver.state)].filter(Boolean).join(", ")
+    : "";
+  const health = healthRating(donation);
+  const impact = donation?.environmentalImpact;
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-md">
-      <div className="bg-[#D02327] px-4 py-3 text-white">
-        <h4 className="text-sm font-semibold uppercase tracking-wide">Health impact</h4>
-      </div>
-      <div className="p-5">
-      <div className="relative mt-2 mb-2 h-10">
-        {pinPercent != null ? (
-          <div
-            className="absolute -top-1 z-10 -translate-x-1/2"
-            style={{ left: `${pinPercent}%` }}
-            aria-hidden="true"
-          >
-            <div
-              className="h-0 w-0 border-x-8 border-t-[12px] border-x-transparent border-t-[#141a43]"
-            />
+    <div className="grid items-start gap-10 lg:grid-cols-2">
+      <div>
+        <p className="flex flex-wrap items-center gap-3 text-sm font-semibold uppercase tracking-wide text-brand-red">
+          Order {id}
+          <StatusPill status={status} />
+        </p>
+        <h3 className="mt-3 text-[clamp(1.6rem,2.6vw,2.4rem)] font-bold leading-[1.15] tracking-[-0.03em]">
+          {HEADING_VERBS[status]} {recipient}
+        </h3>
+        {place ? <p className="mt-1 text-lg text-brand-blue/80">{place}</p> : null}
+
+        {tracking ? (
+          <div className="mt-6">
+            <DeliveryTimeline timeline={tracking.timeline} />
           </div>
         ) : null}
-        <div
-          className="absolute bottom-0 h-5 w-full rounded-md"
-          style={{
-            background:
-              "linear-gradient(to right, #a8acca, #7e84aa, #535a87, #2e3565, #141A43)",
-          }}
-        />
-      </div>
-      <div className="flex justify-between text-xs font-semibold text-slate-600" aria-hidden="true">
-        <span>0</span>
-        <span>4</span>
-      </div>
-      <p className="mt-2 text-lg font-bold">
-        {label}
-        {donation?.healthImpact ? ` (${donation.healthImpact.score} out of a score of 4)` : ""}
-      </p>
-      <a
-        href="#health-impact-calculation"
-        className="mt-1 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#D02327]"
-      >
-        See how we calculate health impact
-      </a>
-      </div>
-    </article>
-  );
-}
 
-function placeLabel(city: string | null, state: string | null, country: string | null) {
-  return [city, regionName(state), country].filter(Boolean).join(", ");
-}
-
-function formatWhen(iso: string | null): string {
-  if (!iso) return "Not yet";
-  return new Date(iso).toLocaleDateString();
-}
-
-function LeafIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current" aria-hidden="true">
-      <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l.93-2.3c.9.08 1.81.12 2.73.12 7 0 11.63-4.18 11.63-9.64 0-2.18-.96-3.98-2.5-5.18C17.9 8.2 17.46 8.08 17 8zm-3.5 6.5c-1.93 0-3.5-1.12-3.5-2.5s1.57-2.5 3.5-2.5 3.5 1.12 3.5 2.5-1.57 2.5-3.5 2.5z" />
-    </svg>
-  );
-}
-
-function PinGlyph() {
-  return (
-    <span
-      className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-white bg-[#D02327] shadow"
-      aria-hidden="true"
-    />
-  );
-}
-
-function EnvironmentalCard({ donation }: { donation: DonationDTO | null }) {
-  const kg = donation?.environmentalImpact?.co2eAvoidedKg;
-
-  return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-md">
-      <div className="flex items-center gap-3 bg-[#1b7a4e] px-4 py-3 text-white">
-        <LeafIcon />
-        <h4 className="text-sm font-semibold uppercase tracking-wide">Environmental impact</h4>
-      </div>
-      <div className="p-5">
-        {kg != null ? (
+        {donation && donation.items.length > 0 ? (
           <>
-            <p className="text-4xl font-extrabold leading-none text-[#1b7a4e] md:text-5xl">
-              {kg}
-              <span className="ml-2 text-lg font-semibold">kg</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-600">CO₂ emissions kept out of the atmosphere</p>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-emerald-100" aria-hidden="true">
-              <div className="h-full w-4/5 rounded-full bg-[#1b7a4e]" />
+            <p className="mt-8 font-semibold">What was in it</p>
+            <div className="mt-2">
+              <DeliveryItemList items={donation.items} />
             </div>
           </>
-        ) : (
-          <p className="text-lg font-bold">Not recorded</p>
-        )}
-        <a
-          href="#environmental-impact-calculation"
-          className="mt-3 inline-block text-sm italic text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-[#1b7a4e]"
-        >
-          See how we calculate environmental impact
-        </a>
-      </div>
-    </article>
-  );
-}
+        ) : null}
 
-function DestinationCard({
-  tracking,
-  fallbackOrg,
-}: {
-  tracking: TrackingDTO | null;
-  fallbackOrg?: string;
-}) {
-  const origin = tracking?.origin;
-  const receiver = tracking?.receiver;
-  const originPlace = origin ? placeLabel(origin.city, origin.state, origin.country) : "";
-  const destPlace = receiver ? placeLabel(receiver.city, receiver.state, receiver.country) : "";
-
-  return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-md sm:col-span-2">
-      <div className="bg-[#2a7d9d] px-4 py-3 text-white">
-        <h4 className="text-sm font-semibold uppercase tracking-wide">Recipient and destination</h4>
-      </div>
-      <div className="grid gap-0 sm:grid-cols-[1fr_auto_1fr]">
-        <div className="flex gap-3 p-5">
-          <PinGlyph />
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#2a7d9d]">From</p>
-            <p className="text-lg font-bold">{origin?.organisation ?? "Medical Pantry"}</p>
-            {originPlace ? <p className="text-sm text-slate-600">{originPlace}</p> : null}
-          </div>
-        </div>
-        <div className="hidden items-center px-2 text-2xl text-[#D02327] sm:flex" aria-hidden="true">
-          →
-        </div>
-        <div className="flex gap-3 border-t border-slate-100 p-5 sm:border-t-0">
-          <PinGlyph />
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#D02327]">To</p>
-            <p className="text-lg font-bold">
-              {receiver?.organisation ?? fallbackOrg ?? "Not available"}
-            </p>
-            {destPlace ? <p className="text-sm text-slate-600">{destPlace}</p> : null}
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function DeliveryStatusCard({ tracking }: { tracking: TrackingDTO }) {
-  const allComplete =
-    tracking.status === "COMPLETED" || tracking.timeline.every((stage) => stage.complete);
-  const completedCount = tracking.timeline.filter((stage) => stage.complete).length;
-  const fillPercent = allComplete
-    ? 100
-    : tracking.timeline.length <= 1
-      ? 0
-      : Math.max(0, ((completedCount - 1) / (tracking.timeline.length - 1)) * 100);
-
-  return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-md">
-      <div className="flex items-center justify-between bg-[#141a43] px-4 py-3 text-white">
-        <h4 className="text-sm font-semibold uppercase tracking-wide">Delivery status</h4>
-        <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold">{tracking.status}</span>
-      </div>
-      <div className="relative p-5">
-        <div className="pointer-events-none absolute top-9 right-10 left-10 hidden h-1 sm:block" aria-hidden="true">
-          <div className="h-full rounded-full bg-slate-200" />
-          <div
-            className="absolute inset-y-0 left-0 rounded-full bg-[#1b7a4e]"
-            style={{ width: `${fillPercent}%` }}
+        <div className="mt-8">
+          <DeliveryImpactStats
+            health={health.label}
+            healthDetail={health.detail}
+            weightKg={impact?.weightDivertedKg ?? null}
+            co2eKg={impact?.co2eAvoidedKg ?? null}
+            emptyLabel={status === "COMPLETED" ? "Not recorded" : "Pending"}
           />
         </div>
-        <div
-          className="pointer-events-none absolute top-9 bottom-9 left-9 w-1 rounded-full bg-slate-200 sm:hidden"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute top-9 left-9 w-1 rounded-full bg-[#1b7a4e] sm:hidden"
-          style={{ height: `${fillPercent}%` }}
-          aria-hidden="true"
-        />
-        <ol className="relative flex flex-col gap-6 sm:flex-row sm:items-start">
-          {tracking.timeline.map((stage, index) => (
-            <li key={stage.stage} className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center">
-              <span
-                className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                  stage.complete ? "bg-[#1b7a4e] text-white" : "bg-slate-300 text-slate-600"
-                }`}
-              >
-                {stage.complete ? "✓" : index + 1}
-              </span>
-              <div>
-                <p className="font-bold">{stage.label}</p>
-                <p className="text-sm text-slate-600">
-                  {stage.complete ? "Complete" : "Not complete"} · {formatWhen(stage.occurredAt)}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </article>
-  );
-}
 
-function CalculationPanel({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      id={id}
-      className="scroll-mt-6 rounded-2xl border border-white/60 bg-white/45 p-6 text-[#141a43]"
-    >
-      <h3 className="mb-4 text-lg font-extrabold uppercase tracking-wide">{title}</h3>
-      {children}
-    </section>
+        <button
+          type="button"
+          onClick={onShowCalculation}
+          className="mt-4 cursor-pointer text-sm font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
+        >
+          How we calculate these figures
+        </button>
+      </div>
+
+      <div className="min-w-0">
+        <TrackingMap tracking={tracking} />
+      </div>
+    </div>
   );
 }
 
@@ -274,77 +153,73 @@ function DonateNudge() {
   );
 }
 
-function HealthImpactMethodology() {
-  return (
-    <CalculationPanel
-      id="health-impact-calculation"
-      title="Health Impact Calculation"
-    >
-      <p className="font-semibold leading-relaxed">
-        Calculated by averaging individual health impact scores based on tiered categories.
-      </p>
-      <div className="mt-6 space-y-5">
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">
-            Tier 1: Critical and high impact (immediate life saving and intervention)
-          </h4>
-          <p className="mt-1 pl-4 font-semibold">• Health impact score of 4</p>
-        </div>
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">
-            Tier 2: High to moderate impact (diagnostics and disease monitoring)
-          </h4>
-          <p className="mt-1 pl-4 font-semibold">• Health impact score of 3</p>
-        </div>
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">
-            Tier 3: Moderate impact (infection control and delivery systems)
-          </h4>
-          <p className="mt-1 pl-4 font-semibold">• Health impact score of 2</p>
-        </div>
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">
-            Tier 4: Low-risk, high utility impact (mobility, wound care, and rehabilitation)
-          </h4>
-          <p className="mt-1 pl-4 font-semibold">• Health impact score of 1</p>
-        </div>
-      </div>
-      <p className="mt-6 font-bold leading-relaxed">
-        The higher the health impact score (out of 4), the higher the health impact.
-      </p>
-    </CalculationPanel>
-  );
-}
+// tiers run from 1 (highest health impact, score 4) to 4 (lowest, score 1); the badge darkens with the score
+const HEALTH_TIERS = [
+  { score: 4, title: "Critical and high impact", examples: "Immediate life-saving care and intervention", badge: "bg-brand-blue text-white" },
+  { score: 3, title: "High to moderate impact", examples: "Diagnostics and disease monitoring", badge: "bg-brand-blue/75 text-white" },
+  { score: 2, title: "Moderate impact", examples: "Infection control and delivery systems", badge: "bg-brand-blue/45 text-white" },
+  { score: 1, title: "Low-risk, high utility impact", examples: "Mobility, wound care and rehabilitation", badge: "bg-brand-blue/15 text-brand-blue" },
+];
 
-function EnvironmentalImpactMethodology() {
+const ENVIRONMENTAL_FORMULAS = [
+  { name: "Units delivered", formula: "Quantity ordered × units in one pack" },
+  { name: "Weight kept out of landfill", formula: "Units delivered × weight of one unit" },
+  { name: "CO₂e emissions avoided", formula: "Units delivered × CO₂e figure for one unit" },
+];
+
+/* how the figures are worked out, closed until the visitor asks for it */
+function ImpactCalculation({ detailsRef }: { detailsRef: React.RefObject<HTMLDetailsElement | null> }) {
   return (
-    <CalculationPanel
-      id="environmental-impact-calculation"
-      title="Environmental Impact Calculation"
-    >
-      <p className="font-semibold leading-relaxed">
-        Calculated from the items in the order, using the pack size, weight and CO₂e figure
-        recorded for each item.
-      </p>
-      <div className="mt-6 space-y-5">
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">Units delivered</h4>
-          <p className="mt-1 pl-4 font-semibold">• Quantity ordered × units in one pack</p>
-        </div>
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">Weight diverted from landfill</h4>
-          <p className="mt-1 pl-4 font-semibold">• Units delivered × weight of one unit</p>
-        </div>
-        <div>
-          <h4 className="font-bold text-[#2a7d9d]">CO₂e emissions avoided</h4>
-          <p className="mt-1 pl-4 font-semibold">• Units delivered × CO₂e figure for one unit</p>
-        </div>
+    <details ref={detailsRef} id="how-we-calculate" className="details-toggle scroll-mt-6">
+      <summary>How we calculate impact</summary>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-bold">Health impact</h3>
+          <p className="mt-2 leading-relaxed text-slate-700">
+            Every item is placed in a tier by the part it plays in care. An order&apos;s score is the average of
+            its items&apos; scores, weighted by quantity, out of 4.
+          </p>
+          <ol className="mt-5 space-y-4">
+            {HEALTH_TIERS.map((tier) => (
+              <li key={tier.score} className="flex items-start gap-4">
+                <span
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${tier.badge}`}
+                  aria-label={`Score ${tier.score}`}
+                >
+                  {tier.score}
+                </span>
+                <div>
+                  <p className="font-semibold">{tier.title}</p>
+                  <p className="text-sm text-slate-600">{tier.examples}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-5 text-sm text-slate-600">
+            An order is rated High with a score of 3 or more, Medium from 2 to under 3, and Low under 2.
+          </p>
+        </article>
+
+        <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-bold">Environmental impact</h3>
+          <p className="mt-2 leading-relaxed text-slate-700">
+            Worked out for each item from its pack size, weight and CO₂e figure, then added up across the order.
+          </p>
+          <dl className="mt-5 space-y-3">
+            {ENVIRONMENTAL_FORMULAS.map((row) => (
+              <div key={row.name} className="rounded-xl bg-surface-cream px-4 py-3">
+                <dt className="font-semibold">{row.name}</dt>
+                <dd className="mt-0.5 text-slate-700">{row.formula}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-5 text-sm text-slate-600">
+            Items with no recorded weight or CO₂e figure are left out, and only completed orders are counted.
+          </p>
+        </article>
       </div>
-      <p className="mt-6 font-bold leading-relaxed">
-        The results for each item are added together to give the order&apos;s total. Items with no
-        recorded weight or CO₂e figure are left out, and only completed orders are counted.
-      </p>
-    </CalculationPanel>
+    </details>
   );
 }
 
@@ -355,6 +230,7 @@ export default function TrackYourImpact() {
   const [donation, setDonation] = useState<DonationDTO | null>(null);
   const [tracking, setTracking] = useState<TrackingDTO | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const calculationRef = useRef<HTMLDetailsElement>(null);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -404,24 +280,36 @@ export default function TrackYourImpact() {
     }
   }
 
+  // opens the calculation panel and brings it into view
+  function showCalculation() {
+    const panel = calculationRef.current;
+    if (!panel) return;
+    panel.open = true;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    panel.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }
+
   const searched = donation !== null || tracking !== null;
 
   return (
-    <section id="track" className="font-sans">
-      <div className="bg-[#2a7d9d] px-6 py-14">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="mb-4 text-center text-[clamp(1.9rem,3.4vw,3.4rem)] font-bold leading-[1.1] tracking-[-0.04em] text-white">
+    <section id="track" className="bg-surface-cream px-6 py-16 font-sans text-brand-blue">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wide text-brand-red">Already part of the network?</p>
+          <h2 className="mt-2 text-[clamp(1.9rem,3.4vw,3.4rem)] font-bold leading-[1.1] tracking-[-0.04em]">
             Follow a delivery
           </h2>
-          <p className="mb-8 text-center text-[clamp(1rem,1.5vw,1.25rem)] text-white/90">
-            Have an order number from Medical Pantry? See where it went and the difference it made.
+          <p className="mt-4 text-[clamp(1rem,1.5vw,1.25rem)] text-brand-blue/85">
+            Enter your order number, then see where it went and the difference it made.
           </p>
+        </div>
 
-          <form onSubmit={onSubmit} className="rounded-2xl bg-white p-4 md:p-5">
+        <div className="mx-auto mt-8 max-w-3xl">
+          <form onSubmit={onSubmit} className="rounded-2xl bg-white p-4 shadow-sm md:p-5">
             <label htmlFor="order-number" className="mb-2 block text-sm font-medium text-slate-700">
               Order number
             </label>
-            <div className="flex flex-col gap-3 rounded-full bg-[#e8eaee] p-2 pl-5 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 rounded-full bg-surface-cream p-2 pl-5 sm:flex-row sm:items-center">
               <input
                 id="order-number"
                 type="search"
@@ -431,12 +319,12 @@ export default function TrackYourImpact() {
                 autoComplete="off"
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? "order-search-error" : undefined}
-                className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2a7d9d]"
+                className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className={`rounded-full bg-[#D02327] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#A61C1F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#D02327] ${BUTTON_MOTION_CLASS}`}
+                className={`rounded-full bg-brand-red px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#A61C1F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-brand-red ${BUTTON_MOTION_CLASS}`}
               >
                 {loading ? "Searching…" : "Track"}
               </button>
@@ -450,40 +338,20 @@ export default function TrackYourImpact() {
 
           <BrowseOrders onTrack={(id) => void onTrackFromList(id)} />
         </div>
-      </div>
 
-      <div ref={resultsRef} className="bg-[#d7e3ec] px-6 py-10">
-        <div className="mx-auto max-w-4xl space-y-6 text-[#141a43]">
-          <TrackingMap tracking={tracking} />
-
+        <div ref={resultsRef} className="scroll-mt-6">
           {searched ? (
-            <>
-              <h3 className="text-2xl font-bold">Order {tracking?.id ?? donation?.id}</h3>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <HealthImpactScale donation={donation} />
-                <EnvironmentalCard donation={donation} />
-                <DestinationCard
-                  tracking={tracking}
-                  fallbackOrg={donation?.receiver.organisation}
-                />
-              </div>
-
-              {tracking ? <DeliveryStatusCard tracking={tracking} /> : null}
-
+            <div className="mt-14 space-y-8">
+              <TrackedOrder donation={donation} tracking={tracking} onShowCalculation={showCalculation} />
               <DonateNudge />
-            </>
+            </div>
           ) : null}
+        </div>
 
-          {/* always shown, whether or not an order has been looked up */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <HealthImpactMethodology />
-            <EnvironmentalImpactMethodology />
-          </div>
+        <div className="mt-14">
+          <ImpactCalculation detailsRef={calculationRef} />
         </div>
       </div>
-
-      <div className="h-10 bg-[#2a7d9d]" />
     </section>
   );
 }

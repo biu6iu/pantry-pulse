@@ -71,19 +71,20 @@ Every donate link goes through `DonateButton` / `donateHref` in `src/components/
 
 ### Follow a delivery (`trackImpact.tsx`)
 
-Client component. The visitor enters an order number, and the donation and its tracking details are fetched together. The results are:
+Client component. The visitor enters an order number, and the donation and its tracking details are fetched together. The result is laid out like the featured delivery, using the same pieces from `src/components/delivery/delivery.tsx` (`DeliveryItemList` and `DeliveryImpactStats`):
 
-- **Health impact**: the order's score on a Low / Medium / High scale (below 2, 2 to under 3, 3 and above)
-- **Environmental impact**: CO₂e avoided, in kg
-- **Recipient and destination**
-- **Delivery status**: the created and completed stages with their dates
+- the order number and its status, and a heading naming the recipient ("Delivered to …", or "Being prepared for …" while the order is open) with its suburb and region
+- **Timeline**: the order placed and delivered stages as dots on a line, with their dates
+- **What was in it**: the items, largest quantity first
+- **Impact cards**: the health rating on a Low / Medium / High scale (below 2, 2 to under 3, 3 and above) with the score out of 4, the weight kept out of landfill and the CO₂e avoided. Before an order is completed these show as pending.
 - **Map**: the route from Medical Pantry to the recipient (`TrackingMap` in `src/components/maps`)
 - a short donate prompt under the results
-- **Health and environmental impact calculation**: two collapsible panels, side by side, explaining the four health tiers and the environmental formulas. They start collapsed; the "See how we calculate" links in the cards open them.
 
-A visitor without an order number can open **Browse orders** (`browseOrders.tsx`) under the search box. It lists orders five at a time, newest first, through `listDonations` in `src/lib/api/client.ts`, and can be narrowed by creation date range, state and status. Filters apply as soon as they change; there is no apply button. Above the list, a row of figures totals the selection (orders, deliveries, items, CO₂e avoided and locations reached) from `getImpactReport` with the same filters. Those impact figures only count completed orders to external recipients, so "delivered" can be lower than the number of orders, and they are left out when the status filter is Open. Each row shows the order's destination (suburb and state) and the kind of recipient, not the organisation's name, because publishing a browsable list of recipient names has not been agreed with the client. Choosing **Track** on a row loads that order exactly as if its number had been typed in. The filter form sends dates as full timestamps, so `toDonationFilters` moves the end date to the end of its day; otherwise orders created during that day would be left out.
+Below the results, **How we calculate impact** is a closed toggle holding two cards: the four health tiers with their scores, and the three environmental formulas. The "How we calculate these figures" link under a tracked order opens it and scrolls to it.
 
-Orders that are not completed show the health impact as pending. The map marks the recipient with a 1.1 km circle rather than an exact point, because the API rounds recipient coordinates. The Leaflet map is loaded in the browser only (`osmRouteMapLoader.tsx`), since Leaflet cannot render on the server.
+A visitor without an order number can open the **Don't have an order number?** panel (`browseOrders.tsx`) under the search box. It lists orders five at a time, newest first, through `listDonations` in `src/lib/api/client.ts`, and can be narrowed by creation date range, state and status. Filters apply as soon as they change; there is no apply button. Above the list, a row of figures totals the selection (orders, deliveries, items, CO₂e avoided and locations reached) from `getImpactReport` with the same filters. Those impact figures only count completed orders to external recipients, so "delivered" can be lower than the number of orders, and they are left out when the status filter is Open. Each row shows the order's destination (suburb and state) and the kind of recipient, not the organisation's name, because publishing a browsable list of recipient names has not been agreed with the client. Choosing **Track** on a row loads that order exactly as if its number had been typed in. The filter form sends dates as full timestamps, so `toDonationFilters` moves the end date to the end of its day; otherwise orders created during that day would be left out.
+
+The map marks the recipient with a 1.1 km circle rather than an exact point, because the API rounds recipient coordinates. The Leaflet map is loaded in the browser only (`osmRouteMapLoader.tsx`), since Leaflet cannot render on the server.
 
 ## Styling
 

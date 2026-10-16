@@ -14,19 +14,19 @@ const STATUS_LABELS: Record<DonationStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<DonationStatus, string> = {
-  COMPLETED: "bg-emerald-100 text-emerald-900",
-  OPEN: "bg-amber-100 text-amber-900",
+  COMPLETED: "bg-brand-blue text-white",
+  OPEN: "bg-brand-red/10 text-brand-red",
   UNKNOWN: "bg-slate-200 text-slate-700",
 };
 
 const HEADER_CELL_CLASS = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600";
-// The table's buttons fill with the brand teal on hover
+// The table's buttons fill with the brand red (Track) or navy (paging) on hover
 const TRACK_BUTTON_CLASS =
-  `rounded-full bg-[#141a43] px-5 py-2 text-xs font-semibold text-white hover:bg-[#2a7d9d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#141a43] ${BUTTON_MOTION_CLASS}`;
+  `rounded-full bg-[#141a43] px-5 py-2 text-xs font-semibold text-white hover:bg-brand-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-70 disabled:hover:bg-[#141a43] ${BUTTON_MOTION_CLASS}`;
 const PAGE_BUTTON_CLASS =
-  `rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-[#141a43] hover:border-[#2a7d9d] hover:bg-[#2a7d9d] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:hover:border-slate-300 disabled:hover:bg-transparent disabled:hover:text-[#141a43] ${BUTTON_MOTION_CLASS}`;
+  `rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-[#141a43] hover:border-brand-blue hover:bg-brand-blue hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:hover:border-slate-300 disabled:hover:bg-transparent disabled:hover:text-[#141a43] ${BUTTON_MOTION_CLASS}`;
 
-function StatusPill({ status }: { status: DonationStatus }) {
+export function StatusPill({ status }: { status: DonationStatus }) {
   return (
     <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${STATUS_CLASSES[status]}`}>
       {STATUS_LABELS[status]}
@@ -91,7 +91,7 @@ export function DonationResultsTable({
             <col className="w-[18%]" />
             <col className="w-[14%]" />
           </colgroup>
-          <thead className="bg-slate-50">
+          <thead className="bg-surface-cream">
             <tr>
               <th scope="col" className={HEADER_CELL_CLASS}>Order</th>
               <th scope="col" className={HEADER_CELL_CLASS}>Created</th>
