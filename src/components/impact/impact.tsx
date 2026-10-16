@@ -31,7 +31,7 @@ export function ImpactSummary({ totalOrders, summary }: ImpactSummaryProps) {
   if (!summary || !co2e) {
     return (
       <dl
-        className="flex justify-center rounded-xl bg-slate-50 px-4 py-3 text-center"
+        className="flex justify-center rounded-xl border border-brand-blue/15 bg-brand-blue/[0.06] px-4 py-3 text-center"
         aria-label="Totals for the selected orders"
       >
         <Stat label={ordersLabel} value={formatCount(totalOrders)} />
@@ -41,7 +41,7 @@ export function ImpactSummary({ totalOrders, summary }: ImpactSummaryProps) {
 
   return (
     <dl
-      className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl bg-slate-50 px-4 py-3 sm:grid-cols-3 lg:grid-cols-5"
+      className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border border-brand-blue/15 bg-brand-blue/[0.06] px-4 py-3 sm:grid-cols-3 lg:grid-cols-5"
       aria-label="Totals for the selected orders"
     >
       <Stat label={ordersLabel} value={formatCount(totalOrders)} />

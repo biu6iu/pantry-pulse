@@ -22,15 +22,26 @@
   h1 { font-size: var(--text-h1); font-weight: 700; line-height: 1.1; }
   h2 { font-size: var(--text-h2); font-weight: 600; line-height: 1.2; }
   h3 { font-size: var(--text-h3); font-weight: 600; }
+
+  /* the header links jump to sections further down the page */
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
 }
 
 @layer components {
   .impact-contribution {
     width: 100%;
-    padding: 32px 28px 48px;
+    padding: 64px 24px;
     background: var(--color-surface-cream);
     color: var(--color-brand-blue);
     font-family: var(--font-sans);
+  }
+
+  /* each block sits in the same centred column as the other sections (max-w-6xl) */
+  .impact-contribution > * {
+    max-width: 72rem;
+    margin-inline: auto;
   }
 
   .impact-contribution__header {
@@ -48,9 +59,10 @@
   .impact-contribution__title,
   .impact-contribution__summary-title {
     margin: 0 0 18px;
-    font-size: clamp(2.2rem, 4vw, 4.3rem);
-    line-height: 1.05;
-    letter-spacing: -0.08em;
+    /* headings are sentences now, not all-caps labels, so they are a little smaller and less tightly spaced */
+    font-size: clamp(1.9rem, 3.4vw, 3.4rem);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
     font-weight: 700;
     color: var(--color-brand-blue);
     font-family: var(--font-sans);
@@ -354,8 +366,11 @@
     color: var(--color-brand-blue);
   }
 
-  /* styled like the metric buttons above the chart, with a chevron instead of the default marker */
-  .impact-over-time__table-toggle summary {
+  /* styled like the metric buttons above the chart, with a chevron instead of the default marker;
+     the full numbers toggle in the impact section uses the same pill, a size up */
+  .impact-over-time__table-toggle summary,
+  .impact-contribution__more > summary,
+  .details-toggle > summary {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -368,11 +383,15 @@
     user-select: none;
   }
 
-  .impact-over-time__table-toggle summary::-webkit-details-marker {
+  .impact-over-time__table-toggle summary::-webkit-details-marker,
+  .impact-contribution__more > summary::-webkit-details-marker,
+  .details-toggle > summary::-webkit-details-marker {
     display: none;
   }
 
-  .impact-over-time__table-toggle summary::after {
+  .impact-over-time__table-toggle summary::after,
+  .impact-contribution__more > summary::after,
+  .details-toggle > summary::after {
     content: '';
     width: 7px;
     height: 7px;
@@ -383,12 +402,16 @@
     transition: transform 0.2s ease-out;
   }
 
-  .impact-over-time__table-toggle[open] summary::after {
+  .impact-over-time__table-toggle[open] summary::after,
+  .impact-contribution__more[open] > summary::after,
+  .details-toggle[open] > summary::after {
     margin-top: 4px;
     transform: rotate(-135deg);
   }
 
-  .impact-over-time__table-toggle summary:hover {
+  .impact-over-time__table-toggle summary:hover,
+  .impact-contribution__more > summary:hover,
+  .details-toggle > summary:hover {
     background: rgba(20, 26, 67, 0.06);
   }
 
@@ -443,6 +466,32 @@
     font-weight: 700;
   }
 
+  /* the reach map */
+  .impact-contribution__map {
+    overflow: hidden;
+    border-radius: 28px;
+    border: 2px solid var(--color-border-ink);
+    /* below the sticky donate button */
+    isolation: isolate;
+  }
+
+  /* everything past the headline figures, closed by default */
+  .impact-contribution__more {
+    margin-top: 54px;
+    color: var(--color-brand-blue);
+  }
+
+  /* a size up from the table toggle, for toggles that open a whole block of the page */
+  .impact-contribution__more > summary,
+  .details-toggle > summary {
+    padding: 10px 22px;
+    font-size: 1.15rem;
+  }
+
+  .impact-contribution__more h3.impact-contribution__summary-title {
+    font-size: clamp(1.5rem, 2.6vw, 2.4rem);
+  }
+
   @media (max-width: 900px) {
     .impact-contribution__header,
     .impact-contribution__grid {
@@ -456,7 +505,7 @@
 
   @media (max-width: 640px) {
     .impact-contribution {
-      padding: 24px 18px 36px;
+      padding: 48px 24px;
     }
 
     .impact-contribution__header {
@@ -465,7 +514,8 @@
 
     .impact-contribution__summary,
     .impact-breakdown,
-    .impact-over-time {
+    .impact-over-time,
+    .impact-contribution__more {
       margin-top: 36px;
     }
 
@@ -495,50 +545,6 @@
   }
 }
 
-
-/* scrolling functionality*/
-@keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-
-/* styles animated strip*/
-.marquee-track {
-  display: flex;
-  font-weight: bold;
-}
-
-/* each group is at least as wide as the screen so there is never an empty gap;
-   padding-right matches the gap so the spacing stays even where the groups join */
-.marquee-group {
-  display: flex;
-  flex-shrink: 0;
-  min-width: 100%;
-  justify-content: space-around;
-  gap: 4rem;
-  padding-right: 4rem;
-  white-space: nowrap;
-  animation: marquee-scroll 30s linear infinite;
-}
-
-/* allows the strip to be sccrollable for those who turned on thereduce motion setting*/
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track {
-    overflow-x: auto;
-  }
-
-  .marquee-group {
-    animation: none;
-  }
-}
-
-/*styles the banner*/
-.marquee-banner-style {
-  overflow: hidden;
-  background-color: #8B1A1A;
-  color: white;
-  padding: 0.5rem 0;
-}
 
 /*styles the percent bar*/
 .percent-bar {

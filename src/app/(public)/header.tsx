@@ -1,86 +1,77 @@
-import {StatsBanner, ImageBanner} from '../../components/ui/ui';
-import {IMAGES, STATS} from '../../components/statsData';
-import { getImpactReport } from '@/lib/api/server';
-import { formatWeight } from '@/lib/format';
+import Image from 'next/image';
+import { DonateButton } from '@/components/ui/donate';
+import { IMAGES } from '../../components/statsData';
 
-export default async function Header() {
-  const report = await getImpactReport();
-  const overall = report?.overall;
+// in-page links to the sections further down; hidden on small screens, where they would crowd the bar
+const SECTION_LINKS = [
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#impact', label: 'Our impact' },
+  { href: '#track', label: 'Track a delivery' },
+];
 
-  const co2e = overall ? formatWeight(overall.totalCO2eAvoidedKg) : null;
-  const waste = overall ? formatWeight(overall.totalWeightDivertedKg) : null;
-
-  // real figures first, then the static stats
-  const stats = [
-    ...(waste ? [`PREVENTED ${waste.value} ${waste.unit.toUpperCase()} OF WASTE`] : []),
-    ...(co2e ? [`AVOIDED ${co2e.value} ${co2e.unit.toUpperCase()} OF CO2e EMISSIONS`] : []),
-    ...STATS,
-  ];
-
+export default function Header() {
   return (
     <>
+      <header
+        data-hide-sticky-donate
+        className="flex items-center justify-between gap-6 bg-brand-blue px-6 py-3 text-white md:px-12"
+      >
+        <a href="#" className="flex items-center gap-3">
+          <Image src={IMAGES.logo} alt="" width={44} height={44} priority />
+          <span className="flex flex-col leading-tight">
+            <span className="text-xl font-bold tracking-[-0.02em]">Pantry Pulse</span>
+            <span className="text-xs font-medium text-white/70">by Medical Pantry</span>
+          </span>
+        </a>
 
-      <header className="flex items-center justify-between px-6 py-4 bg-brand-blue t">
-
-        {/** the left section of the banner */}
-        <div className="flex items-center gap-3">
-          <div className="logo-container">
-            {/* Render the image using the imported variable */}
-            <img
-              src={IMAGES.logo} alt="Company Logo" className="header-logo"
-              style = {{height: '40px'}}
-            />
-          </div>
-        
-          <span className="text-xl font-bold text-white">Medical Pantry - Pantry Pulse</span>
-        </div>
-
-        {/** page navigation section */}
-        <nav className="flex items-center gap-8 text-white">
-          <a href="https://medicalpantry.org/" className="font-medium hover:underline">
-            Main Site
-          </a>
-          {/* pill with a lighter rim and lip underneath, like the button on medicalpantry.org */}
+        <nav aria-label="Main" className="flex items-center gap-6">
+          <ul className="hidden items-center gap-6 lg:flex">
+            {SECTION_LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className="font-medium text-white/85 hover:text-white hover:underline underline-offset-4">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
           <a
-            href="https://www.givenow.com.au/medicalpantry"
-            className="rounded-full border border-[#f08a8d] bg-brand-red px-5 py-1.5 font-bold shadow-[0_4px_0_#e8676b] hover:brightness-110"
+            href="https://medicalpantry.org/"
+            className="hidden font-medium text-white/85 underline-offset-4 hover:text-white hover:underline sm:inline"
           >
-            Donate
+            Main site
           </a>
+          <DonateButton placement="header" />
         </nav>
       </header>
 
+      {/* the hero leads with the problem and the ask */}
+      <section data-hide-sticky-donate className="relative flex min-h-[460px] items-center overflow-hidden">
+        <Image src={IMAGES.mocBanner} alt="" fill priority sizes="100vw" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/90 via-brand-blue/70 to-brand-blue/20" />
 
-      <StatsBanner stats={stats} />
+        {/* the same centred column as the sections below, so the text lines up with theirs */}
+        <div className="relative mx-auto w-full max-w-6xl px-6 py-14 text-white">
+          <div className="max-w-3xl">
+            <h1 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.03em]">
+              Usable medical supplies get thrown out every day. Clinics and rescues go without.
+            </h1>
 
-      <ImageBanner
-        src={IMAGES.mocBanner}
-        alt="Medical Pantry hero banner"
-        overlay={co2e ? [
-          {
-            top: '20%',
-            left: '50%',
-            fontSize: '1.25rem',
-            text: (
-              <>
-                <span style={{ fontSize: '7em', fontWeight: 700, display: 'block', lineHeight: 1 }}>
-                  {co2e.value}
-                  <span style={{ fontSize: '0.4em' }}> {co2e.unit}</span>
-                </span>
-                of CO<sub>2</sub>e emissions avoided through delivered donations
-              </>
-            ),
-          },
-        ] : []
+            <p className="mt-5 max-w-2xl text-[clamp(1.05rem,1.6vw,1.35rem)] leading-relaxed text-white/90">
+              Medical Pantry&apos;s volunteers rescue surplus medical supplies and deliver them to the clinics,
+              rescues and communities that need them.
+            </p>
 
-      }
-        height = "300px"
-      />
-
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <DonateButton placement="hero" size="lg">
+                Donate now
+              </DonateButton>
+              <a href="#impact" className="font-semibold underline-offset-4 hover:underline">
+                See where it goes ↓
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
-}
-
-export function imageStats(){
-
 }
