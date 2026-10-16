@@ -3,8 +3,12 @@
 import Image from 'next/image';
 import { ImpactContributionStatCard, ImpactCategoryRow } from '@/components/ui/ui';
 import { ImpactOverTimeChart } from '@/components/charts/charts';
+import ReachMapLoader from '@/components/maps/reachMapLoader';
+import type { ReachPoint } from '@/components/maps/reachMap';
+import { ORIGIN } from '@/lib/config/origin';
+import { regionName } from '@/lib/regionNames';
 import { getImpactReport } from '@/lib/api/server';
-import { formatCategory, formatWeight } from '@/lib/format';
+import { formatCategory, formatCount, formatWeight } from '@/lib/format';
 
 const HEALTH_SCORE_LABELS: Record<number, string> = {
   4: 'Critical and high impact',
@@ -12,6 +16,11 @@ const HEALTH_SCORE_LABELS: Record<number, string> = {
   2: 'Moderate impact',
   1: 'Low-risk, high utility impact',
 };
+
+// byLocation has no country, so a place counts as Australian when its state is one of these
+const AUSTRALIAN_STATES = new Set(['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT']);
+
+const plural = (n: number, one: string, many: string) => `${formatCount(n)} ${n === 1 ? one : many}`;
 
 export default async function ImpactContribution() {
   const report = await getImpactReport();
@@ -77,6 +86,25 @@ export default async function ImpactContribution() {
       percent: (orders / totalScoredOrders) * 100,
     }));
 
+  // every place supplies have reached, labelled by place only; recipients are not named
+  const reachPoints: ReachPoint[] = (report?.byLocation ?? []).flatMap((l) =>
+    l.lat != null && l.lng != null
+      ? [{
+          lat: l.lat,
+          lng: l.lng,
+          items: l.totalItems,
+          label: `${[l.city, regionName(l.state)].filter(Boolean).join(', ')}: ${plural(l.totalDonations, 'delivery', 'deliveries')}, ${plural(l.totalItems, 'item', 'items')}`,
+        }]
+      : []
+  );
+  const australianPlaces = (report?.byLocation ?? []).filter((l) => l.state && AUSTRALIAN_STATES.has(l.state.toUpperCase())).length;
+  const overseasPlaces = (report?.byLocation.length ?? 0) - australianPlaces;
+  const reachOrigin = {
+    lat: ORIGIN.lat!,
+    lng: ORIGIN.lng!,
+    label: `${ORIGIN.organisation} (${ORIGIN.city})`,
+  };
+
   return (
     <section id="impact" className="impact-contribution">
       <div className="impact-contribution__header">
@@ -136,6 +164,22 @@ export default async function ImpactContribution() {
         </div>
       </div>
 
+      {reachPoints.length > 0 ? (
+        <div className="impact-breakdown">
+          <h2 className="impact-contribution__summary-title">Everywhere supplies have reached</h2>
+
+          <p className="impact-contribution__paragraph">
+            {plural(australianPlaces, 'place', 'places')} across Australia
+            {overseasPlaces > 0 ? <>, and {plural(overseasPlaces, 'place', 'places')} overseas</> : null}, all
+            supplied from our base in {ORIGIN.city}. Bigger dots received more items.
+          </p>
+
+          <div className="impact-contribution__map">
+            <ReachMapLoader origin={reachOrigin} points={reachPoints} />
+          </div>
+        </div>
+      ) : null}
+
       {healthRows.length > 0 ? (
         <div className="impact-breakdown">
           <div className="impact-contribution__grid impact-contribution__grid--visual-right">
@@ -174,39 +218,45 @@ export default async function ImpactContribution() {
         </div>
       ) : null}
 
-      {categoryRows.length > 0 ? (
-        <div className="impact-breakdown">
-          <h2 className="impact-contribution__summary-title">
-            Which supplies save the most emissions
-          </h2>
+      {categoryRows.length > 0 || (report && report.byMonth.length > 0) ? (
+        <details className="impact-contribution__more">
+          <summary>See the full numbers</summary>
 
-          <p className="impact-contribution__paragraph">
-            Share of CO<sub>2</sub>e emissions avoided by each category of supplies.
-          </p>
+          {categoryRows.length > 0 ? (
+            <div className="impact-breakdown">
+              <h3 className="impact-contribution__summary-title">
+                Which supplies save the most emissions
+              </h3>
 
-          <ul className="impact-breakdown__list">
-            {categoryRows.map((row) => (
-              <ImpactCategoryRow
-                key={row.category}
-                category={row.category}
-                value={row.value}
-                percent={row.percent}
-              />
-            ))}
-          </ul>
-        </div>
-      ) : null}
+              <p className="impact-contribution__paragraph">
+                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.
+              </p>
 
-      {report && report.byMonth.length > 0 ? (
-        <div className="impact-over-time">
-          <h2 className="impact-contribution__summary-title">Month by month</h2>
+              <ul className="impact-breakdown__list">
+                {categoryRows.map((row) => (
+                  <ImpactCategoryRow
+                    key={row.category}
+                    category={row.category}
+                    value={row.value}
+                    percent={row.percent}
+                  />
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
-          <p className="impact-contribution__paragraph">
-            How much difference delivered donations have made each month over the last 12 months.
-          </p>
+          {report && report.byMonth.length > 0 ? (
+            <div className="impact-over-time">
+              <h3 className="impact-contribution__summary-title">Month by month</h3>
 
-          <ImpactOverTimeChart months={report.byMonth} />
-        </div>
+              <p className="impact-contribution__paragraph">
+                How much difference delivered donations have made each month over the last 12 months.
+              </p>
+
+              <ImpactOverTimeChart months={report.byMonth} />
+            </div>
+          ) : null}
+        </details>
       ) : null}
     </section>
   );
