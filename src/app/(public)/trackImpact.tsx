@@ -322,7 +322,7 @@ export default function TrackYourImpact() {
             <label htmlFor="order-number" className="mb-2 block text-sm font-medium text-slate-700">
               Order number
             </label>
-            <div className="flex flex-col gap-3 rounded-full bg-surface-cream p-2 pl-5 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 rounded-full border border-brand-blue/15 bg-brand-blue/[0.06] p-2 pl-5 sm:flex-row sm:items-center">
               <input
                 id="order-number"
                 type="search"

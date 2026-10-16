@@ -11,7 +11,7 @@ import {
 
 const LABEL_CLASS = "mb-2 block text-sm font-medium text-slate-700";
 const CONTROL_CLASS =
-  "w-full rounded-full bg-surface-cream px-5 py-2.5 text-sm text-[#141a43] outline-none focus-visible:ring-2 focus-visible:ring-brand-blue disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-full border border-brand-blue/15 bg-brand-blue/[0.06] px-5 py-2.5 text-sm text-[#141a43] outline-none focus-visible:ring-2 focus-visible:ring-brand-blue disabled:cursor-not-allowed disabled:opacity-60";
 
 // A drawn arrow in place of the browser's own, which sits hard against the right edge and can't be moved
 const SELECT_CLASS = `${CONTROL_CLASS} appearance-none bg-no-repeat pr-11`;

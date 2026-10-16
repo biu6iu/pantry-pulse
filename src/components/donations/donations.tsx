@@ -91,7 +91,7 @@ export function DonationResultsTable({
             <col className="w-[18%]" />
             <col className="w-[14%]" />
           </colgroup>
-          <thead className="bg-surface-cream">
+          <thead className="bg-brand-blue/[0.06]">
             <tr>
               <th scope="col" className={HEADER_CELL_CLASS}>Order</th>
               <th scope="col" className={HEADER_CELL_CLASS}>Created</th>
