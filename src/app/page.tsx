@@ -4,6 +4,7 @@ import TrackYourImpact from "./(public)/trackImpact";
 import DonateCta from "./(public)/donateCta";
 import HowItWorks from "./(public)/howItWorks";
 import FeaturedDelivery from "./(public)/featuredDelivery";
+import HowWeMeasure from "./(public)/howWeMeasure";
 import { StickyDonate } from "@/components/ui/stickyDonate";
 import Footer from "./(public)/footer";
 
@@ -17,6 +18,7 @@ export default function Home() {
       <ImpactContribution />
       <DonateCta />
       <TrackYourImpact />
+      <HowWeMeasure />
       <StickyDonate />
       <Footer />
     </>

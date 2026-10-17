@@ -73,11 +73,9 @@ function DeliveryTimeline({ timeline }: { timeline: TrackingStageDTO[] }) {
 function TrackedOrder({
   donation,
   tracking,
-  onShowCalculation,
 }: {
   donation: DonationDTO | null;
   tracking: TrackingDTO | null;
-  onShowCalculation: () => void;
 }) {
   const id = tracking?.id ?? donation?.id;
   const status = tracking?.status ?? donation?.status ?? "UNKNOWN";
@@ -125,13 +123,12 @@ function TrackedOrder({
           />
         </div>
 
-        <button
-          type="button"
-          onClick={onShowCalculation}
-          className="mt-4 cursor-pointer text-sm font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
+        <a
+          href="#how-we-measure"
+          className="mt-4 inline-block text-sm font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
         >
           How we calculate these figures
-        </button>
+        </a>
       </div>
 
       <div className="min-w-0">
@@ -153,88 +150,6 @@ function DonateNudge() {
   );
 }
 
-// tiers run from 1 (highest health impact, score 4) to 4 (lowest, score 1); the badge darkens with the score
-const HEALTH_TIERS = [
-  { score: 4, title: "Critical and high impact", examples: "Immediate life-saving care and intervention", badge: "bg-brand-blue text-white" },
-  { score: 3, title: "High to moderate impact", examples: "Diagnostics and disease monitoring", badge: "bg-brand-blue/75 text-white" },
-  { score: 2, title: "Moderate impact", examples: "Infection control and delivery systems", badge: "bg-brand-blue/45 text-white" },
-  { score: 1, title: "Low-risk, high utility impact", examples: "Mobility, wound care and rehabilitation", badge: "bg-brand-blue/15 text-brand-blue" },
-];
-
-const ENVIRONMENTAL_FORMULAS = [
-  { name: "Units delivered", formula: "Quantity ordered × units in one pack" },
-  { name: "Weight kept out of landfill", formula: "Units delivered × weight of one unit" },
-  { name: "CO₂e emissions avoided", formula: "Units delivered × CO₂e figure for one unit" },
-];
-
-/* how the figures are worked out, closed until the visitor asks for it */
-function ImpactCalculation({ detailsRef }: { detailsRef: React.RefObject<HTMLDetailsElement | null> }) {
-  return (
-    <details ref={detailsRef} id="how-we-calculate" className="details-toggle scroll-mt-6">
-      <summary>How we calculate impact</summary>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <article className="rounded-2xl bg-white p-6 shadow-sm">
-          <h3 className="text-xl font-bold">Health impact</h3>
-          <p className="mt-2 leading-relaxed text-slate-700">
-            Every item is placed in a tier by the part it plays in care. An order&apos;s score is the average of
-            its items&apos; scores, weighted by quantity, out of 4.
-          </p>
-          <ol className="mt-5 space-y-4">
-            {HEALTH_TIERS.map((tier) => (
-              <li key={tier.score} className="flex items-start gap-4">
-                <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${tier.badge}`}
-                  aria-label={`Score ${tier.score}`}
-                >
-                  {tier.score}
-                </span>
-                <div>
-                  <p className="font-semibold">{tier.title}</p>
-                  <p className="text-sm text-slate-600">{tier.examples}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-5 text-sm text-slate-600">
-            An order is rated High with a score of 3 or more, Medium from 2 to under 3, and Low under 2.
-          </p>
-          <p className="mt-3 text-sm text-slate-600">
-            Source:{" "}
-            <a
-              href="https://www.tga.gov.au/products/medical-devices/overview/medical-devices-overview"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
-            >
-              Medical devices overview
-            </a>
-            , Therapeutic Goods Administration (TGA)
-          </p>
-        </article>
-
-        <article className="rounded-2xl bg-white p-6 shadow-sm">
-          <h3 className="text-xl font-bold">Environmental impact</h3>
-          <p className="mt-2 leading-relaxed text-slate-700">
-            Worked out for each item from its pack size, weight and CO₂e figure, then added up across the order.
-          </p>
-          <dl className="mt-5 space-y-3">
-            {ENVIRONMENTAL_FORMULAS.map((row) => (
-              <div key={row.name} className="rounded-xl bg-surface-cream px-4 py-3">
-                <dt className="font-semibold">{row.name}</dt>
-                <dd className="mt-0.5 text-slate-700">{row.formula}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="mt-5 text-sm text-slate-600">
-            Items with no recorded weight or CO₂e figure are left out, and only completed orders are counted.
-          </p>
-        </article>
-      </div>
-    </details>
-  );
-}
-
 export default function TrackYourImpact() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -242,7 +157,6 @@ export default function TrackYourImpact() {
   const [donation, setDonation] = useState<DonationDTO | null>(null);
   const [tracking, setTracking] = useState<TrackingDTO | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const calculationRef = useRef<HTMLDetailsElement>(null);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -305,15 +219,6 @@ export default function TrackYourImpact() {
     }
   }
 
-  // opens the calculation panel and brings it into view
-  function showCalculation() {
-    const panel = calculationRef.current;
-    if (!panel) return;
-    panel.open = true;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    panel.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-  }
-
   const searched = donation !== null || tracking !== null;
 
   return (
@@ -367,14 +272,10 @@ export default function TrackYourImpact() {
         <div ref={resultsRef} className="scroll-mt-6">
           {searched ? (
             <div className="mt-14 space-y-8">
-              <TrackedOrder donation={donation} tracking={tracking} onShowCalculation={showCalculation} />
+              <TrackedOrder donation={donation} tracking={tracking} />
               <DonateNudge />
             </div>
           ) : null}
-        </div>
-
-        <div className="mt-14">
-          <ImpactCalculation detailsRef={calculationRef} />
         </div>
       </div>
     </section>

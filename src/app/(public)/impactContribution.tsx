@@ -6,6 +6,7 @@ import { ImpactOverTimeChart } from '@/components/charts/charts';
 import ReachMapLoader from '@/components/maps/reachMapLoader';
 import type { ReachPoint } from '@/components/maps/reachMap';
 import { ORIGIN } from '@/lib/config/origin';
+import { HEALTH_TIER_SOURCE } from '@/components/statsData';
 import { regionName } from '@/lib/regionNames';
 import { getImpactReport } from '@/lib/api/server';
 import { formatCategory, formatCount, formatWeight } from '@/lib/format';
@@ -202,6 +203,23 @@ export default async function ImpactContribution() {
                   />
                 ))}
               </ul>
+
+              <p className="mt-6 text-base text-brand-blue/80">
+                Source:{' '}
+                <a
+                  href={HEALTH_TIER_SOURCE.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
+                >
+                  {HEALTH_TIER_SOURCE.title}
+                </a>
+                , {HEALTH_TIER_SOURCE.publisher}
+                {' · '}
+                <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
+                  How we measure this
+                </a>
+              </p>
             </div>
 
             <div className="impact-contribution__visual">
@@ -229,7 +247,10 @@ export default async function ImpactContribution() {
               </h3>
 
               <p className="impact-contribution__paragraph">
-                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.
+                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.{' '}
+                <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
+                  How we measure this
+                </a>
               </p>
 
               <ul className="impact-breakdown__list">
