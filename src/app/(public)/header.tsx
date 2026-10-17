@@ -4,10 +4,10 @@ import { IMAGES } from '../../components/statsData';
 
 // in-page links to the sections further down; hidden on small screens, where they would crowd the bar
 const SECTION_LINKS = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#impact', label: 'Our impact' },
-  { href: '#track', label: 'Track a delivery' },
-  { href: '#how-we-measure', label: 'How we measure' },
+  { href: '#how-it-works', label: 'How It Works' },
+  { href: '#impact', label: 'Our Impact' },
+  { href: '#track', label: 'Track a Delivery' },
+  { href: '#how-we-measure', label: 'How We Measure' },
 ];
 
 export default function Header() {
