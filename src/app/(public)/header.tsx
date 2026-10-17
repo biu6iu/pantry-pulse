@@ -7,6 +7,7 @@ const SECTION_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
   { href: '#impact', label: 'Our impact' },
   { href: '#track', label: 'Track a delivery' },
+  { href: '#how-we-measure', label: 'How we measure' },
 ];
 
 export default function Header() {
@@ -25,7 +26,7 @@ export default function Header() {
         </a>
 
         <nav aria-label="Main" className="flex items-center gap-6">
-          <ul className="hidden items-center gap-6 lg:flex">
+          <ul className="hidden items-center gap-5 lg:flex">
             {SECTION_LINKS.map((link) => (
               <li key={link.href}>
                 <a href={link.href} className="font-medium text-white/85 hover:text-white hover:underline underline-offset-4">

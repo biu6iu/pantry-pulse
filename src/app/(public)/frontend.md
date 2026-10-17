@@ -30,7 +30,7 @@ The frontend never touches the database directly. It calls the API routes throug
 
 Static; it fetches nothing. Renders:
 
-- the top bar: the logo with "Pantry Pulse by Medical Pantry", links to the sections below (`#how-it-works`, `#impact`, `#track`; shown on large screens only), a `Main site` link to medicalpantry.org (hidden on phones) and the `Donate` button
+- the top bar: the logo with "Pantry Pulse by Medical Pantry", links to the sections below (`#how-it-works`, `#impact`, `#track`, `#how-we-measure`; shown on large screens only), a `Main site` link to medicalpantry.org (hidden on phones) and the `Donate` button
 - the hero: a headline stating the problem, a line on what Medical Pantry does, a `Donate now` button and a "See where it goes" link down to the impact section
 
 The page scrolls smoothly to a section when one of these links is followed, unless the visitor has asked for reduced motion.
