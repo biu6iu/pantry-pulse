@@ -1,6 +1,6 @@
 # Frontend notes
 
-The site is one page (`/`), rendered by `src/app/page.tsx` from the section components in this folder. The page is ordered as a story that ends in a donation: the problem and the ask (header), how Medical Pantry works, one real delivery told as a story, the proof (our impact), the ask again (donate), then the order tracker for partners. Run it with `npm run dev` and open <http://localhost:3000>.
+The site is one page (`/`), rendered by `src/app/page.tsx` from the section components in this folder. The page is ordered as a story that ends in a donation: the problem and the ask (header), how Medical Pantry works, one real delivery told as a story, the proof (our impact), the ask again (donate), the order tracker for partners, then how the figures are measured. Run it with `npm run dev` and open <http://localhost:3000>.
 
 For setup and how to run the app, see the [README](../../../README.md).
 
@@ -10,14 +10,14 @@ For setup and how to run the app, see the [README](../../../README.md).
 | --- | --- |
 | `src/app/layout.tsx` | Root layout: page title and description, favicon, the Poppins font and global styles. |
 | `src/app/page.tsx` | The home page. Renders the sections in order, plus the floating donate button. |
-| `src/app/(public)/` | The page sections: `header.tsx`, `impactContribution.tsx` (a server component that fetches the impact report), `howItWorks.tsx` (the three steps), `featuredDelivery.tsx` (one recent order as a story), `donateCta.tsx` (the closing donate section), `trackImpact.tsx` (client component for the order search), plus `browseOrders.tsx`, the filterable order list inside the tracking section. |
+| `src/app/(public)/` | The page sections: `header.tsx`, `impactContribution.tsx` (a server component that fetches the impact report), `howItWorks.tsx` (the three steps), `featuredDelivery.tsx` (one recent order as a story), `donateCta.tsx` (the closing donate section), `trackImpact.tsx` (client component for the order search), plus `browseOrders.tsx`, the filterable order list inside the tracking section, and `howWeMeasure.tsx` (how the figures are worked out). |
 | `src/components/ui/` | Shared presentational components (`ImageBanner`, `CountUp`, `PercentBar`, `ImpactCategoryRow`, `ImpactContributionStatCard`), plus `donate.tsx` (`DonateButton` and `donateHref`) and `stickyDonate.tsx` (`StickyDonate`). |
 | `src/components/charts/` | `ImpactOverTimeChart`, the monthly bar chart. |
 | `src/components/maps/` | `TrackingMap` and the Leaflet route map, and `reachMap.tsx`, the map of every place supplies have reached. Both Leaflet maps are loaded client-side only, through their `*Loader.tsx`. Neither zooms with the scroll wheel until it is clicked (`ClickToScrollZoom`), so scrolling down the page never gets caught on a map. |
 | `src/components/filters/` | `DonationFilterBar` (the date, state and status controls) and `filterValues.ts`, which holds the form's values, its validation and the conversion to the API's `DonationFilters`. |
 | `src/components/donations/` | `DonationResultsTable`, one page of orders with paging and a Track button per row. |
 | `src/components/impact/` | `ImpactSummary`, the row of totals for a set of orders. |
-| `src/components/statsData.ts` | The image paths and `SUPPLIES_PER_DOLLAR` (the $1 → $350 figure). |
+| `src/components/statsData.ts` | The image paths, `SUPPLIES_PER_DOLLAR` (the $1 → $350 figure) and `HEALTH_TIER_SOURCE`, the citation for the health impact tiers. |
 | `src/lib/featuredDelivery.ts` | `pickFeaturedDelivery`, which chooses the order for the featured delivery section, and `RECIPIENT_PHRASES`, how each recipient type is described in it. |
 | `src/lib/format.ts` | Number, date and label formatting (`formatWeight`, `formatDate`, `formatCategory`) with a fixed `en-AU` locale so server and browser output match. |
 | `public/images/` | Static images. The favicon is served from `public/favicon/favicon.ico`. |
@@ -30,7 +30,7 @@ The frontend never touches the database directly. It calls the API routes throug
 
 Static; it fetches nothing. Renders:
 
-- the top bar: the logo with "Pantry Pulse by Medical Pantry", links to the sections below (`#how-it-works`, `#impact`, `#track`; shown on large screens only), a `Main site` link to medicalpantry.org (hidden on phones) and the `Donate` button
+- the top bar: the logo with "Pantry Pulse by Medical Pantry", links to the sections below (`#how-it-works`, `#impact`, `#track`, `#how-we-measure`; shown on large screens only), a `Main site` link to medicalpantry.org (hidden on phones) and the `Donate` button
 - the hero: a headline stating the problem, a line on what Medical Pantry does, a `Donate now` button and a "See where it goes" link down to the impact section
 
 The page scrolls smoothly to a section when one of these links is followed, unless the visitor has asked for reduced motion.
@@ -52,9 +52,9 @@ Server component. Fetches the impact report and renders:
 - the intro copy and hero image
 - **What it has added up to so far**: stat cards (organisations supplied, items saved from landfill, deliveries made, deliveries made last month). The last-month card is left out when it is zero.
 - **Everywhere supplies have reached**: a sentence counting the places in Australia and overseas, and a map with a dot for each place in `byLocation`, sized by the number of items it received, plus a dot for Medical Pantry. A dot's popup gives the place, deliveries and items, never the recipient's name. A place counts as Australian when its state is an Australian state code, since `byLocation` has no country. Hidden if no place has coordinates.
-- **How much these deliveries matter to care**: orders at each health impact score. Hidden if no order is scored.
+- **Health Impacts Made**: orders at each health impact score, with the source of the tiers (`HEALTH_TIER_SOURCE` in `statsData.ts`) and a "How we measure this" link to `#how-we-measure`. Hidden if no order is scored.
 - **See the full numbers**: a closed-by-default toggle holding the detail for visitors who want it:
-  - **Which supplies save the most emissions**: each item category's share of CO₂e avoided, largest first. Hidden if no category has any CO₂e avoided.
+  - **Which supplies save the most emissions**: each item category's share of CO₂e avoided, largest first, with a "How we measure this" link. Hidden if no category has any CO₂e avoided.
   - **Month by month**: `ImpactOverTimeChart` from `src/components/charts/charts.tsx`. Hidden if there is no monthly data.
 
 The chart shows the 12 months up to the latest month with data, with empty months as zero. The buttons switch between CO₂e avoided, weight diverted and donations. Hovering or focusing a column shows its value just above the bar, and "View as table" gives the same numbers as a table.
@@ -80,11 +80,18 @@ Client component. The visitor enters an order number, and the donation and its t
 - **Map**: the route from Medical Pantry to the recipient (`TrackingMap` in `src/components/maps`)
 - a short donate prompt under the results
 
-Below the results, **How we calculate impact** is a closed toggle holding two cards: the four health tiers with their scores, and the three environmental formulas. The "How we calculate these figures" link under a tracked order opens it and scrolls to it.
+The "How we calculate these figures" link under a tracked order jumps to the How we measure impact section below.
 
 A visitor without an order number can open the **Don't have an order number?** panel (`browseOrders.tsx`) under the search box. It lists orders five at a time, newest first, through `listDonations` in `src/lib/api/client.ts`, and can be narrowed by creation date range, state and status. Filters apply as soon as they change; there is no apply button. Above the list, a row of figures totals the selection (orders, deliveries, items, CO₂e avoided and locations reached) from `getImpactReport` with the same filters. Those impact figures only count completed orders to external recipients, so "delivered" can be lower than the number of orders, and they are left out when the status filter is Open. Each row shows the order's destination (suburb and state) and the kind of recipient, not the organisation's name, because publishing a browsable list of recipient names has not been agreed with the client. Choosing **Track** on a row loads that order exactly as if its number had been typed in. The filter form sends dates as full timestamps, so `toDonationFilters` moves the end date to the end of its day; otherwise orders created during that day would be left out.
 
 The map marks the recipient with a 1.1 km circle rather than an exact point, because the API rounds recipient coordinates. The Leaflet map is loaded in the browser only (`osmRouteMapLoader.tsx`), since Leaflet cannot render on the server.
+
+### How we measure impact (`howWeMeasure.tsx`)
+
+Static, after the tracker and before the footer, with the id `how-we-measure` that the impact section and a tracked order link to. Two cards, always shown:
+
+- **Health impact**: how an order's score is worked out, the four tiers (each with its tier number and score), the High / Medium / Low thresholds, a team-written paragraph on how the tiers adapt the TGA's four device classes (keep its wording as is), and the source (`HEALTH_TIER_SOURCE` in `statsData.ts`).
+- **Environmental impact**: the three formulas (units delivered, weight kept out of landfill, CO₂e avoided) and which items and orders are counted.
 
 ## Styling
 
