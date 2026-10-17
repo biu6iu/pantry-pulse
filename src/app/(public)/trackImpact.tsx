@@ -199,6 +199,18 @@ function ImpactCalculation({ detailsRef }: { detailsRef: React.RefObject<HTMLDet
           <p className="mt-5 text-sm text-slate-600">
             An order is rated High with a score of 3 or more, Medium from 2 to under 3, and Low under 2.
           </p>
+          <p className="mt-3 text-sm text-slate-600">
+            Source:{" "}
+            <a
+              href="https://www.tga.gov.au/products/medical-devices/overview/medical-devices-overview"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
+            >
+              Medical devices overview
+            </a>
+            , Therapeutic Goods Administration (TGA)
+          </p>
         </article>
 
         <article className="rounded-2xl bg-white p-6 shadow-sm">
