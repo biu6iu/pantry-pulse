@@ -3,7 +3,7 @@ import { regionName } from "@/lib/regionNames";
 
 // What the filter form holds: plain strings straight from the inputs, with "" meaning "not set"
 export interface FilterValues {
-  from: string; // "YYYY-MM-DD"
+  from: string; // "YYYY-MM-DD"; shown to the visitor as DD/MM/YYYY (see DateField)
   to: string; // "YYYY-MM-DD"
   country: string; // the stored country code, e.g. "AU"
   state: string; // the region within the chosen country: its state, or its city where there is no state
@@ -74,6 +74,28 @@ export const STATUS_OPTIONS: { value: FilterValues["status"]; label: string }[] 
   { value: "COMPLETED", label: "Completed" },
   { value: "OPEN", label: "Open" },
 ];
+
+// "2026-08-29" -> "29/08/2026", the day-first order every visitor sees whatever their browser's locale
+export function isoToDisplayDate(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : "";
+}
+
+/**
+ * "29/08/2026" -> "2026-08-29". Also takes "-" or "." as the separator and a one-digit day or month.
+ * Returns null for anything that is not a real calendar date, such as "31/02/2026".
+ */
+export function displayToIsoDate(display: string): string | null {
+  const match = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(display.trim());
+  if (!match) return null;
+
+  const [day, month, year] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    return null;
+  }
+  return date.toISOString().slice(0, 10);
+}
 
 /** Returns a message for the visitor when the values cannot be searched, or null when they are fine. */
 export function validateFilterValues(values: FilterValues): string | null {

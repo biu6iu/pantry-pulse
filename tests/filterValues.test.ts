@@ -3,6 +3,8 @@ import {
     EMPTY_FILTER_VALUES,
     countActiveFilters,
     countryOptionsFromCodes,
+    displayToIsoDate,
+    isoToDisplayDate,
     regionOptionsForCountry,
     toDonationFilters,
     validateFilterValues,
@@ -123,4 +125,37 @@ describe("countryOptionsFromCodes", () => {
     it("falls back to the stored value when it is not a standard country code", () => {
         expect(countryOptionsFromCodes(["Atlantis"])).toEqual([{ value: "Atlantis", label: "Atlantis" }]);
     });
+});
+
+describe("isoToDisplayDate", () => {
+    it("shows the day first", () => {
+        expect(isoToDisplayDate("2026-08-29")).toBe("29/08/2026");
+    });
+
+    it("shows nothing for an unset date", () => {
+        expect(isoToDisplayDate("")).toBe("");
+    });
+});
+
+describe("displayToIsoDate", () => {
+    it("reads the day first", () => {
+        expect(displayToIsoDate("03/08/2026")).toBe("2026-08-03");
+    });
+
+    it("accepts one-digit days and months and other separators", () => {
+        expect(displayToIsoDate("3/8/2026")).toBe("2026-08-03");
+        expect(displayToIsoDate("03-08-2026")).toBe("2026-08-03");
+        expect(displayToIsoDate("03.08.2026")).toBe("2026-08-03");
+    });
+
+    it("round-trips with isoToDisplayDate", () => {
+        expect(displayToIsoDate(isoToDisplayDate("2026-12-31"))).toBe("2026-12-31");
+    });
+
+    it.each(["31/02/2026", "29/02/2025", "13/13/2026", "00/01/2026", "03/08/26", "2026-08-03", "half typed", ""])(
+        "rejects %j",
+        (input) => {
+            expect(displayToIsoDate(input)).toBeNull();
+        },
+    );
 });

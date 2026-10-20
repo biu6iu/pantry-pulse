@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { DateField } from "./dateField";
 import {
   CountryOption,
   FilterValues,
@@ -52,13 +53,13 @@ export function DonationFilterBar({
           <label htmlFor={`${id}-from`} className={LABEL_CLASS}>
             From
           </label>
-          <input
+          <DateField
             id={`${id}-from`}
-            type="date"
+            label="From"
             value={values.from}
             max={values.to || undefined}
-            onChange={(event) => onChange({ ...values, from: event.target.value })}
-            aria-invalid={Boolean(error)}
+            onChange={(from) => onChange({ ...values, from })}
+            invalid={Boolean(error)}
             className={CONTROL_CLASS}
           />
         </div>
@@ -67,13 +68,13 @@ export function DonationFilterBar({
           <label htmlFor={`${id}-to`} className={LABEL_CLASS}>
             To
           </label>
-          <input
+          <DateField
             id={`${id}-to`}
-            type="date"
+            label="To"
             value={values.to}
             min={values.from || undefined}
-            onChange={(event) => onChange({ ...values, to: event.target.value })}
-            aria-invalid={Boolean(error)}
+            onChange={(to) => onChange({ ...values, to })}
+            invalid={Boolean(error)}
             className={CONTROL_CLASS}
           />
         </div>
