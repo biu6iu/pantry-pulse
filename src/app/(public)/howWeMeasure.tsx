@@ -1,7 +1,7 @@
 // how we measure impact: the method behind every figure, after the tracker and before the footer.
 // The impact section and a tracked order both link here (#how-we-measure).
 
-import { HEALTH_TIER_SOURCE } from "@/components/statsData";
+import { CO2E_FACTOR_SOURCE, HEALTH_TIER_SOURCE } from "@/components/statsData";
 
 // tiers run from 1 (highest health impact, score 4) to 4 (lowest, score 1); the badge darkens with the score
 const HEALTH_TIERS = [
@@ -96,6 +96,24 @@ export default function HowWeMeasure() {
             </dl>
             <p className="mt-5 text-sm text-slate-600">
               Items with no recorded weight or CO₂e figure are left out, and only completed orders are counted.
+            </p>
+            <p className="mt-5 border-t border-brand-blue/15 pt-5 text-sm leading-relaxed text-slate-700">
+              The CO₂e figure for each item is its weight multiplied by an emission factor for the material it is
+              made from (small electrical items, rigid plastics or clothing). These factors are UK Government
+              emission factors for producing new material, so the figure estimates the emissions from making a new
+              item that reuse avoids.
+            </p>
+            <p className="mt-3 text-sm text-slate-600">
+              Source:{" "}
+              <a
+                href={CO2E_FACTOR_SOURCE.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline"
+              >
+                {CO2E_FACTOR_SOURCE.title}
+              </a>
+              , {CO2E_FACTOR_SOURCE.publisher}
             </p>
           </article>
         </div>

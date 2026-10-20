@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { ImpactContributionStatCard, ImpactCategoryRow } from '@/components/ui/ui';
-import { ImpactOverTimeChart } from '@/components/charts/charts';
 import ReachMapLoader from '@/components/maps/reachMapLoader';
 import type { ReachPoint } from '@/components/maps/reachMap';
 import { ORIGIN } from '@/lib/config/origin';
@@ -236,21 +235,27 @@ export default async function ImpactContribution() {
         </div>
       ) : null}
 
-      {categoryRows.length > 0 || (report && report.byMonth.length > 0) ? (
-        <details className="impact-contribution__more">
-          <summary>See the full numbers</summary>
+      {categoryRows.length > 0 ? (
+        <div className="impact-breakdown">
+          <div className="impact-contribution__grid">
+            <div className="impact-contribution__visual">
+              <Image
+                src="/images/image1.jpg"
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
 
-          {categoryRows.length > 0 ? (
-            <div className="impact-breakdown">
-              <h3 className="impact-contribution__summary-title">
-                Which supplies save the most emissions
-              </h3>
+            <div>
+              <h2 className="impact-contribution__summary-title">
+                Environmental Impacts Made
+              </h2>
 
               <p className="impact-contribution__paragraph">
-                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.{' '}
-                <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
-                  How we measure this
-                </a>
+                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.
               </p>
 
               <ul className="impact-breakdown__list">
@@ -263,21 +268,15 @@ export default async function ImpactContribution() {
                   />
                 ))}
               </ul>
-            </div>
-          ) : null}
 
-          {report && report.byMonth.length > 0 ? (
-            <div className="impact-over-time">
-              <h3 className="impact-contribution__summary-title">Month by month</h3>
-
-              <p className="impact-contribution__paragraph">
-                How much difference delivered donations have made each month over the last 12 months.
+              <p className="mt-6 text-base text-brand-blue/80">
+                <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
+                  How we measure this
+                </a>
               </p>
-
-              <ImpactOverTimeChart months={report.byMonth} />
             </div>
-          ) : null}
-        </details>
+          </div>
+        </div>
       ) : null}
     </section>
   );

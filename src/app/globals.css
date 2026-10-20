@@ -361,106 +361,6 @@
     opacity: 0.6;
   }
 
-  .impact-over-time__table-toggle {
-    margin-top: 20px;
-    color: var(--color-brand-blue);
-  }
-
-  /* styled like the metric buttons above the chart, with a chevron instead of the default marker;
-     the full numbers toggle in the impact section uses the same pill, a size up */
-  .impact-over-time__table-toggle summary,
-  .impact-contribution__more > summary {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 16px;
-    border-radius: 9999px;
-    border: 2px solid var(--color-border-ink);
-    font-weight: 600;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-  }
-
-  .impact-over-time__table-toggle summary::-webkit-details-marker,
-  .impact-contribution__more > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .impact-over-time__table-toggle summary::after,
-  .impact-contribution__more > summary::after {
-    content: '';
-    width: 7px;
-    height: 7px;
-    margin-top: -4px;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(45deg);
-    transition: transform 0.2s ease-out;
-  }
-
-  .impact-over-time__table-toggle[open] summary::after,
-  .impact-contribution__more[open] > summary::after {
-    margin-top: 4px;
-    transform: rotate(-135deg);
-  }
-
-  .impact-over-time__table-toggle summary:hover,
-  .impact-contribution__more > summary:hover {
-    background: rgba(20, 26, 67, 0.06);
-  }
-
-  /* the card around the table; it scrolls sideways when the 12 months do not fit */
-  .impact-over-time__table-scroll {
-    margin-top: 16px;
-    overflow-x: auto;
-    border: 1px solid rgba(20, 26, 67, 0.16);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.55);
-  }
-
-  .impact-over-time__table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    white-space: nowrap;
-  }
-
-  .impact-over-time__table th,
-  .impact-over-time__table td {
-    padding: 9px 12px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .impact-over-time__table th:first-child {
-    text-align: left;
-    padding-left: 18px;
-  }
-
-  .impact-over-time__table thead th {
-    background: var(--color-brand-blue);
-    color: white;
-    font-weight: 600;
-  }
-
-  .impact-over-time__table-year {
-    display: block;
-    font-size: 0.75em;
-    font-weight: 400;
-    opacity: 0.7;
-  }
-
-  .impact-over-time__table tbody th {
-    font-weight: 700;
-  }
-
-  /* the total column is set apart from the months */
-  .impact-over-time__table tbody td:last-child {
-    border-left: 2px solid rgba(20, 26, 67, 0.25);
-    font-weight: 700;
-  }
-
   /* the reach map */
   .impact-contribution__map {
     overflow: hidden;
@@ -468,21 +368,6 @@
     border: 2px solid var(--color-border-ink);
     /* below the sticky donate button */
     isolation: isolate;
-  }
-
-  /* everything past the headline figures, closed by default */
-  .impact-contribution__more {
-    margin-top: 54px;
-    color: var(--color-brand-blue);
-  }
-
-  .impact-contribution__more > summary {
-    padding: 10px 22px;
-    font-size: 1.15rem;
-  }
-
-  .impact-contribution__more h3.impact-contribution__summary-title {
-    font-size: clamp(1.5rem, 2.6vw, 2.4rem);
   }
 
   @media (max-width: 900px) {
@@ -507,8 +392,7 @@
 
     .impact-contribution__summary,
     .impact-breakdown,
-    .impact-over-time,
-    .impact-contribution__more {
+    .impact-over-time {
       margin-top: 36px;
     }
 
