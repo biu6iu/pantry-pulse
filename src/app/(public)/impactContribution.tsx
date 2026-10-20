@@ -236,29 +236,45 @@ export default async function ImpactContribution() {
       ) : null}
 
       {categoryRows.length > 0 ? (
-        <div className="impact-contribution__more">
-          <div className="impact-breakdown">
-            <h3 className="impact-contribution__summary-title">
-              Which supplies save the most emissions
-            </h3>
+        <div className="impact-breakdown">
+          <div className="impact-contribution__grid">
+            <div className="impact-contribution__visual">
+              <Image
+                src="/images/image1.jpg"
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
 
-            <p className="impact-contribution__paragraph">
-              Share of CO<sub>2</sub>e emissions avoided by each category of supplies.{' '}
-              <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
-                How we measure this
-              </a>
-            </p>
+            <div>
+              <h2 className="impact-contribution__summary-title">
+                Environmental Impacts Made
+              </h2>
 
-            <ul className="impact-breakdown__list">
-              {categoryRows.map((row) => (
-                <ImpactCategoryRow
-                  key={row.category}
-                  category={row.category}
-                  value={row.value}
-                  percent={row.percent}
-                />
-              ))}
-            </ul>
+              <p className="impact-contribution__paragraph">
+                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.
+              </p>
+
+              <ul className="impact-breakdown__list">
+                {categoryRows.map((row) => (
+                  <ImpactCategoryRow
+                    key={row.category}
+                    category={row.category}
+                    value={row.value}
+                    percent={row.percent}
+                  />
+                ))}
+              </ul>
+
+              <p className="mt-6 text-base text-brand-blue/80">
+                <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
+                  How we measure this
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       ) : null}

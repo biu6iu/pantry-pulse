@@ -370,15 +370,6 @@
     isolation: isolate;
   }
 
-  /* everything past the headline figures */
-  .impact-contribution__more {
-    color: var(--color-brand-blue);
-  }
-
-  .impact-contribution__more h3.impact-contribution__summary-title {
-    font-size: clamp(1.5rem, 2.6vw, 2.4rem);
-  }
-
   @media (max-width: 900px) {
     .impact-contribution__header,
     .impact-contribution__grid {

@@ -53,7 +53,7 @@ Server component. Fetches the impact report and renders:
 - **What it has added up to so far**: stat cards (organisations supplied, items saved from landfill, deliveries made, deliveries made last month). The last-month card is left out when it is zero.
 - **Everywhere supplies have reached**: a sentence counting the places in Australia and overseas, and a map with a dot for each place in `byLocation`, sized by the number of items it received, plus a dot for Medical Pantry. A dot's popup gives the place, deliveries and items, never the recipient's name. A place counts as Australian when its state is an Australian state code, since `byLocation` has no country. Hidden if no place has coordinates.
 - **Health Impacts Made**: orders at each health impact score, with the source of the tiers (`HEALTH_TIER_SOURCE` in `statsData.ts`) and a "How we measure this" link to `#how-we-measure`. Hidden if no order is scored.
-- **Which supplies save the most emissions**: each item category's share of CO₂e avoided, largest first, with a "How we measure this" link. Hidden if no category has any CO₂e avoided.
+- **Which supplies save the most emissions**: laid out like the health section but mirrored, with the image on the left. Each item category's share of CO₂e avoided, largest first, with a "How we measure this" link. Hidden if no category has any CO₂e avoided.
 
 ### Donate (`donateCta.tsx`)
 
