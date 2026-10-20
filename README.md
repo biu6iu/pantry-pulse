@@ -69,13 +69,16 @@ npm run lint         # eslint
 ```bash
 npm test             # single run (vitest run)
 npm run test:watch   # re-run on change
+npm run test:e2e     # end-to-end tests in a browser (Playwright)
 ```
+
+The first time, install the browser with `npx playwright install chromium`.
 
 The suite applies migrations to `TEST_DATABASE_URL` and deletes every row after each test, so it must point at a separate test database, never at real data.
 
 ### Continuous integration
 
-`.github/workflows/verify.yml` runs on every pull request to `main` and every push to `main`. Against a throwaway Postgres 16 service it runs `npx next typegen`, `npx tsc --noEmit`, `npm run lint`, `npm run test` and `npm run build`. Run the same commands locally before opening a pull request.
+`.github/workflows/verify.yml` runs on every pull request to `main` and every push to `main`. Against a throwaway Postgres 16 service it runs `npx next typegen`, `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build` and `npm run test:e2e`. Run the same commands locally before opening a pull request.
 
 ## Scripts
 
