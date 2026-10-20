@@ -174,6 +174,8 @@ Tests are in `tests/` and run with `npm test`.
 
 If you add an item, recipient or donation to the fixtures, expected totals in several test files will change.
 
+End-to-end tests are in `tests/e2e/` and run with `npm run test:e2e` (Playwright). `tests/e2e/global-setup.ts` migrates `TEST_DATABASE_URL`, seeds it once with the same fixtures, and the app is built and started on port 3100 against it; `tests/e2e/global-teardown.ts` empties it again. They share the test database with `npm test`, so don't run the two at once.
+
 ## Scripts
 
 Both live in `scripts/` and write to the database in `DATABASE_URL`.

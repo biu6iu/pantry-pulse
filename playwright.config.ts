@@ -7,9 +7,9 @@ const PORT = 3100;
 const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
-  testDir: "./e2e",
-  globalSetup: "./e2e/global-setup.ts",
-  globalTeardown: "./e2e/global-teardown.ts",
+  testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   // every test reads the same seeded data, so they can run in parallel
   fullyParallel: true,
   forbidOnly: isCI,

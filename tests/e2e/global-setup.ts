@@ -15,7 +15,7 @@ export default async function globalSetup() {
   execSync("npx prisma migrate deploy", { env: process.env, stdio: "inherit" });
 
   // imported after DATABASE_URL is set, since the Prisma client reads it on import
-  const { seedFixtures, clearFixtures } = await import("../tests/fixtures/donation");
+  const { seedFixtures, clearFixtures } = await import("../fixtures/donation");
   await clearFixtures();
   await seedFixtures();
 }

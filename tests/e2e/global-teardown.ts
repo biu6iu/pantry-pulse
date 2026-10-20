@@ -4,6 +4,6 @@ import "dotenv/config";
 export default async function globalTeardown() {
   process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 
-  const { clearFixtures } = await import("../tests/fixtures/donation");
+  const { clearFixtures } = await import("../fixtures/donation");
   await clearFixtures();
 }

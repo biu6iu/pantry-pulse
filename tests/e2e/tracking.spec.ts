@@ -26,13 +26,15 @@ test("explains when no order matches", async ({ page }) => {
   await page.getByLabel("Order number").fill("#NOPE");
   await page.getByRole("button", { name: "Track", exact: true }).click();
 
-  await expect(page.getByRole("alert")).toHaveText("No order found for “#NOPE”. Check the number and try again.");
+  await expect(page.getByText("No order found for “#NOPE”. Check the number and try again.")).toBeVisible();
+  await expect(page.getByLabel("Order number")).toHaveAttribute("aria-invalid", "true");
 });
 
 test("asks for an order number when the search is empty", async ({ page }) => {
   await page.getByRole("button", { name: "Track", exact: true }).click();
 
-  await expect(page.getByRole("alert")).toHaveText("Enter an order number to search.");
+  await expect(page.getByText("Enter an order number to search.")).toBeVisible();
+  await expect(page.getByLabel("Order number")).toHaveAttribute("aria-invalid", "true");
 });
 
 test("finds an order by browsing, then tracks it", async ({ page }) => {
