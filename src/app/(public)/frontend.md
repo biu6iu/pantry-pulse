@@ -17,7 +17,7 @@ For setup and how to run the app, see the [README](../../../README.md).
 | `src/components/filters/` | `DonationFilterBar` (the date, state and status controls) and `filterValues.ts`, which holds the form's values, its validation and the conversion to the API's `DonationFilters`. |
 | `src/components/donations/` | `DonationResultsTable`, one page of orders with paging and a Track button per row. |
 | `src/components/impact/` | `ImpactSummary`, the row of totals for a set of orders. |
-| `src/components/statsData.ts` | The image paths, `SUPPLIES_PER_DOLLAR` (the $1 → $350 figure) and `HEALTH_TIER_SOURCE`, the citation for the health impact tiers. |
+| `src/components/statsData.ts` | The image paths, `SUPPLIES_PER_DOLLAR` (the $1 → $350 figure), `HEALTH_TIER_SOURCE`, the citation for the health impact tiers, and `CO2E_FACTOR_SOURCE`, the citation for the CO₂e emission factors. |
 | `src/lib/featuredDelivery.ts` | `pickFeaturedDelivery`, which chooses the order for the featured delivery section, and `RECIPIENT_PHRASES`, how each recipient type is described in it. |
 | `src/lib/format.ts` | Number, date and label formatting (`formatWeight`, `formatDate`, `formatCategory`) with a fixed `en-AU` locale so server and browser output match. |
 | `public/images/` | Static images. The favicon is served from `public/favicon/favicon.ico`. |
@@ -87,7 +87,7 @@ The map marks the recipient with a 1.1 km circle rather than an exact point, bec
 Static, after the tracker and before the footer, with the id `how-we-measure` that the impact section and a tracked order link to. Two cards, always shown:
 
 - **Health impact**: how an order's score is worked out, the four tiers (each with its tier number and score), the High / Medium / Low thresholds, a team-written paragraph on how the tiers adapt the TGA's four device classes (keep its wording as is), and the source (`HEALTH_TIER_SOURCE` in `statsData.ts`).
-- **Environmental impact**: the three formulas (units delivered, weight kept out of landfill, CO₂e avoided) and which items and orders are counted.
+- **Environmental impact**: the three formulas (units delivered, weight kept out of landfill, CO₂e avoided), which items and orders are counted, a paragraph on how each item's CO₂e figure was made (weight × a material emission factor), and the source (`CO2E_FACTOR_SOURCE` in `statsData.ts`).
 
 ## Styling
 
