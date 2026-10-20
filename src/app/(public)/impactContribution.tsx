@@ -237,9 +237,7 @@ export default async function ImpactContribution() {
       ) : null}
 
       {categoryRows.length > 0 || (report && report.byMonth.length > 0) ? (
-        <details className="impact-contribution__more">
-          <summary>See the full numbers</summary>
-
+        <div className="impact-contribution__more">
           {categoryRows.length > 0 ? (
             <div className="impact-breakdown">
               <h3 className="impact-contribution__summary-title">
@@ -277,7 +275,7 @@ export default async function ImpactContribution() {
               <ImpactOverTimeChart months={report.byMonth} />
             </div>
           ) : null}
-        </details>
+        </div>
       ) : null}
     </section>
   );

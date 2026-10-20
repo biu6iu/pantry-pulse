@@ -366,10 +366,8 @@
     color: var(--color-brand-blue);
   }
 
-  /* styled like the metric buttons above the chart, with a chevron instead of the default marker;
-     the full numbers toggle in the impact section uses the same pill, a size up */
-  .impact-over-time__table-toggle summary,
-  .impact-contribution__more > summary {
+  /* styled like the metric buttons above the chart, with a chevron instead of the default marker */
+  .impact-over-time__table-toggle summary {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -382,13 +380,11 @@
     user-select: none;
   }
 
-  .impact-over-time__table-toggle summary::-webkit-details-marker,
-  .impact-contribution__more > summary::-webkit-details-marker {
+  .impact-over-time__table-toggle summary::-webkit-details-marker {
     display: none;
   }
 
-  .impact-over-time__table-toggle summary::after,
-  .impact-contribution__more > summary::after {
+  .impact-over-time__table-toggle summary::after {
     content: '';
     width: 7px;
     height: 7px;
@@ -399,14 +395,12 @@
     transition: transform 0.2s ease-out;
   }
 
-  .impact-over-time__table-toggle[open] summary::after,
-  .impact-contribution__more[open] > summary::after {
+  .impact-over-time__table-toggle[open] summary::after {
     margin-top: 4px;
     transform: rotate(-135deg);
   }
 
-  .impact-over-time__table-toggle summary:hover,
-  .impact-contribution__more > summary:hover {
+  .impact-over-time__table-toggle summary:hover {
     background: rgba(20, 26, 67, 0.06);
   }
 
@@ -470,15 +464,9 @@
     isolation: isolate;
   }
 
-  /* everything past the headline figures, closed by default */
+  /* everything past the headline figures */
   .impact-contribution__more {
-    margin-top: 54px;
     color: var(--color-brand-blue);
-  }
-
-  .impact-contribution__more > summary {
-    padding: 10px 22px;
-    font-size: 1.15rem;
   }
 
   .impact-contribution__more h3.impact-contribution__summary-title {
@@ -507,8 +495,7 @@
 
     .impact-contribution__summary,
     .impact-breakdown,
-    .impact-over-time,
-    .impact-contribution__more {
+    .impact-over-time {
       margin-top: 36px;
     }
 
