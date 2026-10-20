@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { ImpactContributionStatCard, ImpactCategoryRow } from '@/components/ui/ui';
-import { ImpactOverTimeChart } from '@/components/charts/charts';
 import ReachMapLoader from '@/components/maps/reachMapLoader';
 import type { ReachPoint } from '@/components/maps/reachMap';
 import { ORIGIN } from '@/lib/config/origin';
@@ -236,45 +235,31 @@ export default async function ImpactContribution() {
         </div>
       ) : null}
 
-      {categoryRows.length > 0 || (report && report.byMonth.length > 0) ? (
+      {categoryRows.length > 0 ? (
         <div className="impact-contribution__more">
-          {categoryRows.length > 0 ? (
-            <div className="impact-breakdown">
-              <h3 className="impact-contribution__summary-title">
-                Which supplies save the most emissions
-              </h3>
+          <div className="impact-breakdown">
+            <h3 className="impact-contribution__summary-title">
+              Which supplies save the most emissions
+            </h3>
 
-              <p className="impact-contribution__paragraph">
-                Share of CO<sub>2</sub>e emissions avoided by each category of supplies.{' '}
-                <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
-                  How we measure this
-                </a>
-              </p>
+            <p className="impact-contribution__paragraph">
+              Share of CO<sub>2</sub>e emissions avoided by each category of supplies.{' '}
+              <a href="#how-we-measure" className="font-semibold text-brand-red underline underline-offset-4 hover:no-underline">
+                How we measure this
+              </a>
+            </p>
 
-              <ul className="impact-breakdown__list">
-                {categoryRows.map((row) => (
-                  <ImpactCategoryRow
-                    key={row.category}
-                    category={row.category}
-                    value={row.value}
-                    percent={row.percent}
-                  />
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {report && report.byMonth.length > 0 ? (
-            <div className="impact-over-time">
-              <h3 className="impact-contribution__summary-title">Month by month</h3>
-
-              <p className="impact-contribution__paragraph">
-                How much difference delivered donations have made each month over the last 12 months.
-              </p>
-
-              <ImpactOverTimeChart months={report.byMonth} />
-            </div>
-          ) : null}
+            <ul className="impact-breakdown__list">
+              {categoryRows.map((row) => (
+                <ImpactCategoryRow
+                  key={row.category}
+                  category={row.category}
+                  value={row.value}
+                  percent={row.percent}
+                />
+              ))}
+            </ul>
+          </div>
         </div>
       ) : null}
     </section>

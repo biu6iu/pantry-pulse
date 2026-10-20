@@ -45,7 +45,7 @@ const MAX_HEALTH_SCORE = 4;
 
 const [DONATIONS_METRIC, ...WEIGHT_METRICS] = TOTAL_METRICS;
 
-/* in the order the buttons and table rows are shown */
+/* in the order the buttons are shown */
 const MONTHLY_METRICS = [DONATIONS_METRIC, HEALTH_METRIC, ...WEIGHT_METRICS] as const;
 
 type MetricKey = (typeof MONTHLY_METRICS)[number]['key'];
@@ -204,52 +204,6 @@ export function ImpactOverTimeChart({ months }: { months: MonthlyImpactSummary[]
           </div>
         </div>
       </div>
-
-      {/* the same numbers as a table, for screen readers and anyone who prefers it */}
-      <details className="impact-over-time__table-toggle">
-        <summary>View as table</summary>
-        {/* every metric by month; months run across, lining up with the chart, rather than down the page */}
-        <div className="impact-over-time__table-scroll">
-          <table className="impact-over-time__table">
-            <thead>
-              <tr>
-                <th scope="col">Month</th>
-                {columns.map((c) => (
-                  <th key={c.key} scope="col">
-                    {c.label}
-                    <span className="impact-over-time__table-year">{c.date.getFullYear()}</span>
-                  </th>
-                ))}
-                <th scope="col">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MONTHLY_METRICS.map((m) =>
-                m.key === 'health' ? (
-                  <tr key={m.key}>
-                    <th scope="row">Avg. Health Impact Score</th>
-                    {columns.map((c) => (
-                      <td key={c.key}>{c.data?.averageHealthImpactScore?.toFixed(2) ?? '–'}</td>
-                    ))}
-                    {/* monthly averages cannot be added up into a total */}
-                    <td>–</td>
-                  </tr>
-                ) : (
-                  <tr key={m.key}>
-                    <th scope="row">{m.label}</th>
-                    {columns.map((c) => (
-                      <td key={c.key}>{m.format(c.data ? m.getValue(c.data) : 0)}</td>
-                    ))}
-                    <td>
-                      {m.format(columns.reduce((sum, c) => sum + (c.data ? m.getValue(c.data) : 0), 0))}
-                    </td>
-                  </tr>
-                ),
-              )}
-            </tbody>
-          </table>
-        </div>
-      </details>
     </div>
   );
 }
