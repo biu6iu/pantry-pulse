@@ -9,6 +9,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // e2e/ holds the Playwright tests, run with npm run test:e2e
+    include: ["tests/**/*.test.ts"],
     globalSetup: "./tests/global-setup.ts",
     fileParallelism: false,
   },
