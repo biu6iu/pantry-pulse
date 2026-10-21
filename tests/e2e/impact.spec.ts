@@ -23,10 +23,10 @@ test("shows the impact totals worked out from completed orders", async ({ page }
 });
 
 test("shows the health and environmental breakdowns", async ({ page }) => {
-  await expect(page.getByRole("heading", { name: "Health Impacts Made" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Health Impacts" })).toBeVisible();
 
   const environmental = page.locator(".impact-breakdown").filter({
-    has: page.getByRole("heading", { name: "Environmental Impacts Made" }),
+    has: page.getByRole("heading", { name: "Environmental Impacts" }),
   });
   await expect(environmental).toBeVisible();
   await expect(environmental.getByText("Equipment")).toBeVisible();
@@ -35,7 +35,7 @@ test("shows the health and environmental breakdowns", async ({ page }) => {
 
 test("links from the environmental breakdown to how impact is measured", async ({ page }) => {
   const environmental = page.locator(".impact-breakdown").filter({
-    has: page.getByRole("heading", { name: "Environmental Impacts Made" }),
+    has: page.getByRole("heading", { name: "Environmental Impacts" }),
   });
   await environmental.getByRole("link", { name: "How we measure this" }).click();
 

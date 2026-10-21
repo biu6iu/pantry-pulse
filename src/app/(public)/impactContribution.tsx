@@ -14,7 +14,7 @@ const HEALTH_SCORE_LABELS: Record<number, string> = {
   4: 'Critical and high impact',
   3: 'High to moderate impact',
   2: 'Moderate impact',
-  1: 'Low-risk, high utility impact',
+  1: 'Low-risk',
 };
 
 // byLocation has no country, so a place counts as Australian when its state is one of these
@@ -184,7 +184,7 @@ export default async function ImpactContribution() {
         <div className="impact-breakdown">
           <div className="impact-contribution__grid impact-contribution__grid--visual-right">
             <div>
-              <h2 className="impact-contribution__summary-title">Health Impacts Made</h2>
+              <h2 className="impact-contribution__summary-title">Health Impacts</h2>
 
               <p className="impact-contribution__paragraph">
                 Each delivery is scored by how important its supplies are to patient care,
@@ -240,7 +240,7 @@ export default async function ImpactContribution() {
           <div className="impact-contribution__grid">
             <div className="impact-contribution__visual">
               <Image
-                src="/images/image1.jpg"
+                src="/images/env.jpg"
                 alt=""
                 aria-hidden="true"
                 fill
@@ -251,7 +251,7 @@ export default async function ImpactContribution() {
 
             <div>
               <h2 className="impact-contribution__summary-title">
-                Environmental Impacts Made
+                Environmental Impacts
               </h2>
 
               <p className="impact-contribution__paragraph">

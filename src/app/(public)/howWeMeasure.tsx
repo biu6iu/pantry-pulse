@@ -3,12 +3,13 @@
 
 import { CO2E_FACTOR_SOURCE, HEALTH_TIER_SOURCE } from "@/components/statsData";
 
-// tiers run from 1 (highest health impact, score 4) to 4 (lowest, score 1); the badge darkens with the score
+// shown so that tier = score, from 4 (highest health impact) down to 1; the badge darkens with the score.
+// The stored healthImpactTier runs the other way (1 is highest), so a stored tier t shows here as tier 5 - t
 const HEALTH_TIERS = [
-  { tier: 1, score: 4, title: "Critical and high impact", examples: "Immediate life-saving care and intervention", badge: "bg-brand-blue text-white" },
-  { tier: 2, score: 3, title: "High to moderate impact", examples: "Diagnostics and disease monitoring", badge: "bg-brand-blue/75 text-white" },
-  { tier: 3, score: 2, title: "Moderate impact", examples: "Infection control and delivery systems", badge: "bg-brand-blue/45 text-white" },
-  { tier: 4, score: 1, title: "Low-risk, high utility impact", examples: "Mobility, wound care and rehabilitation", badge: "bg-brand-blue/15 text-brand-blue" },
+  { score: 4, title: "Critical and high impact", examples: "Immediate life-saving care and intervention", badge: "bg-brand-blue text-white" },
+  { score: 3, title: "High to moderate impact", examples: "Diagnostics and disease monitoring", badge: "bg-brand-blue/75 text-white" },
+  { score: 2, title: "Moderate impact", examples: "Infection control and delivery systems", badge: "bg-brand-blue/45 text-white" },
+  { score: 1, title: "Low-risk", examples: "Mobility, wound care and rehabilitation", badge: "bg-brand-blue/15 text-brand-blue" },
 ];
 
 const ENVIRONMENTAL_FORMULAS = [
@@ -49,7 +50,7 @@ export default function HowWeMeasure() {
                   </span>
                   <div>
                     <p className="font-semibold">
-                      Tier {tier.tier}: {tier.title}
+                      Tier {tier.score}: {tier.title}
                     </p>
                     <p className="text-sm text-slate-600">{tier.examples}</p>
                   </div>
@@ -59,13 +60,13 @@ export default function HowWeMeasure() {
             <p className="mt-5 text-sm text-slate-600">
               An order is rated High with a score of 3 or more, Medium from 2 to under 3, and Low under 2.
             </p>
-            {/* where the tiers come from; worded by the team, so keep it as written */}
+            {/* where the tiers come from; worded by the team, with the tier order flipped to match the scores */}
             <p className="mt-5 border-t border-brand-blue/15 pt-5 text-sm leading-relaxed text-slate-700">
               The health impact tiering was derived from the TGA&apos;s medical device classification framework,
               which groups devices into four classes (Class I, IIa, IIb and III). Where the TGA classifies devices
               by their level of risk to patients, this scheme adapts the same four-tier structure to classify items
-              by their level of health impact, from immediate life-saving intervention (Tier 1) to mobility, wound
-              care and rehabilitation (Tier 4).
+              by their level of health impact, from mobility, wound care and rehabilitation (Tier 1) to immediate
+              life-saving intervention (Tier 4).
             </p>
             <p className="mt-3 text-sm text-slate-600">
               Source:{" "}
