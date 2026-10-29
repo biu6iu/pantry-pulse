@@ -1,6 +1,6 @@
 # Testing
 
-Pantry Pulse is tested with [Vitest](https://vitest.dev/) and [Playwright](https://playwright.dev/). The Vitest suite has 139 tests across 13 files in `tests/`; the Playwright end-to-end tests are in `tests/e2e/`. Both run on every pull request through CI.
+Pantry Pulse is tested with [Vitest](https://vitest.dev/) and [Playwright](https://playwright.dev/). There are 172 tests in total: 164 Vitest tests across 13 files in `tests/`, and 8 Playwright end-to-end tests across 2 files in `tests/e2e/` (each run on desktop and mobile, so a run reports 16). Both run on every pull request through CI.
 
 ## Running the tests
 
@@ -14,7 +14,7 @@ The tests need `TEST_DATABASE_URL` in `.env` to point at a **separate** Postgres
 
 ## How the suite works
 
-- **Real database, not mocks.** Tests run against a real Postgres database, so the actual Prisma queries and aggregations are checked. `tests/global-setup.ts` points `DATABASE_URL` and `DIRECT_URL` at `TEST_DATABASE_URL` and runs `prisma migrate deploy` before the suite starts.
+- **Real database.** Tests run against a real Postgres database, so the actual Prisma queries and aggregations are checked. `tests/global-setup.ts` points `DATABASE_URL` and `DIRECT_URL` at `TEST_DATABASE_URL` and runs `prisma migrate deploy` before the suite starts.
 - **Known fixtures.** `tests/fixtures/donation.ts` seeds a small, known dataset (`seedFixtures`) before each test and deletes every row afterwards (`clearFixtures`), so each test starts from the same state. Impact figures are calculated from the item factors in the fixtures, so the expected totals can be worked out by hand.
 - **One file at a time.** The test files share one database, so they run one after another (`fileParallelism: false` in `vitest.config.ts`).
 - **No server needed.** Route tests import a route's `GET` handler and call it directly with a `NextRequest`.
@@ -28,7 +28,7 @@ The tests follow the backend layers: routes → services → repositories, plus 
 
 | File | Layer | Tests | What it checks |
 | --- | --- | --- | --- |
-| `donations.route.test.ts` | Route | 16 | `GET /api/donations` and `/api/donations/[id]`: filters, paging, totals, 400 on invalid filters, 404 on unknown ids, percent-encoded ids |
+| `donations.route.test.ts` | Route | 30 | `GET /api/donations` and `/api/donations/[id]`: filters by status, recipient, date, country and state, paging, totals, 400 on each invalid filter, 404 on unknown ids, percent-encoded ids |
 | `impact.route.test.ts` | Route | 5 | `GET /api/impact`: overall and monthly totals, region and date filters, 400 on invalid filters |
 | `tracking.route.test.ts` | Route | 4 | `GET /api/tracking/[id]`: status timeline, route endpoints, missing coordinates, 404 |
 | `server-error.route.test.ts` | Route | 4 | Every route returns a 500 and logs the error when the repository fails |
@@ -36,7 +36,7 @@ The tests follow the backend layers: routes → services → repositories, plus 
 | `impact.service.test.ts` | Service | 7 | The impact report: totals, breakdowns by month, recipient, item, location and category |
 | `tracking.service.test.ts` | Service | 5 | Delivery stages for open and completed orders, completion dates, coordinates |
 | `donation.repository.test.ts` | Repository | 51 | Every query and aggregation, plus filters by status, recipient, date range and region; checks that filtered breakdowns add up to the filtered totals |
-| `filters.test.ts` | API helper | 11 | `parseDonationFilters`: date handling, state code validation, from-after-to rejection |
+| `filters.test.ts` | API helper | 22 | `parseDonationFilters`: date handling, state code validation (Australian codes only when the country is Australia), from-after-to rejection, each invalid parameter rejected |
 | `api.client.test.ts` | Frontend | 8 | Query string building and the typed fetch wrappers |
 | `filterValues.test.ts` | Frontend | 16 | Filter form values, validation, region and country options; checks that the query strings it produces are accepted by the API parser |
 | `featuredDelivery.test.ts` | Frontend | 3 | Picking the "One recent delivery" order |
